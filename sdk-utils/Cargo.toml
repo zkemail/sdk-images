@@ -1,13 +1,15 @@
 [package]
-name = "circom-compile"
-authors = ["Aditya Bisht"]
+name = "sdk-utils"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.90"
 dotenv = "0.15.0"
+google-cloud-storage = "0.22.1"
+reqwest-middleware = "0.3.3"
+reqwest-retry = "0.6.1"
+retry-policies = "0.4.0"
 tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
 relayer-utils = { version = "0.4.2", git = "https://github.com/zkemail/relayer-utils" }
 slog = { version = "2.7.0", features = ["max_level_trace", "release_max_level_warn"] }
-sdk-utils = { path = "../../sdk-utils" }

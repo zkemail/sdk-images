@@ -1,0 +1,12 @@
+{
+    "bucket": "",
+    "blueprintId": "",
+    "googleApplicationCredentials": "",
+    "chains": {
+        "privateKey": "",
+        "rpcUrl": "https://sepolia.base.org",
+        "chainId": 84532,
+        "verificationApiKey": ""
+    },
+    "jsonLogger": false
+}

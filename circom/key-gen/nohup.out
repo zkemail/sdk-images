@@ -1,0 +1,1661 @@
+warning: virtual workspace defaulting to `resolver = "1"` despite one or more workspace members being on edition 2021 which implies `resolver = "2"`
+note: to keep the current resolver, specify `workspace.resolver = "1"` in the workspace root's manifest
+note: to use the edition 2021 resolver, specify `workspace.resolver = "2"` in the workspace root's manifest
+note: for more details see https://doc.rust-lang.org/cargo/reference/resolver.html#resolver-versions
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+warning: unused imports: `download_file` and `upload_file`
+ --> circom/key-gen/src/main.rs:7:5
+  |
+7 |     download_file, get_client, run_command, run_command_and_return_output, run_command_with_input,
+  |     ^^^^^^^^^^^^^
+8 |     upload_file,
+  |     ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `client`
+  --> circom/key-gen/src/main.rs:16:9
+   |
+16 |     let client = get_client().await?;
+   |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `bucket`
+  --> circom/key-gen/src/main.rs:19:9
+   |
+19 |     let bucket = std::env::var("BUCKET")?;
+   |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_bucket`
+
+warning: unused variable: `object`
+  --> circom/key-gen/src/main.rs:21:9
+   |
+21 |     let object = format!("{}/compiled_circuit.zip", blueprint_id);
+   |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_object`
+
+warning: `key-gen` (bin "key-gen") generated 4 warnings (run `cargo fix --bin "key-gen"` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running `/home/adityabisht64/sdk-images/target/debug/key-gen`
+Oct 22 15:56:25.314 INFO Unzipping circuit, version: 0.1.0
+Oct 22 15:56:28.557 INFO Generating power of tau, version: 0.1.0
+Oct 22 15:56:29.180 INFO Contributing to power of tau, version: 0.1.0
+Oct 22 15:56:30.630 INFO Power of tau: 22, version: 0.1.0
+Oct 22 15:59:47.470 INFO Contributing to power of tau, version: 0.1.0
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.42s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 17:18:17.669 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 17:18:17.724 INFO Unzipping circuit, version: 0.1.0
+Archive:  compiled_circuit.zip
+  inflating: artifacts/calcwit.cpp   
+  inflating: artifacts/circuit.sym   
+  inflating: artifacts/fr.asm        
+  inflating: artifacts/circom.hpp    
+  inflating: artifacts/circuit.dat   
+  inflating: artifacts/circuit.cpp   
+  inflating: artifacts/circuit.r1cs  
+  inflating: artifacts/fr.cpp        
+  inflating: artifacts/main.cpp      
+  inflating: artifacts/Makefile      
+  inflating: artifacts/fr.hpp        
+  inflating: artifacts/calcwit.hpp   
+Oct 22 17:18:23.884 INFO Generating power of tau, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculating First Challenge Hash
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Blank Contribution Hash:
+		786a02f7 42015903 c6c6fd85 2552d272
+		912f4740 e1584761 8a86e217 f71f5419
+		d25e1031 afee5853 13896444 934eb04b
+		903a685b 1448b755 d56f701a fe9be2ce
+[32;22m[INFO]  [39;1msnarkJS[0m: First Contribution Hash:
+		e809c07e 01ec4d01 624089c1 f4009ec9
+		ba62964e 9056113d 2fa6f3bf df29ff2c
+		c4ebcda7 49cd5332 7598cb0c aac7dbe3
+		b50cda3f 75c64f87 845ce634 5fd964e4
+Oct 22 17:18:25.155 INFO Contributing to power of tau, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix end: 0/1
+Oct 22 17:18:28.603 INFO Power of tau: 22, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5000000
+Oct 22 17:19:28.112 INFO Preparing phase 2 of power of tau, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5100000
+Oct 22 17:19:28.619 INFO Generating zkey, version: 0.1.0
+Oct 22 17:19:29.139 INFO Contributing to zkey, version: 0.1.0
+Oct 22 17:19:29.252 INFO Exporting verification key, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5200000
+Error: Command `snarkjs` failed: 
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculating First Challenge Hash
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4092000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4433000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4774000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5115000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5456000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5797000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6138000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6479000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6820000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7161000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7502000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7843000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Blank Contribution Hash:
+		786a02f7 42015903 c6c6fd85 2552d272
+		912f4740 e1584761 8a86e217 f71f5419
+		d25e1031 afee5853 13896444 934eb04b
+		903a685b 1448b755 d56f701a fe9be2ce
+[32;22m[INFO]  [39;1msnarkJS[0m: First Contribution Hash:
+		5b4d5208 5c949b60 ab5060c9 3196dc51
+		b2dc629c 4dcfc5d1 fdb9466e 3c6c052b
+		d1f9bada 6ee24a60 c0474017 b7c08f51
+		fce83c75 845fb489 547aa945 3e256cf6
+Oct 22 17:22:19.718 INFO Contributing to power of tau, version: 0.1.0
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.47s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 17:49:20.785 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 17:49:20.832 INFO Unzipping circuit, version: 0.1.0
+Archive:  compiled_circuit.zip
+  inflating: artifacts/calcwit.cpp   
+  inflating: artifacts/circuit.sym   
+  inflating: artifacts/fr.asm        
+  inflating: artifacts/circom.hpp    
+  inflating: artifacts/circuit.dat   
+  inflating: artifacts/circuit.cpp   
+  inflating: artifacts/circuit.r1cs  
+  inflating: artifacts/fr.cpp        
+  inflating: artifacts/main.cpp      
+  inflating: artifacts/Makefile      
+  inflating: artifacts/fr.hpp        
+  inflating: artifacts/calcwit.hpp   
+Oct 22 17:49:27.789 INFO Generating power of tau, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculating First Challenge Hash
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Blank Contribution Hash:
+		786a02f7 42015903 c6c6fd85 2552d272
+		912f4740 e1584761 8a86e217 f71f5419
+		d25e1031 afee5853 13896444 934eb04b
+		903a685b 1448b755 d56f701a fe9be2ce
+[32;22m[INFO]  [39;1msnarkJS[0m: First Contribution Hash:
+		e809c07e 01ec4d01 624089c1 f4009ec9
+		ba62964e 9056113d 2fa6f3bf df29ff2c
+		c4ebcda7 49cd5332 7598cb0c aac7dbe3
+		b50cda3f 75c64f87 845ce634 5fd964e4
+Oct 22 17:49:29.058 INFO Contributing to power of tau, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix end: 0/1
+Error: Command `snarkjs` failed: 
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+   Compiling circom-key-gen v0.1.0 (/home/adityabisht64/sdk-images/circom/key-gen)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.63s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 17:50:37.245 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 17:50:37.286 INFO Unzipping circuit, version: 0.1.0
+Archive:  compiled_circuit.zip
+  inflating: artifacts/calcwit.cpp   
+  inflating: artifacts/circuit.sym   
+  inflating: artifacts/fr.asm        
+  inflating: artifacts/circom.hpp    
+  inflating: artifacts/circuit.dat   
+  inflating: artifacts/circuit.cpp   
+  inflating: artifacts/circuit.r1cs  
+  inflating: artifacts/fr.cpp        
+  inflating: artifacts/main.cpp      
+  inflating: artifacts/Makefile      
+  inflating: artifacts/fr.hpp        
+  inflating: artifacts/calcwit.hpp   
+Oct 22 17:50:44.251 INFO Generating power of tau (test), version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculating First Challenge Hash
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Blank Contribution Hash:
+		786a02f7 42015903 c6c6fd85 2552d272
+		912f4740 e1584761 8a86e217 f71f5419
+		d25e1031 afee5853 13896444 934eb04b
+		903a685b 1448b755 d56f701a fe9be2ce
+[32;22m[INFO]  [39;1msnarkJS[0m: First Contribution Hash:
+		e809c07e 01ec4d01 624089c1 f4009ec9
+		ba62964e 9056113d 2fa6f3bf df29ff2c
+		c4ebcda7 49cd5332 7598cb0c aac7dbe3
+		b50cda3f 75c64f87 845ce634 5fd964e4
+Oct 22 17:50:45.563 INFO Contributing to power of tau (test), version: 0.1.0
+Oct 22 17:50:46.591 INFO Preparing phase 2 of power of tau (test), version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix end: 0/1
+Error: Command `snarkjs` failed: 
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+   Compiling circom-key-gen v0.1.0 (/home/adityabisht64/sdk-images/circom/key-gen)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.61s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 18:05:56.081 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 18:05:56.126 INFO Unzipping circuit, version: 0.1.0
+Archive:  compiled_circuit.zip
+  inflating: calcwit.cpp             
+  inflating: circuit.sym             
+  inflating: fr.asm                  
+  inflating: circom.hpp              
+  inflating: circuit.dat             
+  inflating: circuit.cpp             
+  inflating: circuit.r1cs            
+  inflating: fr.cpp                  
+  inflating: main.cpp                
+  inflating: Makefile                
+  inflating: fr.hpp                  
+  inflating: calcwit.hpp             
+Oct 22 18:06:01.152 INFO Generating power of tau (test), version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculating First Challenge Hash
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Blank Contribution Hash:
+		786a02f7 42015903 c6c6fd85 2552d272
+		912f4740 e1584761 8a86e217 f71f5419
+		d25e1031 afee5853 13896444 934eb04b
+		903a685b 1448b755 d56f701a fe9be2ce
+[32;22m[INFO]  [39;1msnarkJS[0m: First Contribution Hash:
+		e809c07e 01ec4d01 624089c1 f4009ec9
+		ba62964e 9056113d 2fa6f3bf df29ff2c
+		c4ebcda7 49cd5332 7598cb0c aac7dbe3
+		b50cda3f 75c64f87 845ce634 5fd964e4
+Oct 22 18:06:02.283 INFO Contributing to power of tau (test), version: 0.1.0
+Oct 22 18:06:03.286 INFO Preparing phase 2 of power of tau (test), version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: fft 2 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: fft 1 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Starting section: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 0 mix end: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix start: 0/1
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: fft 1 mix end: 0/1
+Oct 22 18:06:05.729 INFO Power of tau: 22, version: 0.1.0
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 4900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 5900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 6900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 7900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG1: 8300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: tauG2: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: alphaTauG1: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 1900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 2900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3200000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3300000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3400000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3500000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3600000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3700000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3800000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 3900000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 4000000
+[36;22m[DEBUG] [39;1msnarkJS[0m: betaTauG1: 4100000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculating First Challenge Hash
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4092000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4433000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4774000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5115000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5456000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5797000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6138000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6479000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6820000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7161000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7502000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7843000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG2
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: alphaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: betaTauG1
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000
+[36;22m[DEBUG] [39;1msnarkJS[0m: Blank Contribution Hash:
+		786a02f7 42015903 c6c6fd85 2552d272
+		912f4740 e1584761 8a86e217 f71f5419
+		d25e1031 afee5853 13896444 934eb04b
+		903a685b 1448b755 d56f701a fe9be2ce
+[32;22m[INFO]  [39;1msnarkJS[0m: First Contribution Hash:
+		5b4d5208 5c949b60 ab5060c9 3196dc51
+		b2dc629c 4dcfc5d1 fdb9466e 3c6c052b
+		d1f9bada 6ee24a60 c0474017 b7c08f51
+		fce83c75 845fb489 547aa945 3e256cf6
+Oct 22 18:13:52.354 INFO Contributing to power of tau, version: 0.1.0
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+   Compiling circom-key-gen v0.1.0 (/home/adityabisht64/sdk-images/circom/key-gen)
+warning: function `find_power_of_tau` is never used
+   --> circom/key-gen/src/main.rs:167:10
+    |
+167 | async fn find_power_of_tau(artifact_dir: &str) -> Result<usize> {
+    |          ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `circom-key-gen` (bin "circom-key-gen") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.96s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 18:15:20.369 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 18:15:20.522 INFO Contributing to power of tau, version: 0.1.0
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+   Compiling sdk-utils v0.1.0 (/home/adityabisht64/sdk-images/sdk-utils)
+   Compiling circom-key-gen v0.1.0 (/home/adityabisht64/sdk-images/circom/key-gen)
+warning: function `find_power_of_tau` is never used
+   --> circom/key-gen/src/main.rs:167:10
+    |
+167 | async fn find_power_of_tau(artifact_dir: &str) -> Result<usize> {
+    |          ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `circom-key-gen` (bin "circom-key-gen") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 10.10s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 18:17:21.801 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 18:17:21.942 INFO Contributing to power of tau, version: 0.1.0
+Oct 22 18:17:21.942 INFO Running command with input, args: ["powersoftau", "contribute", "pot_0000.ptau", "pot_0001.ptau", "-v"], command: snarkjs, version: 0.1.0
+Oct 22 18:17:21.957 INFO Writing input to command, input: 293
+, version: 0.1.0
+Oct 22 18:17:21.957 INFO Reading output from command, version: 0.1.0
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+   Compiling sdk-utils v0.1.0 (/home/adityabisht64/sdk-images/sdk-utils)
+warning: unused import: `Read`
+ --> sdk-utils/src/command.rs:5:30
+  |
+5 |     io::{BufRead, BufReader, Read, Write},
+  |                              ^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: `sdk-utils` (lib) generated 1 warning
+   Compiling circom-key-gen v0.1.0 (/home/adityabisht64/sdk-images/circom/key-gen)
+warning: function `find_power_of_tau` is never used
+   --> circom/key-gen/src/main.rs:167:10
+    |
+167 | async fn find_power_of_tau(artifact_dir: &str) -> Result<usize> {
+    |          ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `circom-key-gen` (bin "circom-key-gen") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.53s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 18:18:16.725 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 18:18:17.144 INFO Contributing to power of tau, version: 0.1.0
+Oct 22 18:18:17.144 INFO Running command with input, args: ["powersoftau", "contribute", "pot_0000.ptau", "pot_0001.ptau", "-v"], command: snarkjs, version: 0.1.0
+Oct 22 18:18:17.169 INFO Writing input to command, input: 640
+, version: 0.1.0
+Oct 22 18:18:17.169 INFO Waiting for command to finish, version: 0.1.0
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.edition
+warning: /home/adityabisht64/sdk-images/Cargo.toml: unused manifest key: workspace.version
+    Blocking waiting for file lock on build directory
+   Compiling sdk-utils v0.1.0 (/home/adityabisht64/sdk-images/sdk-utils)
+warning: unused import: `Read`
+ --> sdk-utils/src/command.rs:5:30
+  |
+5 |     io::{BufRead, BufReader, Read, Write},
+  |                              ^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: `sdk-utils` (lib) generated 1 warning
+   Compiling circom-key-gen v0.1.0 (/home/adityabisht64/sdk-images/circom/key-gen)
+warning: function `find_power_of_tau` is never used
+   --> circom/key-gen/src/main.rs:167:10
+    |
+167 | async fn find_power_of_tau(artifact_dir: &str) -> Result<usize> {
+    |          ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `circom-key-gen` (bin "circom-key-gen") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.35s
+     Running `/home/adityabisht64/sdk-images/target/debug/circom-key-gen`
+Oct 22 18:19:39.001 INFO Download path: artifacts/compiled_circuit.zip, version: 0.1.0
+Oct 22 18:19:39.481 INFO Contributing to power of tau, version: 0.1.0
+Oct 22 18:19:39.481 INFO Running command with input, args: ["powersoftau", "contribute", "pot_0000.ptau", "pot_0001.ptau", "-v"], command: snarkjs, version: 0.1.0
+Oct 22 18:19:39.497 INFO Writing input to command, input: 684
+, version: 0.1.0
+Oct 22 18:19:39.497 INFO Waiting for command to finish, version: 0.1.0
+Oct 22 18:19:42.924 INFO Command output, line: Enter a random text. (Entropy): [36;22m[DEBUG] [39;1msnarkJS[0m: Calculating First Challenge Hash, version: 0.1.0
+Oct 22 18:19:42.933 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG1, version: 0.1.0
+Oct 22 18:19:44.036 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0, version: 0.1.0
+Oct 22 18:19:44.718 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000, version: 0.1.0
+Oct 22 18:19:45.397 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000, version: 0.1.0
+Oct 22 18:19:46.070 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000, version: 0.1.0
+Oct 22 18:19:46.774 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000, version: 0.1.0
+Oct 22 18:19:47.431 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000, version: 0.1.0
+Oct 22 18:19:48.201 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000, version: 0.1.0
+Oct 22 18:19:48.921 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000, version: 0.1.0
+Oct 22 18:19:49.666 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000, version: 0.1.0
+Oct 22 18:19:50.330 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000, version: 0.1.0
+Oct 22 18:19:51.028 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000, version: 0.1.0
+Oct 22 18:19:51.739 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000, version: 0.1.0
+Oct 22 18:19:52.448 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4092000, version: 0.1.0
+Oct 22 18:19:53.111 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4433000, version: 0.1.0
+Oct 22 18:19:53.819 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 4774000, version: 0.1.0
+Oct 22 18:19:54.559 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5115000, version: 0.1.0
+Oct 22 18:19:55.299 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5456000, version: 0.1.0
+Oct 22 18:19:56.041 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 5797000, version: 0.1.0
+Oct 22 18:19:56.755 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6138000, version: 0.1.0
+Oct 22 18:19:57.521 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6479000, version: 0.1.0
+Oct 22 18:19:58.261 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 6820000, version: 0.1.0
+Oct 22 18:19:59.002 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7161000, version: 0.1.0
+Oct 22 18:19:59.699 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7502000, version: 0.1.0
+Oct 22 18:20:00.447 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 7843000, version: 0.1.0
+Oct 22 18:20:00.997 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: tauG2, version: 0.1.0
+Oct 22 18:20:02.661 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0, version: 0.1.0
+Oct 22 18:20:04.102 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000, version: 0.1.0
+Oct 22 18:20:05.537 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000, version: 0.1.0
+Oct 22 18:20:07.110 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000, version: 0.1.0
+Oct 22 18:20:08.692 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000, version: 0.1.0
+Oct 22 18:20:10.444 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000, version: 0.1.0
+Oct 22 18:20:11.983 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000, version: 0.1.0
+Oct 22 18:20:13.367 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000, version: 0.1.0
+Oct 22 18:20:14.736 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000, version: 0.1.0
+Oct 22 18:20:16.113 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000, version: 0.1.0
+Oct 22 18:20:17.701 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000, version: 0.1.0
+Oct 22 18:20:19.153 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000, version: 0.1.0
+Oct 22 18:20:19.576 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: alphaTauG1, version: 0.1.0
+Oct 22 18:20:20.421 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0, version: 0.1.0
+Oct 22 18:20:21.157 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000, version: 0.1.0
+Oct 22 18:20:21.918 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000, version: 0.1.0
+Oct 22 18:20:22.645 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000, version: 0.1.0
+Oct 22 18:20:23.378 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000, version: 0.1.0
+Oct 22 18:20:24.005 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000, version: 0.1.0
+Oct 22 18:20:24.628 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000, version: 0.1.0
+Oct 22 18:20:25.319 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000, version: 0.1.0
+Oct 22 18:20:26.007 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000, version: 0.1.0
+Oct 22 18:20:26.660 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000, version: 0.1.0
+Oct 22 18:20:27.304 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000, version: 0.1.0
+Oct 22 18:20:27.996 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000, version: 0.1.0
+Oct 22 18:20:28.220 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Calculate Initial Hash: betaTauG1, version: 0.1.0
+Oct 22 18:20:29.026 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 0, version: 0.1.0
+Oct 22 18:20:29.699 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 341000, version: 0.1.0
+Oct 22 18:20:30.372 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 682000, version: 0.1.0
+Oct 22 18:20:31.031 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1023000, version: 0.1.0
+Oct 22 18:20:31.730 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1364000, version: 0.1.0
+Oct 22 18:20:32.439 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 1705000, version: 0.1.0
+Oct 22 18:20:33.129 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2046000, version: 0.1.0
+Oct 22 18:20:33.794 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2387000, version: 0.1.0
+Oct 22 18:20:34.467 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 2728000, version: 0.1.0
+Oct 22 18:20:35.163 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3069000, version: 0.1.0
+Oct 22 18:20:35.801 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3410000, version: 0.1.0
+Oct 22 18:20:36.458 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: Initial hash: 3751000, version: 0.1.0
+Oct 22 18:20:36.870 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 0/8388607, version: 0.1.0
+Oct 22 18:20:50.527 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 16384/8388607, version: 0.1.0
+Oct 22 18:21:04.441 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 32768/8388607, version: 0.1.0
+Oct 22 18:21:18.304 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 49152/8388607, version: 0.1.0
+Oct 22 18:21:32.221 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 65536/8388607, version: 0.1.0
+Oct 22 18:21:50.829 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 81920/8388607, version: 0.1.0
+Oct 22 18:22:06.709 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 98304/8388607, version: 0.1.0
+Oct 22 18:22:20.554 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 114688/8388607, version: 0.1.0
+Oct 22 18:22:34.557 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 131072/8388607, version: 0.1.0
+Oct 22 18:22:48.266 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 147456/8388607, version: 0.1.0
+Oct 22 18:23:02.135 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 163840/8388607, version: 0.1.0
+Oct 22 18:23:15.950 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 180224/8388607, version: 0.1.0
+Oct 22 18:23:29.830 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 196608/8388607, version: 0.1.0
+Oct 22 18:23:43.705 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 212992/8388607, version: 0.1.0
+Oct 22 18:23:57.693 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 229376/8388607, version: 0.1.0
+Oct 22 18:24:11.646 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 245760/8388607, version: 0.1.0
+Oct 22 18:24:25.811 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 262144/8388607, version: 0.1.0
+Oct 22 18:24:39.600 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 278528/8388607, version: 0.1.0
+Oct 22 18:24:53.420 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 294912/8388607, version: 0.1.0
+Oct 22 18:25:07.286 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 311296/8388607, version: 0.1.0
+Oct 22 18:25:21.165 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 327680/8388607, version: 0.1.0
+Oct 22 18:25:35.040 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 344064/8388607, version: 0.1.0
+Oct 22 18:25:49.099 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 360448/8388607, version: 0.1.0
+Oct 22 18:26:02.993 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 376832/8388607, version: 0.1.0
+Oct 22 18:26:17.093 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 393216/8388607, version: 0.1.0
+Oct 22 18:26:31.150 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 409600/8388607, version: 0.1.0
+Oct 22 18:26:45.182 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 425984/8388607, version: 0.1.0
+Oct 22 18:26:59.013 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 442368/8388607, version: 0.1.0
+Oct 22 18:27:12.772 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 458752/8388607, version: 0.1.0
+Oct 22 18:27:26.597 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 475136/8388607, version: 0.1.0
+Oct 22 18:27:40.406 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 491520/8388607, version: 0.1.0
+Oct 22 18:27:54.308 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 507904/8388607, version: 0.1.0
+Oct 22 18:28:08.192 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 524288/8388607, version: 0.1.0
+Oct 22 18:28:22.013 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 540672/8388607, version: 0.1.0
+Oct 22 18:28:35.965 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 557056/8388607, version: 0.1.0
+Oct 22 18:28:49.725 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 573440/8388607, version: 0.1.0
+Oct 22 18:29:03.480 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 589824/8388607, version: 0.1.0
+Oct 22 18:29:17.253 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 606208/8388607, version: 0.1.0
+Oct 22 18:29:31.105 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 622592/8388607, version: 0.1.0
+Oct 22 18:29:44.893 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 638976/8388607, version: 0.1.0
+Oct 22 18:29:58.704 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 655360/8388607, version: 0.1.0
+Oct 22 18:30:12.729 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 671744/8388607, version: 0.1.0
+Oct 22 18:30:26.656 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 688128/8388607, version: 0.1.0
+Oct 22 18:30:40.804 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 704512/8388607, version: 0.1.0
+Oct 22 18:30:54.782 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 720896/8388607, version: 0.1.0
+Oct 22 18:31:08.681 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 737280/8388607, version: 0.1.0
+Oct 22 18:31:22.616 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 753664/8388607, version: 0.1.0
+Oct 22 18:31:36.504 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 770048/8388607, version: 0.1.0
+Oct 22 18:31:55.101 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 786432/8388607, version: 0.1.0
+Oct 22 18:32:08.053 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 802816/8388607, version: 0.1.0
+Oct 22 18:32:22.021 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 819200/8388607, version: 0.1.0
+Oct 22 18:32:36.101 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 835584/8388607, version: 0.1.0
+Oct 22 18:32:50.070 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 851968/8388607, version: 0.1.0
+Oct 22 18:33:03.797 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 868352/8388607, version: 0.1.0
+Oct 22 18:33:17.674 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 884736/8388607, version: 0.1.0
+Oct 22 18:33:31.597 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 901120/8388607, version: 0.1.0
+Oct 22 18:33:45.417 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 917504/8388607, version: 0.1.0
+Oct 22 18:33:59.542 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 933888/8388607, version: 0.1.0
+Oct 22 18:34:13.636 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 950272/8388607, version: 0.1.0
+Oct 22 18:34:27.662 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 966656/8388607, version: 0.1.0
+Oct 22 18:34:41.752 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 983040/8388607, version: 0.1.0
+Oct 22 18:34:55.467 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 999424/8388607, version: 0.1.0
+Oct 22 18:35:09.248 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1015808/8388607, version: 0.1.0
+Oct 22 18:35:22.996 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1032192/8388607, version: 0.1.0
+Oct 22 18:35:36.802 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1048576/8388607, version: 0.1.0
+Oct 22 18:35:50.653 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1064960/8388607, version: 0.1.0
+Oct 22 18:36:04.539 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1081344/8388607, version: 0.1.0
+Oct 22 18:36:18.305 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1097728/8388607, version: 0.1.0
+Oct 22 18:36:32.122 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1114112/8388607, version: 0.1.0
+Oct 22 18:36:46.149 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1130496/8388607, version: 0.1.0
+Oct 22 18:37:00.094 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1146880/8388607, version: 0.1.0
+Oct 22 18:37:13.955 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1163264/8388607, version: 0.1.0
+Oct 22 18:37:27.818 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1179648/8388607, version: 0.1.0
+Oct 22 18:37:41.705 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1196032/8388607, version: 0.1.0
+Oct 22 18:37:55.521 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1212416/8388607, version: 0.1.0
+Oct 22 18:38:09.405 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1228800/8388607, version: 0.1.0
+Oct 22 18:38:23.138 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1245184/8388607, version: 0.1.0
+Oct 22 18:38:37.541 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1261568/8388607, version: 0.1.0
+Oct 22 18:38:52.140 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1277952/8388607, version: 0.1.0
+Oct 22 18:39:06.582 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1294336/8388607, version: 0.1.0
+Oct 22 18:39:21.008 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1310720/8388607, version: 0.1.0
+Oct 22 18:39:35.545 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1327104/8388607, version: 0.1.0
+Oct 22 18:39:49.746 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1343488/8388607, version: 0.1.0
+Oct 22 18:40:04.033 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1359872/8388607, version: 0.1.0
+Oct 22 18:40:18.754 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1376256/8388607, version: 0.1.0
+Oct 22 18:40:34.749 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1392640/8388607, version: 0.1.0
+Oct 22 18:40:51.251 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1409024/8388607, version: 0.1.0
+Oct 22 18:41:06.420 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1425408/8388607, version: 0.1.0
+Oct 22 18:41:21.334 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1441792/8388607, version: 0.1.0
+Oct 22 18:41:36.149 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1458176/8388607, version: 0.1.0
+Oct 22 18:41:56.986 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1474560/8388607, version: 0.1.0
+Oct 22 18:42:11.329 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1490944/8388607, version: 0.1.0
+Oct 22 18:42:25.766 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1507328/8388607, version: 0.1.0
+Oct 22 18:42:41.109 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1523712/8388607, version: 0.1.0
+Oct 22 18:42:56.473 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1540096/8388607, version: 0.1.0
+Oct 22 18:43:11.365 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1556480/8388607, version: 0.1.0
+Oct 22 18:43:27.566 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1572864/8388607, version: 0.1.0
+Oct 22 18:43:43.610 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1589248/8388607, version: 0.1.0
+Oct 22 18:43:59.597 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1605632/8388607, version: 0.1.0
+Oct 22 18:44:15.486 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1622016/8388607, version: 0.1.0
+Oct 22 18:44:31.209 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1638400/8388607, version: 0.1.0
+Oct 22 18:44:47.105 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1654784/8388607, version: 0.1.0
+Oct 22 18:45:02.845 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1671168/8388607, version: 0.1.0
+Oct 22 18:45:18.838 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1687552/8388607, version: 0.1.0
+Oct 22 18:45:34.677 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1703936/8388607, version: 0.1.0
+Oct 22 18:45:50.506 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1720320/8388607, version: 0.1.0
+Oct 22 18:46:06.337 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1736704/8388607, version: 0.1.0
+Oct 22 18:46:21.405 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1753088/8388607, version: 0.1.0
+Oct 22 18:46:36.118 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1769472/8388607, version: 0.1.0
+Oct 22 18:46:50.653 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1785856/8388607, version: 0.1.0
+Oct 22 18:47:05.512 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1802240/8388607, version: 0.1.0
+Oct 22 18:47:20.433 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1818624/8388607, version: 0.1.0
+Oct 22 18:47:34.785 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1835008/8388607, version: 0.1.0
+Oct 22 18:47:49.246 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1851392/8388607, version: 0.1.0
+Oct 22 18:48:03.606 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1867776/8388607, version: 0.1.0
+Oct 22 18:48:18.232 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1884160/8388607, version: 0.1.0
+Oct 22 18:48:32.672 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1900544/8388607, version: 0.1.0
+Oct 22 18:48:47.930 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1916928/8388607, version: 0.1.0
+Oct 22 18:49:02.317 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1933312/8388607, version: 0.1.0
+Oct 22 18:49:16.526 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1949696/8388607, version: 0.1.0
+Oct 22 18:49:31.126 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1966080/8388607, version: 0.1.0
+Oct 22 18:49:45.454 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1982464/8388607, version: 0.1.0
+Oct 22 18:49:59.908 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 1998848/8388607, version: 0.1.0
+Oct 22 18:50:13.725 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2015232/8388607, version: 0.1.0
+Oct 22 18:50:27.552 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2031616/8388607, version: 0.1.0
+Oct 22 18:50:41.310 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2048000/8388607, version: 0.1.0
+Oct 22 18:50:55.785 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2064384/8388607, version: 0.1.0
+Oct 22 18:51:09.466 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2080768/8388607, version: 0.1.0
+Oct 22 18:51:23.377 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2097152/8388607, version: 0.1.0
+Oct 22 18:51:37.645 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2113536/8388607, version: 0.1.0
+Oct 22 18:51:55.706 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2129920/8388607, version: 0.1.0
+Oct 22 18:52:10.500 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2146304/8388607, version: 0.1.0
+Oct 22 18:52:26.445 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2162688/8388607, version: 0.1.0
+Oct 22 18:52:41.666 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2179072/8388607, version: 0.1.0
+Oct 22 18:52:57.286 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2195456/8388607, version: 0.1.0
+Oct 22 18:53:13.009 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2211840/8388607, version: 0.1.0
+Oct 22 18:53:28.710 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2228224/8388607, version: 0.1.0
+Oct 22 18:53:44.957 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2244608/8388607, version: 0.1.0
+Oct 22 18:54:00.785 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2260992/8388607, version: 0.1.0
+Oct 22 18:54:16.720 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2277376/8388607, version: 0.1.0
+Oct 22 18:54:32.434 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2293760/8388607, version: 0.1.0
+Oct 22 18:54:48.433 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2310144/8388607, version: 0.1.0
+Oct 22 18:55:04.400 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2326528/8388607, version: 0.1.0
+Oct 22 18:55:20.405 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2342912/8388607, version: 0.1.0
+Oct 22 18:55:36.347 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2359296/8388607, version: 0.1.0
+Oct 22 18:55:52.401 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2375680/8388607, version: 0.1.0
+Oct 22 18:56:08.314 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2392064/8388607, version: 0.1.0
+Oct 22 18:56:24.269 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2408448/8388607, version: 0.1.0
+Oct 22 18:56:40.220 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2424832/8388607, version: 0.1.0
+Oct 22 18:56:56.125 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2441216/8388607, version: 0.1.0
+Oct 22 18:57:11.855 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2457600/8388607, version: 0.1.0
+Oct 22 18:57:27.765 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2473984/8388607, version: 0.1.0
+Oct 22 18:57:43.838 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2490368/8388607, version: 0.1.0
+Oct 22 18:57:59.800 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2506752/8388607, version: 0.1.0
+Oct 22 18:58:15.249 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2523136/8388607, version: 0.1.0
+Oct 22 18:58:30.768 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2539520/8388607, version: 0.1.0
+Oct 22 18:58:45.454 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2555904/8388607, version: 0.1.0
+Oct 22 18:58:59.610 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2572288/8388607, version: 0.1.0
+Oct 22 18:59:13.325 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2588672/8388607, version: 0.1.0
+Oct 22 18:59:26.926 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2605056/8388607, version: 0.1.0
+Oct 22 18:59:40.765 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2621440/8388607, version: 0.1.0
+Oct 22 18:59:54.702 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2637824/8388607, version: 0.1.0
+Oct 22 19:00:09.177 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2654208/8388607, version: 0.1.0
+Oct 22 19:00:23.569 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2670592/8388607, version: 0.1.0
+Oct 22 19:00:38.477 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2686976/8388607, version: 0.1.0
+Oct 22 19:00:52.959 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2703360/8388607, version: 0.1.0
+Oct 22 19:01:07.847 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2719744/8388607, version: 0.1.0
+Oct 22 19:01:22.585 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2736128/8388607, version: 0.1.0
+Oct 22 19:01:36.937 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2752512/8388607, version: 0.1.0
+Oct 22 19:01:56.142 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2768896/8388607, version: 0.1.0
+Oct 22 19:02:09.964 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2785280/8388607, version: 0.1.0
+Oct 22 19:02:24.313 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2801664/8388607, version: 0.1.0
+Oct 22 19:02:38.736 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2818048/8388607, version: 0.1.0
+Oct 22 19:02:53.508 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2834432/8388607, version: 0.1.0
+Oct 22 19:03:07.768 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2850816/8388607, version: 0.1.0
+Oct 22 19:03:22.113 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2867200/8388607, version: 0.1.0
+Oct 22 19:03:36.246 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2883584/8388607, version: 0.1.0
+Oct 22 19:03:50.323 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2899968/8388607, version: 0.1.0
+Oct 22 19:04:04.302 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2916352/8388607, version: 0.1.0
+Oct 22 19:04:19.269 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2932736/8388607, version: 0.1.0
+Oct 22 19:04:33.720 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2949120/8388607, version: 0.1.0
+Oct 22 19:04:48.340 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2965504/8388607, version: 0.1.0
+Oct 22 19:05:02.676 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2981888/8388607, version: 0.1.0
+Oct 22 19:05:16.502 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 2998272/8388607, version: 0.1.0
+Oct 22 19:05:30.368 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3014656/8388607, version: 0.1.0
+Oct 22 19:05:44.016 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3031040/8388607, version: 0.1.0
+Oct 22 19:05:57.914 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3047424/8388607, version: 0.1.0
+Oct 22 19:06:11.937 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3063808/8388607, version: 0.1.0
+Oct 22 19:06:26.169 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3080192/8388607, version: 0.1.0
+Oct 22 19:06:41.249 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3096576/8388607, version: 0.1.0
+Oct 22 19:06:56.098 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3112960/8388607, version: 0.1.0
+Oct 22 19:07:10.820 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3129344/8388607, version: 0.1.0
+Oct 22 19:07:25.066 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3145728/8388607, version: 0.1.0
+Oct 22 19:07:39.273 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3162112/8388607, version: 0.1.0
+Oct 22 19:07:53.692 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3178496/8388607, version: 0.1.0
+Oct 22 19:08:08.021 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3194880/8388607, version: 0.1.0
+Oct 22 19:08:22.357 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3211264/8388607, version: 0.1.0
+Oct 22 19:08:36.529 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3227648/8388607, version: 0.1.0
+Oct 22 19:08:50.850 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3244032/8388607, version: 0.1.0
+Oct 22 19:09:06.634 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3260416/8388607, version: 0.1.0
+Oct 22 19:09:21.613 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3276800/8388607, version: 0.1.0
+Oct 22 19:09:36.106 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3293184/8388607, version: 0.1.0
+Oct 22 19:09:50.472 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3309568/8388607, version: 0.1.0
+Oct 22 19:10:05.161 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3325952/8388607, version: 0.1.0
+Oct 22 19:10:19.158 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3342336/8388607, version: 0.1.0
+Oct 22 19:10:33.998 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3358720/8388607, version: 0.1.0
+Oct 22 19:10:48.813 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3375104/8388607, version: 0.1.0
+Oct 22 19:11:03.410 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3391488/8388607, version: 0.1.0
+Oct 22 19:11:18.170 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3407872/8388607, version: 0.1.0
+Oct 22 19:11:32.746 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3424256/8388607, version: 0.1.0
+Oct 22 19:11:51.366 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3440640/8388607, version: 0.1.0
+Oct 22 19:12:05.610 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3457024/8388607, version: 0.1.0
+Oct 22 19:12:19.983 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3473408/8388607, version: 0.1.0
+Oct 22 19:12:34.497 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3489792/8388607, version: 0.1.0
+Oct 22 19:12:48.811 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3506176/8388607, version: 0.1.0
+Oct 22 19:13:03.533 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3522560/8388607, version: 0.1.0
+Oct 22 19:13:17.610 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3538944/8388607, version: 0.1.0
+Oct 22 19:13:31.325 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3555328/8388607, version: 0.1.0
+Oct 22 19:13:45.205 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3571712/8388607, version: 0.1.0
+Oct 22 19:13:59.566 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3588096/8388607, version: 0.1.0
+Oct 22 19:14:13.994 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3604480/8388607, version: 0.1.0
+Oct 22 19:14:29.006 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3620864/8388607, version: 0.1.0
+Oct 22 19:14:43.786 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3637248/8388607, version: 0.1.0
+Oct 22 19:14:58.608 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3653632/8388607, version: 0.1.0
+Oct 22 19:15:13.399 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3670016/8388607, version: 0.1.0
+Oct 22 19:15:28.810 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3686400/8388607, version: 0.1.0
+Oct 22 19:15:43.774 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3702784/8388607, version: 0.1.0
+Oct 22 19:15:58.330 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3719168/8388607, version: 0.1.0
+Oct 22 19:16:12.600 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3735552/8388607, version: 0.1.0
+Oct 22 19:16:27.064 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3751936/8388607, version: 0.1.0
+Oct 22 19:16:41.456 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3768320/8388607, version: 0.1.0
+Oct 22 19:16:55.569 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3784704/8388607, version: 0.1.0
+Oct 22 19:17:10.250 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3801088/8388607, version: 0.1.0
+Oct 22 19:17:24.158 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3817472/8388607, version: 0.1.0
+Oct 22 19:17:38.614 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3833856/8388607, version: 0.1.0
+Oct 22 19:17:52.428 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3850240/8388607, version: 0.1.0
+Oct 22 19:18:06.033 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3866624/8388607, version: 0.1.0
+Oct 22 19:18:19.944 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3883008/8388607, version: 0.1.0
+Oct 22 19:18:33.737 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3899392/8388607, version: 0.1.0
+Oct 22 19:18:47.556 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3915776/8388607, version: 0.1.0
+Oct 22 19:19:01.417 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3932160/8388607, version: 0.1.0
+Oct 22 19:19:15.138 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3948544/8388607, version: 0.1.0
+Oct 22 19:19:29.120 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3964928/8388607, version: 0.1.0
+Oct 22 19:19:43.010 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3981312/8388607, version: 0.1.0
+Oct 22 19:19:56.897 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 3997696/8388607, version: 0.1.0
+Oct 22 19:20:11.062 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4014080/8388607, version: 0.1.0
+Oct 22 19:20:25.769 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4030464/8388607, version: 0.1.0
+Oct 22 19:20:40.781 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4046848/8388607, version: 0.1.0
+Oct 22 19:20:55.489 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4063232/8388607, version: 0.1.0
+Oct 22 19:21:11.093 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4079616/8388607, version: 0.1.0
+Oct 22 19:21:25.857 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4096000/8388607, version: 0.1.0
+Oct 22 19:21:41.211 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4112384/8388607, version: 0.1.0
+Oct 22 19:21:57.232 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4128768/8388607, version: 0.1.0
+Oct 22 19:22:11.248 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4145152/8388607, version: 0.1.0
+Oct 22 19:22:25.934 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4161536/8388607, version: 0.1.0
+Oct 22 19:22:40.577 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4177920/8388607, version: 0.1.0
+Oct 22 19:22:55.168 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4194304/8388607, version: 0.1.0
+Oct 22 19:23:09.434 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4210688/8388607, version: 0.1.0
+Oct 22 19:23:24.394 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4227072/8388607, version: 0.1.0
+Oct 22 19:23:39.144 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4243456/8388607, version: 0.1.0
+Oct 22 19:23:53.267 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4259840/8388607, version: 0.1.0
+Oct 22 19:24:07.232 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4276224/8388607, version: 0.1.0
+Oct 22 19:24:21.274 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4292608/8388607, version: 0.1.0
+Oct 22 19:24:35.271 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4308992/8388607, version: 0.1.0
+Oct 22 19:24:49.070 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4325376/8388607, version: 0.1.0
+Oct 22 19:25:02.890 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4341760/8388607, version: 0.1.0
+Oct 22 19:25:17.321 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4358144/8388607, version: 0.1.0
+Oct 22 19:25:32.401 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4374528/8388607, version: 0.1.0
+Oct 22 19:25:46.270 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4390912/8388607, version: 0.1.0
+Oct 22 19:26:01.193 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4407296/8388607, version: 0.1.0
+Oct 22 19:26:15.036 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4423680/8388607, version: 0.1.0
+Oct 22 19:26:28.910 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4440064/8388607, version: 0.1.0
+Oct 22 19:26:42.744 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4456448/8388607, version: 0.1.0
+Oct 22 19:26:56.392 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4472832/8388607, version: 0.1.0
+Oct 22 19:27:10.184 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4489216/8388607, version: 0.1.0
+Oct 22 19:27:24.007 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4505600/8388607, version: 0.1.0
+Oct 22 19:27:38.118 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4521984/8388607, version: 0.1.0
+Oct 22 19:27:52.530 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4538368/8388607, version: 0.1.0
+Oct 22 19:28:06.478 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4554752/8388607, version: 0.1.0
+Oct 22 19:28:20.301 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4571136/8388607, version: 0.1.0
+Oct 22 19:28:34.051 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4587520/8388607, version: 0.1.0
+Oct 22 19:28:47.980 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4603904/8388607, version: 0.1.0
+Oct 22 19:29:01.942 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4620288/8388607, version: 0.1.0
+Oct 22 19:29:15.772 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4636672/8388607, version: 0.1.0
+Oct 22 19:29:29.561 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4653056/8388607, version: 0.1.0
+Oct 22 19:29:43.300 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4669440/8388607, version: 0.1.0
+Oct 22 19:29:57.081 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4685824/8388607, version: 0.1.0
+Oct 22 19:30:10.941 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4702208/8388607, version: 0.1.0
+Oct 22 19:30:24.774 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4718592/8388607, version: 0.1.0
+Oct 22 19:30:38.630 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4734976/8388607, version: 0.1.0
+Oct 22 19:30:52.429 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4751360/8388607, version: 0.1.0
+Oct 22 19:31:06.216 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4767744/8388607, version: 0.1.0
+Oct 22 19:31:20.057 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4784128/8388607, version: 0.1.0
+Oct 22 19:31:33.988 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4800512/8388607, version: 0.1.0
+Oct 22 19:31:50.965 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4816896/8388607, version: 0.1.0
+Oct 22 19:32:04.306 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4833280/8388607, version: 0.1.0
+Oct 22 19:32:17.993 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4849664/8388607, version: 0.1.0
+Oct 22 19:32:31.754 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4866048/8388607, version: 0.1.0
+Oct 22 19:32:45.533 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4882432/8388607, version: 0.1.0
+Oct 22 19:32:59.535 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4898816/8388607, version: 0.1.0
+Oct 22 19:33:13.319 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4915200/8388607, version: 0.1.0
+Oct 22 19:33:27.045 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4931584/8388607, version: 0.1.0
+Oct 22 19:33:41.041 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4947968/8388607, version: 0.1.0
+Oct 22 19:33:54.870 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4964352/8388607, version: 0.1.0
+Oct 22 19:34:08.640 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4980736/8388607, version: 0.1.0
+Oct 22 19:34:22.357 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 4997120/8388607, version: 0.1.0
+Oct 22 19:34:36.093 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5013504/8388607, version: 0.1.0
+Oct 22 19:34:49.887 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5029888/8388607, version: 0.1.0
+Oct 22 19:35:03.642 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5046272/8388607, version: 0.1.0
+Oct 22 19:35:17.466 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5062656/8388607, version: 0.1.0
+Oct 22 19:35:31.529 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5079040/8388607, version: 0.1.0
+Oct 22 19:35:45.206 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5095424/8388607, version: 0.1.0
+Oct 22 19:35:59.110 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5111808/8388607, version: 0.1.0
+Oct 22 19:36:12.850 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5128192/8388607, version: 0.1.0
+Oct 22 19:36:26.601 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5144576/8388607, version: 0.1.0
+Oct 22 19:36:40.378 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5160960/8388607, version: 0.1.0
+Oct 22 19:36:54.253 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5177344/8388607, version: 0.1.0
+Oct 22 19:37:08.006 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5193728/8388607, version: 0.1.0
+Oct 22 19:37:21.825 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5210112/8388607, version: 0.1.0
+Oct 22 19:37:35.837 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5226496/8388607, version: 0.1.0
+Oct 22 19:37:49.469 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5242880/8388607, version: 0.1.0
+Oct 22 19:38:03.250 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5259264/8388607, version: 0.1.0
+Oct 22 19:38:17.044 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5275648/8388607, version: 0.1.0
+Oct 22 19:38:30.822 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5292032/8388607, version: 0.1.0
+Oct 22 19:38:44.549 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5308416/8388607, version: 0.1.0
+Oct 22 19:38:58.495 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5324800/8388607, version: 0.1.0
+Oct 22 19:39:12.281 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5341184/8388607, version: 0.1.0
+Oct 22 19:39:26.178 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5357568/8388607, version: 0.1.0
+Oct 22 19:39:39.954 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5373952/8388607, version: 0.1.0
+Oct 22 19:39:53.710 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5390336/8388607, version: 0.1.0
+Oct 22 19:40:07.506 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5406720/8388607, version: 0.1.0
+Oct 22 19:40:21.319 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5423104/8388607, version: 0.1.0
+Oct 22 19:40:35.119 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5439488/8388607, version: 0.1.0
+Oct 22 19:40:48.942 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5455872/8388607, version: 0.1.0
+Oct 22 19:41:02.790 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5472256/8388607, version: 0.1.0
+Oct 22 19:41:16.516 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5488640/8388607, version: 0.1.0
+Oct 22 19:41:30.309 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5505024/8388607, version: 0.1.0
+Oct 22 19:41:46.624 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5521408/8388607, version: 0.1.0
+Oct 22 19:42:00.653 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5537792/8388607, version: 0.1.0
+Oct 22 19:42:14.037 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5554176/8388607, version: 0.1.0
+Oct 22 19:42:27.870 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5570560/8388607, version: 0.1.0
+Oct 22 19:42:41.689 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5586944/8388607, version: 0.1.0
+Oct 22 19:42:55.366 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5603328/8388607, version: 0.1.0
+Oct 22 19:43:09.169 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5619712/8388607, version: 0.1.0
+Oct 22 19:43:22.886 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5636096/8388607, version: 0.1.0
+Oct 22 19:43:36.544 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5652480/8388607, version: 0.1.0
+Oct 22 19:43:50.361 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5668864/8388607, version: 0.1.0
+Oct 22 19:44:04.074 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5685248/8388607, version: 0.1.0
+Oct 22 19:44:17.891 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5701632/8388607, version: 0.1.0
+Oct 22 19:44:31.609 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5718016/8388607, version: 0.1.0
+Oct 22 19:44:45.346 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5734400/8388607, version: 0.1.0
+Oct 22 19:44:59.006 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5750784/8388607, version: 0.1.0
+Oct 22 19:45:12.828 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5767168/8388607, version: 0.1.0
+Oct 22 19:45:26.568 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5783552/8388607, version: 0.1.0
+Oct 22 19:45:40.509 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5799936/8388607, version: 0.1.0
+Oct 22 19:45:54.245 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5816320/8388607, version: 0.1.0
+Oct 22 19:46:07.962 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5832704/8388607, version: 0.1.0
+Oct 22 19:46:21.730 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5849088/8388607, version: 0.1.0
+Oct 22 19:46:35.518 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5865472/8388607, version: 0.1.0
+Oct 22 19:46:49.282 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5881856/8388607, version: 0.1.0
+Oct 22 19:47:03.117 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5898240/8388607, version: 0.1.0
+Oct 22 19:47:16.906 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5914624/8388607, version: 0.1.0
+Oct 22 19:47:30.577 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5931008/8388607, version: 0.1.0
+Oct 22 19:47:44.682 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5947392/8388607, version: 0.1.0
+Oct 22 19:47:58.359 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5963776/8388607, version: 0.1.0
+Oct 22 19:48:12.138 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5980160/8388607, version: 0.1.0
+Oct 22 19:48:25.937 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 5996544/8388607, version: 0.1.0
+Oct 22 19:48:39.678 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6012928/8388607, version: 0.1.0
+Oct 22 19:48:53.429 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6029312/8388607, version: 0.1.0
+Oct 22 19:49:07.202 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6045696/8388607, version: 0.1.0
+Oct 22 19:49:21.066 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6062080/8388607, version: 0.1.0
+Oct 22 19:49:34.729 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6078464/8388607, version: 0.1.0
+Oct 22 19:49:48.612 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6094848/8388607, version: 0.1.0
+Oct 22 19:50:02.320 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6111232/8388607, version: 0.1.0
+Oct 22 19:50:16.126 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6127616/8388607, version: 0.1.0
+Oct 22 19:50:29.816 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6144000/8388607, version: 0.1.0
+Oct 22 19:50:43.592 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6160384/8388607, version: 0.1.0
+Oct 22 19:50:57.298 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6176768/8388607, version: 0.1.0
+Oct 22 19:51:11.219 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6193152/8388607, version: 0.1.0
+Oct 22 19:51:24.772 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6209536/8388607, version: 0.1.0
+Oct 22 19:51:39.644 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6225920/8388607, version: 0.1.0
+Oct 22 19:51:57.160 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6242304/8388607, version: 0.1.0
+Oct 22 19:52:10.829 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6258688/8388607, version: 0.1.0
+Oct 22 19:52:24.576 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6275072/8388607, version: 0.1.0
+Oct 22 19:52:38.294 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6291456/8388607, version: 0.1.0
+Oct 22 19:52:51.974 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6307840/8388607, version: 0.1.0
+Oct 22 19:53:05.767 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6324224/8388607, version: 0.1.0
+Oct 22 19:53:19.545 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6340608/8388607, version: 0.1.0
+Oct 22 19:53:33.318 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6356992/8388607, version: 0.1.0
+Oct 22 19:53:47.302 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6373376/8388607, version: 0.1.0
+Oct 22 19:54:00.999 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6389760/8388607, version: 0.1.0
+Oct 22 19:54:14.750 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6406144/8388607, version: 0.1.0
+Oct 22 19:54:28.599 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6422528/8388607, version: 0.1.0
+Oct 22 19:54:42.532 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6438912/8388607, version: 0.1.0
+Oct 22 19:54:57.425 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6455296/8388607, version: 0.1.0
+Oct 22 19:55:12.178 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6471680/8388607, version: 0.1.0
+Oct 22 19:55:26.993 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6488064/8388607, version: 0.1.0
+Oct 22 19:55:42.958 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6504448/8388607, version: 0.1.0
+Oct 22 19:55:58.473 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6520832/8388607, version: 0.1.0
+Oct 22 19:56:13.692 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6537216/8388607, version: 0.1.0
+Oct 22 19:56:28.794 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6553600/8388607, version: 0.1.0
+Oct 22 19:56:44.400 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6569984/8388607, version: 0.1.0
+Oct 22 19:56:59.616 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6586368/8388607, version: 0.1.0
+Oct 22 19:57:14.990 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6602752/8388607, version: 0.1.0
+Oct 22 19:57:30.283 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6619136/8388607, version: 0.1.0
+Oct 22 19:57:45.570 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6635520/8388607, version: 0.1.0
+Oct 22 19:58:00.554 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6651904/8388607, version: 0.1.0
+Oct 22 19:58:14.865 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6668288/8388607, version: 0.1.0
+Oct 22 19:58:29.274 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6684672/8388607, version: 0.1.0
+Oct 22 19:58:43.926 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6701056/8388607, version: 0.1.0
+Oct 22 19:58:58.284 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6717440/8388607, version: 0.1.0
+Oct 22 19:59:12.585 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6733824/8388607, version: 0.1.0
+Oct 22 19:59:26.922 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6750208/8388607, version: 0.1.0
+Oct 22 19:59:40.778 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6766592/8388607, version: 0.1.0
+Oct 22 19:59:55.801 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6782976/8388607, version: 0.1.0
+Oct 22 20:00:10.760 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6799360/8388607, version: 0.1.0
+Oct 22 20:00:25.417 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6815744/8388607, version: 0.1.0
+Oct 22 20:00:39.249 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6832128/8388607, version: 0.1.0
+Oct 22 20:00:53.629 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6848512/8388607, version: 0.1.0
+Oct 22 20:01:07.774 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6864896/8388607, version: 0.1.0
+Oct 22 20:01:21.634 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6881280/8388607, version: 0.1.0
+Oct 22 20:01:35.354 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6897664/8388607, version: 0.1.0
+Oct 22 20:01:54.068 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6914048/8388607, version: 0.1.0
+Oct 22 20:02:07.033 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6930432/8388607, version: 0.1.0
+Oct 22 20:02:20.662 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6946816/8388607, version: 0.1.0
+Oct 22 20:02:34.365 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6963200/8388607, version: 0.1.0
+Oct 22 20:02:48.129 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6979584/8388607, version: 0.1.0
+Oct 22 20:03:01.929 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 6995968/8388607, version: 0.1.0
+Oct 22 20:03:15.699 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7012352/8388607, version: 0.1.0
+Oct 22 20:03:29.458 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7028736/8388607, version: 0.1.0
+Oct 22 20:03:43.133 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7045120/8388607, version: 0.1.0
+Oct 22 20:03:57.209 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7061504/8388607, version: 0.1.0
+Oct 22 20:04:11.114 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7077888/8388607, version: 0.1.0
+Oct 22 20:04:24.942 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7094272/8388607, version: 0.1.0
+Oct 22 20:04:38.757 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7110656/8388607, version: 0.1.0
+Oct 22 20:04:52.557 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7127040/8388607, version: 0.1.0
+Oct 22 20:05:06.498 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7143424/8388607, version: 0.1.0
+Oct 22 20:05:20.218 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7159808/8388607, version: 0.1.0
+Oct 22 20:05:34.020 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7176192/8388607, version: 0.1.0
+Oct 22 20:05:47.953 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7192576/8388607, version: 0.1.0
+Oct 22 20:06:01.832 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7208960/8388607, version: 0.1.0
+Oct 22 20:06:15.686 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7225344/8388607, version: 0.1.0
+Oct 22 20:06:29.421 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7241728/8388607, version: 0.1.0
+Oct 22 20:06:43.122 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7258112/8388607, version: 0.1.0
+Oct 22 20:06:56.954 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7274496/8388607, version: 0.1.0
+Oct 22 20:07:10.759 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7290880/8388607, version: 0.1.0
+Oct 22 20:07:24.508 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7307264/8388607, version: 0.1.0
+Oct 22 20:07:38.381 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7323648/8388607, version: 0.1.0
+Oct 22 20:07:52.096 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7340032/8388607, version: 0.1.0
+Oct 22 20:08:06.141 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7356416/8388607, version: 0.1.0
+Oct 22 20:08:19.792 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7372800/8388607, version: 0.1.0
+Oct 22 20:08:33.596 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7389184/8388607, version: 0.1.0
+Oct 22 20:08:47.404 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7405568/8388607, version: 0.1.0
+Oct 22 20:09:01.193 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7421952/8388607, version: 0.1.0
+Oct 22 20:09:15.094 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7438336/8388607, version: 0.1.0
+Oct 22 20:09:28.824 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7454720/8388607, version: 0.1.0
+Oct 22 20:09:42.674 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7471104/8388607, version: 0.1.0
+Oct 22 20:09:56.513 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7487488/8388607, version: 0.1.0
+Oct 22 20:10:10.414 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7503872/8388607, version: 0.1.0
+Oct 22 20:10:24.177 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7520256/8388607, version: 0.1.0
+Oct 22 20:10:37.941 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7536640/8388607, version: 0.1.0
+Oct 22 20:10:51.834 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7553024/8388607, version: 0.1.0
+Oct 22 20:11:05.644 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7569408/8388607, version: 0.1.0
+Oct 22 20:11:19.469 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7585792/8388607, version: 0.1.0
+Oct 22 20:11:33.217 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7602176/8388607, version: 0.1.0
+Oct 22 20:11:52.121 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7618560/8388607, version: 0.1.0
+Oct 22 20:12:05.058 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7634944/8388607, version: 0.1.0
+Oct 22 20:12:18.806 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7651328/8388607, version: 0.1.0
+Oct 22 20:12:32.618 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7667712/8388607, version: 0.1.0
+Oct 22 20:12:46.453 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7684096/8388607, version: 0.1.0
+Oct 22 20:13:00.275 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7700480/8388607, version: 0.1.0
+Oct 22 20:13:14.075 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7716864/8388607, version: 0.1.0
+Oct 22 20:13:28.117 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7733248/8388607, version: 0.1.0
+Oct 22 20:13:41.899 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7749632/8388607, version: 0.1.0
+Oct 22 20:13:55.672 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7766016/8388607, version: 0.1.0
+Oct 22 20:14:09.642 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7782400/8388607, version: 0.1.0
+Oct 22 20:14:23.520 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7798784/8388607, version: 0.1.0
+Oct 22 20:14:38.089 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7815168/8388607, version: 0.1.0
+Oct 22 20:14:52.394 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7831552/8388607, version: 0.1.0
+Oct 22 20:15:07.665 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7847936/8388607, version: 0.1.0
+Oct 22 20:15:22.579 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7864320/8388607, version: 0.1.0
+Oct 22 20:15:37.452 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7880704/8388607, version: 0.1.0
+Oct 22 20:15:52.525 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7897088/8388607, version: 0.1.0
+Oct 22 20:16:07.946 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7913472/8388607, version: 0.1.0
+Oct 22 20:16:22.650 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7929856/8388607, version: 0.1.0
+Oct 22 20:16:37.834 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7946240/8388607, version: 0.1.0
+Oct 22 20:16:53.266 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7962624/8388607, version: 0.1.0
+Oct 22 20:17:08.860 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7979008/8388607, version: 0.1.0
+Oct 22 20:17:24.376 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 7995392/8388607, version: 0.1.0
+Oct 22 20:17:39.559 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8011776/8388607, version: 0.1.0
+Oct 22 20:17:54.746 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8028160/8388607, version: 0.1.0
+Oct 22 20:18:09.453 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8044544/8388607, version: 0.1.0
+Oct 22 20:18:24.593 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8060928/8388607, version: 0.1.0
+Oct 22 20:18:39.671 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8077312/8388607, version: 0.1.0
+Oct 22 20:18:54.376 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8093696/8388607, version: 0.1.0
+Oct 22 20:19:08.738 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8110080/8388607, version: 0.1.0
+Oct 22 20:19:23.216 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8126464/8388607, version: 0.1.0
+Oct 22 20:19:37.535 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8142848/8388607, version: 0.1.0
+Oct 22 20:19:52.000 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8159232/8388607, version: 0.1.0
+Oct 22 20:20:05.875 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8175616/8388607, version: 0.1.0
+Oct 22 20:20:20.254 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8192000/8388607, version: 0.1.0
+Oct 22 20:20:34.819 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8208384/8388607, version: 0.1.0
+Oct 22 20:20:49.684 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8224768/8388607, version: 0.1.0
+Oct 22 20:21:03.805 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8241152/8388607, version: 0.1.0
+Oct 22 20:21:18.398 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8257536/8388607, version: 0.1.0
+Oct 22 20:21:33.051 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8273920/8388607, version: 0.1.0
+Oct 22 20:21:51.473 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8290304/8388607, version: 0.1.0
+Oct 22 20:22:05.856 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8306688/8388607, version: 0.1.0
+Oct 22 20:22:19.912 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8323072/8388607, version: 0.1.0
+Oct 22 20:22:33.551 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8339456/8388607, version: 0.1.0
+Oct 22 20:22:47.382 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8355840/8388607, version: 0.1.0
+Oct 22 20:23:01.292 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG1: 8372224/8388607, version: 0.1.0
+Oct 22 20:23:15.379 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 0/4194304, version: 0.1.0
+Oct 22 20:23:38.970 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 8192/4194304, version: 0.1.0
+Oct 22 20:24:03.093 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 16384/4194304, version: 0.1.0
+Oct 22 20:24:26.846 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 24576/4194304, version: 0.1.0
+Oct 22 20:24:50.216 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 32768/4194304, version: 0.1.0
+Oct 22 20:25:14.338 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 40960/4194304, version: 0.1.0
+Oct 22 20:25:38.550 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 49152/4194304, version: 0.1.0
+Oct 22 20:26:01.849 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 57344/4194304, version: 0.1.0
+Oct 22 20:26:25.730 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 65536/4194304, version: 0.1.0
+Oct 22 20:26:49.206 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 73728/4194304, version: 0.1.0
+Oct 22 20:27:12.524 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 81920/4194304, version: 0.1.0
+Oct 22 20:27:36.054 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 90112/4194304, version: 0.1.0
+Oct 22 20:27:59.595 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 98304/4194304, version: 0.1.0
+Oct 22 20:28:23.187 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 106496/4194304, version: 0.1.0
+Oct 22 20:28:46.492 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 114688/4194304, version: 0.1.0
+Oct 22 20:29:09.963 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 122880/4194304, version: 0.1.0
+Oct 22 20:29:33.505 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 131072/4194304, version: 0.1.0
+Oct 22 20:29:58.768 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 139264/4194304, version: 0.1.0
+Oct 22 20:30:25.286 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 147456/4194304, version: 0.1.0
+Oct 22 20:30:51.510 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 155648/4194304, version: 0.1.0
+Oct 22 20:31:18.857 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 163840/4194304, version: 0.1.0
+Oct 22 20:31:51.162 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 172032/4194304, version: 0.1.0
+Oct 22 20:32:19.066 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 180224/4194304, version: 0.1.0
+Oct 22 20:32:45.133 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 188416/4194304, version: 0.1.0
+Oct 22 20:33:11.858 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 196608/4194304, version: 0.1.0
+Oct 22 20:33:38.987 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 204800/4194304, version: 0.1.0
+Oct 22 20:34:07.346 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 212992/4194304, version: 0.1.0
+Oct 22 20:34:35.333 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 221184/4194304, version: 0.1.0
+Oct 22 20:35:02.777 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 229376/4194304, version: 0.1.0
+Oct 22 20:35:28.918 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 237568/4194304, version: 0.1.0
+Oct 22 20:35:55.569 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 245760/4194304, version: 0.1.0
+Oct 22 20:36:21.177 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 253952/4194304, version: 0.1.0
+Oct 22 20:36:47.412 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 262144/4194304, version: 0.1.0
+Oct 22 20:37:12.200 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 270336/4194304, version: 0.1.0
+Oct 22 20:37:36.757 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 278528/4194304, version: 0.1.0
+Oct 22 20:38:01.270 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 286720/4194304, version: 0.1.0
+Oct 22 20:38:27.478 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 294912/4194304, version: 0.1.0
+Oct 22 20:38:55.842 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 303104/4194304, version: 0.1.0
+Oct 22 20:39:23.174 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 311296/4194304, version: 0.1.0
+Oct 22 20:39:49.956 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 319488/4194304, version: 0.1.0
+Oct 22 20:40:15.496 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 327680/4194304, version: 0.1.0
+Oct 22 20:40:40.374 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 335872/4194304, version: 0.1.0
+Oct 22 20:41:03.490 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 344064/4194304, version: 0.1.0
+Oct 22 20:41:26.181 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 352256/4194304, version: 0.1.0
+Oct 22 20:41:30.213 INFO Preparing phase 2 of power of tau, version: 0.1.0
+Oct 22 20:41:52.665 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 360448/4194304, version: 0.1.0
+[31;22m[ERROR] [39;1msnarkJS[0m: TypeError: Cannot read properties of undefined (reading '0')
+    at Object.copySection (/home/adityabisht64/.nvm/versions/node/v22.3.0/lib/node_modules/snarkjs/node_modules/@iden3/binfileutils/build/main.cjs:125:35)
+    at preparePhase2 (/home/adityabisht64/.nvm/versions/node/v22.3.0/lib/node_modules/snarkjs/build/cli.cjs:2614:35)
+    at async Object.powersOfTauPreparePhase2 [as action] (/home/adityabisht64/.nvm/versions/node/v22.3.0/lib/node_modules/snarkjs/build/cli.cjs:13288:5)
+    at async clProcessor (/home/adityabisht64/.nvm/versions/node/v22.3.0/lib/node_modules/snarkjs/build/cli.cjs:481:27)
+Error: Command `snarkjs` failed with status: exit status: 1
+Oct 22 20:42:14.071 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 368640/4194304, version: 0.1.0
+Oct 22 20:42:33.370 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 376832/4194304, version: 0.1.0
+Oct 22 20:42:52.753 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 385024/4194304, version: 0.1.0
+Oct 22 20:43:12.201 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 393216/4194304, version: 0.1.0
+Oct 22 20:43:31.758 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 401408/4194304, version: 0.1.0
+Oct 22 20:43:51.318 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 409600/4194304, version: 0.1.0
+Oct 22 20:44:10.728 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 417792/4194304, version: 0.1.0
+Oct 22 20:44:30.259 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 425984/4194304, version: 0.1.0
+Oct 22 20:44:50.018 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 434176/4194304, version: 0.1.0
+Oct 22 20:45:09.448 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 442368/4194304, version: 0.1.0
+Oct 22 20:45:29.024 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 450560/4194304, version: 0.1.0
+Oct 22 20:45:48.561 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 458752/4194304, version: 0.1.0
+Oct 22 20:46:08.190 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 466944/4194304, version: 0.1.0
+Oct 22 20:46:27.766 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 475136/4194304, version: 0.1.0
+Oct 22 20:46:47.507 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 483328/4194304, version: 0.1.0
+Oct 22 20:47:06.949 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 491520/4194304, version: 0.1.0
+Oct 22 20:47:26.483 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 499712/4194304, version: 0.1.0
+Oct 22 20:47:45.918 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 507904/4194304, version: 0.1.0
+Oct 22 20:48:05.420 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 516096/4194304, version: 0.1.0
+Oct 22 20:48:24.896 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 524288/4194304, version: 0.1.0
+Oct 22 20:48:44.630 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 532480/4194304, version: 0.1.0
+Oct 22 20:49:04.056 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 540672/4194304, version: 0.1.0
+Oct 22 20:49:23.440 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 548864/4194304, version: 0.1.0
+Oct 22 20:49:42.998 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 557056/4194304, version: 0.1.0
+Oct 22 20:50:02.429 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 565248/4194304, version: 0.1.0
+Oct 22 20:50:22.052 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 573440/4194304, version: 0.1.0
+Oct 22 20:50:41.698 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 581632/4194304, version: 0.1.0
+Oct 22 20:51:01.183 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 589824/4194304, version: 0.1.0
+Oct 22 20:51:20.706 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 598016/4194304, version: 0.1.0
+Oct 22 20:51:41.153 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 606208/4194304, version: 0.1.0
+Oct 22 20:52:05.022 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 614400/4194304, version: 0.1.0
+Oct 22 20:52:23.764 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 622592/4194304, version: 0.1.0
+Oct 22 20:52:43.448 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 630784/4194304, version: 0.1.0
+Oct 22 20:53:02.777 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 638976/4194304, version: 0.1.0
+Oct 22 20:53:22.414 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 647168/4194304, version: 0.1.0
+Oct 22 20:53:41.946 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 655360/4194304, version: 0.1.0
+Oct 22 20:54:01.481 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 663552/4194304, version: 0.1.0
+Oct 22 20:54:21.000 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 671744/4194304, version: 0.1.0
+Oct 22 20:54:40.516 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 679936/4194304, version: 0.1.0
+Oct 22 20:55:00.300 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 688128/4194304, version: 0.1.0
+Oct 22 20:55:19.785 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 696320/4194304, version: 0.1.0
+Oct 22 20:55:39.405 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 704512/4194304, version: 0.1.0
+Oct 22 20:55:58.885 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 712704/4194304, version: 0.1.0
+Oct 22 20:56:18.358 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 720896/4194304, version: 0.1.0
+Oct 22 20:56:37.857 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 729088/4194304, version: 0.1.0
+Oct 22 20:56:57.617 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 737280/4194304, version: 0.1.0
+Oct 22 20:57:17.279 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 745472/4194304, version: 0.1.0
+Oct 22 20:57:36.681 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 753664/4194304, version: 0.1.0
+Oct 22 20:57:56.220 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 761856/4194304, version: 0.1.0
+Oct 22 20:58:15.808 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 770048/4194304, version: 0.1.0
+Oct 22 20:58:35.282 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 778240/4194304, version: 0.1.0
+Oct 22 20:58:55.096 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 786432/4194304, version: 0.1.0
+Oct 22 20:59:14.539 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 794624/4194304, version: 0.1.0
+Oct 22 20:59:34.042 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 802816/4194304, version: 0.1.0
+Oct 22 20:59:53.579 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 811008/4194304, version: 0.1.0
+Oct 22 21:00:13.056 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 819200/4194304, version: 0.1.0
+Oct 22 21:00:32.549 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 827392/4194304, version: 0.1.0
+Oct 22 21:00:52.509 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 835584/4194304, version: 0.1.0
+Oct 22 21:01:11.971 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 843776/4194304, version: 0.1.0
+Oct 22 21:01:31.458 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 851968/4194304, version: 0.1.0
+Oct 22 21:01:55.958 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 860160/4194304, version: 0.1.0
+Oct 22 21:02:14.258 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 868352/4194304, version: 0.1.0
+Oct 22 21:02:33.601 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 876544/4194304, version: 0.1.0
+Oct 22 21:02:53.283 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 884736/4194304, version: 0.1.0
+Oct 22 21:03:12.736 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 892928/4194304, version: 0.1.0
+Oct 22 21:03:32.284 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 901120/4194304, version: 0.1.0
+Oct 22 21:03:53.682 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 909312/4194304, version: 0.1.0
+Oct 22 21:04:15.241 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 917504/4194304, version: 0.1.0
+Oct 22 21:04:37.068 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 925696/4194304, version: 0.1.0
+Oct 22 21:04:59.778 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 933888/4194304, version: 0.1.0
+Oct 22 21:05:21.516 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 942080/4194304, version: 0.1.0
+Oct 22 21:05:44.233 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 950272/4194304, version: 0.1.0
+Oct 22 21:06:06.439 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 958464/4194304, version: 0.1.0
+Oct 22 21:06:28.442 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 966656/4194304, version: 0.1.0
+Oct 22 21:06:49.263 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 974848/4194304, version: 0.1.0
+Oct 22 21:07:09.779 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 983040/4194304, version: 0.1.0
+Oct 22 21:07:30.679 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 991232/4194304, version: 0.1.0
+Oct 22 21:07:51.130 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 999424/4194304, version: 0.1.0
+Oct 22 21:08:11.777 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 1007616/4194304, version: 0.1.0
+Oct 22 21:08:32.473 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 1015808/4194304, version: 0.1.0
+Oct 22 21:08:53.848 INFO Command output, line: [36;22m[DEBUG] [39;1msnarkJS[0m: processing: tauG2: 1024000/4194304, version: 0.1.0

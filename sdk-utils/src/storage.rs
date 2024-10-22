@@ -7,8 +7,10 @@ use google_cloud_storage::{
         upload::{Media, UploadObjectRequest, UploadType},
     },
 };
+use relayer_utils::LOG;
 use reqwest_middleware::{reqwest, ClientBuilder};
 use reqwest_retry::{policies::ExponentialBackoff, Jitter, RetryTransientMiddleware};
+use slog::info;
 
 pub async fn get_client() -> Result<Client> {
     let retry_policy = ExponentialBackoff::builder()
@@ -49,16 +51,26 @@ pub async fn download_file(
         )
         .await?;
 
-    println!("Download path: {}", download_path);
+    info!(LOG, "Download path: {}", download_path);
     std::fs::write(download_path, data).expect("Unable to write file");
 
     Ok(())
 }
 
-pub async fn upload_file(client: &Client, bucket: String, file_path: String) -> Result<()> {
+pub async fn upload_file(
+    client: &Client,
+    bucket: String,
+    blueprint_id: String,
+    file_path: String,
+) -> Result<()> {
     let data = std::fs::read(file_path).expect("Unable to read file");
 
-    let upload_type = UploadType::Simple(Media::new("compiled_circuit.zip"));
+    info!(LOG, "Uploading file");
+    let upload_type = UploadType::Simple(Media {
+        name: format!("{}/compiled_circuit.zip", blueprint_id).into(),
+        content_type: "application/zip".to_string().into(),
+        content_length: None,
+    });
     client
         .upload_object(
             &UploadObjectRequest {
