@@ -24,6 +24,11 @@ RUN curl https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash 
 ENV NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
 ENV PATH=$NVM_DIR/v$NODE_VERSION/bin:$PATH
 
+# Install Foundry
+RUN curl -L https://foundry.paradigm.xyz | bash
+ENV PATH="/root/.foundry/bin:$PATH"
+RUN foundryup
+
 RUN npm install -g snarkjs
 
 COPY Cargo.* ./

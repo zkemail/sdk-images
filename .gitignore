@@ -6,3 +6,8 @@
 artifacts
 logs
 config.json
+cache
+broadcast
+
+contract.sol
+verifier.sol

@@ -1,10 +1,18 @@
-mod chain;
 mod config;
+mod contract;
+
+use std::collections::HashMap;
 
 use anyhow::Result;
-use chain::{create_contract, ContractData, Field};
+use config::Config;
+use contract::{
+    create_contract, deploy_verifier_contract, generate_verifier_contract, ContractData, Field,
+};
+use regex::Regex;
 use relayer_utils::LOG;
-use sdk_utils::{download_file, get_client, run_command, upload_file};
+use sdk_utils::{
+    download_file, get_client, run_command, run_command_and_return_output, upload_file,
+};
 use slog::info;
 
 #[tokio::main]
@@ -15,16 +23,14 @@ async fn main() -> Result<()> {
     let client = get_client().await?;
 
     // Read bucket and object from env
-    let bucket = std::env::var("BUCKET")?;
-    let blueprint_id = std::env::var("BLUEPRINT_ID")?;
-    let object = format!("{}/circuit.zip", blueprint_id);
+    let object = format!("{}/circuit.zip", config.blueprint_id);
 
     // Create an artifact folder if it doesn't exist
     std::fs::create_dir_all("artifacts")?;
 
     download_file(
         &client,
-        bucket.clone(),
+        config.bucket.clone(),
         object,
         "artifacts/compiled_circuit_with_keys.zip".to_string(),
     )
@@ -50,10 +56,17 @@ async fn main() -> Result<()> {
         }],
     })?;
 
+    info!(LOG, "Deploying verifier contract");
+    deploy_verifier_contract(config.clone()).await?;
+
+    // Clean up the artifacts folder
+    info!(LOG, "Cleaning up artifacts");
+    clean_up_artifacts("artifacts").await?;
+
     upload_file(
         &client,
-        bucket,
-        blueprint_id,
+        config.bucket,
+        config.blueprint_id,
         "artifacts/complete_circuit.zip".to_string(),
     )
     .await?;
@@ -61,27 +74,45 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn generate_verifier_contract(artifact_dir: &str) -> Result<()> {
-    // Unzip circuit files into the artifacts folder
-    info!(LOG, "Unzipping circuit");
+async fn clean_up_artifacts(artifact_dir: &str) -> Result<()> {
+    // Ensure the artifacts/src directory exists
+    run_command("mkdir", &["-p", "artifacts/src"], None).await?;
+
+    // Copy the src/contract.sol and src/verifier.sol file to a new src folder in the artifacts directory
     run_command(
-        "unzip",
-        &["-o", "compiled_circuit_with_keys.zip"],
-        Some(artifact_dir),
+        "cp",
+        &["src/contract.sol", "src/verifier.sol", "artifacts/src/"],
+        None,
     )
     .await?;
 
-    // Generate the verifier contract
-    info!(LOG, "Generating verifier contract");
+    // Copy node_modules to the artifacts folder
     run_command(
-        "snarkjs",
+        "cp",
+        &["-r", "node_modules", "artifacts/node_modules"],
+        None,
+    )
+    .await?;
+
+    // Copy Deply.s.sol, foundry.toml, package.json, remappings.txt, and yarn.lock to the artifacts folder
+    run_command(
+        "cp",
         &[
-            "zkey",
-            "export",
-            "solidityverifier",
-            "circuit.zkey",
-            "verifier.sol",
+            "Deploy.s.sol",
+            "foundry.toml",
+            "package.json",
+            "remappings.txt",
+            "yarn.lock",
+            "artifacts/",
         ],
+        None,
+    )
+    .await?;
+
+    // Zip the artifacts folder
+    run_command(
+        "zip",
+        &["-r", "complete_circuit.zip", "."],
         Some(artifact_dir),
     )
     .await?;
