@@ -61,13 +61,14 @@ pub async fn upload_file(
     client: &Client,
     bucket: String,
     blueprint_id: String,
+    name: String,
     file_path: String,
 ) -> Result<()> {
     let data = std::fs::read(file_path).expect("Unable to read file");
 
     info!(LOG, "Uploading file");
     let upload_type = UploadType::Simple(Media {
-        name: format!("{}/compiled_circuit.zip", blueprint_id).into(),
+        name: format!("{}/{}", blueprint_id, name).into(),
         content_type: "application/zip".to_string().into(),
         content_length: None,
     });

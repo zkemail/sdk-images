@@ -37,6 +37,7 @@ async fn main() -> Result<()> {
         &client,
         bucket,
         blueprint_id,
+        "compiled_circuit_with_keys.zip".to_string(),
         "artifacts/compiled_circuit_with_keys.zip".to_string(),
     )
     .await?;

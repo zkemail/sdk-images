@@ -5,7 +5,10 @@ FROM rust:latest
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    build-essential
+    build-essential \
+    nlohmann-json3-dev \
+    libgmp-dev \
+    nasm
 
 # Clone the Circom repository
 RUN git clone https://github.com/iden3/circom.git /circom

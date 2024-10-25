@@ -12,4 +12,4 @@ sdk-utils = { path = "../../sdk-utils" }
 handlebars = "6.1.0"
 serde = "1.0.213"
 serde_json = "1.0.132"
-regex = "1.11.0"
+regex = "1.10.6"

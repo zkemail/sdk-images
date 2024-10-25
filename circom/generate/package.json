@@ -1,0 +1,10 @@
+{
+  "name": "generate",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "@zk-email/circuits": "^6.2.0"
+  },
+  "author": "Aditya Bisht",
+  "license": "ISC"
+}

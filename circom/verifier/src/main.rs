@@ -67,6 +67,7 @@ async fn main() -> Result<()> {
         &client,
         config.bucket,
         config.blueprint_id,
+        "complete_circuit.zip".to_string(),
         "artifacts/complete_circuit.zip".to_string(),
     )
     .await?;
