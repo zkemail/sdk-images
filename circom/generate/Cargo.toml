@@ -13,6 +13,5 @@ tera = "1.20.0"
 tokio = { version = "1.41.0", features = ["full"] }
 uuid = { version = "1.11.0", features = ["serde"] }
 sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "migrate", "uuid", "time", "chrono"] }
-regex = "1.10.6"
-zk-regex-compiler = { path = "../../../zk-regex/packages/compiler" }
-sdk-utils = { path = "../../sdk-utils" }
+zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", branch = "main" }
+sdk-utils = { git = "https://github.com/zkemail/sdk-images", branch = "main" }

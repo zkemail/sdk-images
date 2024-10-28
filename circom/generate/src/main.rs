@@ -1,34 +1,27 @@
 mod blueprint;
 mod template;
 
-use blueprint::get_blueprint;
-use sqlx::postgres::PgPoolOptions;
+use blueprint::Payload;
 
 use anyhow::Result;
 use dotenv::dotenv;
-use sdk_utils::{get_client, run_command, upload_file};
+use sdk_utils::{run_command, upload_to_url};
 use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs};
-use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    let client = get_client().await?;
 
-    let bucket = std::env::var("BUCKET")?;
-    let database_url = std::env::var("DATABASE_URL")?;
-    let blueprint_id = std::env::var("BLUEPRINT_ID")?;
+    let payload: Payload = serde_json::from_str(
+        std::env::var("PAYLOAD")
+            .expect("PAYLOAD environment variable not set")
+            .as_str(),
+    )?;
 
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect(&database_url)
-        .await?;
-    println!("Database connection established");
+    let blueprint = payload.blueprint;
+    let upload_url = payload.upload_url;
 
     setup().await?;
-
-    let blueprint =
-        get_blueprint(&pool, Uuid::parse_str(&blueprint_id).expect("Invalid UUID")).await?;
 
     generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
 
@@ -42,14 +35,7 @@ async fn main() -> Result<()> {
 
     cleanup().await?;
 
-    upload_file(
-        &client,
-        bucket,
-        blueprint_id,
-        "circuit.zip".to_string(),
-        "artifacts/circuit.zip".to_string(),
-    )
-    .await?;
+    upload_to_url(&upload_url, "./artifacts/circuit.zip").await?;
 
     Ok(())
 }
@@ -77,7 +63,17 @@ async fn cleanup() -> Result<()> {
     run_command("mv", &["regex", "artifacts/regex"], None).await?;
 
     // Move package.json and yarn.lock to artifacts
-    run_command("cp", &["package.json", "artifacts/package.json"], None).await?;
+    run_command(
+        "cp",
+        &[
+            "package.json",
+            "artifacts/package.json",
+            "yarn.lock",
+            "artifacts/yarn.lock",
+        ],
+        None,
+    )
+    .await?;
 
     // Zip everything in artifacts
     run_command("zip", &["-r", "circuit.zip", "."], Some("artifacts")).await?;
