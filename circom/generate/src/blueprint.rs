@@ -1,18 +1,20 @@
-use chrono::NaiveDateTime;
-use serde::{Deserialize, Serialize};
+use std::fmt;
+
+use serde::{
+    de::{self, Visitor},
+    Deserialize, Deserializer, Serialize,
+};
 use uuid::Uuid;
 
 // Enums and Structs
 
-#[derive(Serialize, Deserialize, Debug, sqlx::Type, Clone)]
-#[sqlx(type_name = "zk_framework_enum", rename_all = "lowercase")]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ZkFramework {
     Circom,
     // Add other variants as needed
 }
 
-#[derive(Serialize, Deserialize, Debug, sqlx::Type, Clone)]
-#[sqlx(type_name = "status_enum", rename_all = "lowercase")]
+#[derive(Serialize, Debug, Clone)]
 pub enum Status {
     Draft,
     InProgress,
@@ -21,18 +23,50 @@ pub enum Status {
     // Add other variants as needed
 }
 
+impl<'de> Deserialize<'de> for Status {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct StatusVisitor;
+
+        impl<'de> Visitor<'de> for StatusVisitor {
+            type Value = Status;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an integer between 1 and 4")
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Status, E>
+            where
+                E: de::Error,
+            {
+                match value {
+                    1 => Ok(Status::Draft),
+                    2 => Ok(Status::InProgress),
+                    3 => Ok(Status::Done),
+                    4 => Ok(Status::Failed),
+                    _ => Err(de::Error::invalid_value(
+                        de::Unexpected::Unsigned(value),
+                        &self,
+                    )),
+                }
+            }
+        }
+
+        deserializer.deserialize_u64(StatusVisitor)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExternalInput {
     pub name: String,
-    #[serde(rename = "maxLength")]
     pub max_length: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DecomposedRegexPart {
-    #[serde(rename = "isPublic")]
     pub is_public: bool,
-    #[serde(rename = "regexDef")]
     pub regex_def: String,
 }
 
@@ -40,9 +74,14 @@ pub struct DecomposedRegexPart {
 pub struct DecomposedRegex {
     pub parts: Vec<DecomposedRegexPart>,
     pub name: String,
-    #[serde(rename = "maxLength")]
     pub max_length: i32,
     pub location: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Timestamp {
+    seconds: usize,
+    nanos: usize,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -65,8 +104,8 @@ pub struct Blueprint {
     pub enable_body_masking: Option<bool>,
     pub zk_framework: Option<ZkFramework>,
     pub is_public: Option<bool>,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub created_at: Option<Timestamp>,
+    pub updated_at: Option<Timestamp>,
     pub external_inputs: Option<Vec<ExternalInput>>,
     pub decomposed_regexes: Vec<DecomposedRegex>,
     pub status: Option<Status>,

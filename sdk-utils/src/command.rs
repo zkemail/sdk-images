@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use relayer_utils::LOG;
 use slog::info;
 use std::{
-    io::{BufRead, BufReader, Read, Write},
+    io::{BufRead, BufReader, Write},
     process::{Command, Stdio},
 };
 

@@ -63,17 +63,7 @@ async fn cleanup() -> Result<()> {
     run_command("mv", &["regex", "artifacts/regex"], None).await?;
 
     // Move package.json and yarn.lock to artifacts
-    run_command(
-        "cp",
-        &[
-            "package.json",
-            "artifacts/package.json",
-            "yarn.lock",
-            "artifacts/yarn.lock",
-        ],
-        None,
-    )
-    .await?;
+    run_command("cp", &["package.json", "yarn.lock", "artifacts/"], None).await?;
 
     // Zip everything in artifacts
     run_command("zip", &["-r", "circuit.zip", "."], Some("artifacts")).await?;
