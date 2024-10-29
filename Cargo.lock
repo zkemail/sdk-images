@@ -513,7 +513,7 @@ dependencies = [
  "anyhow",
  "dotenv",
  "relayer-utils",
- "sdk-utils 0.1.0",
+ "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=main)",
  "serde_json",
  "slog",
  "tokio",
