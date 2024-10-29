@@ -62,7 +62,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             } else {
                 "Body".to_string()
             };
-            let max_length_of_location = if location == "header" {
+            let max_length_of_location = if location == "Header" {
                 email_header_max_length
             } else {
                 email_body_max_length
