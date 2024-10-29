@@ -6,7 +6,9 @@ use slog::info;
 
 #[derive(Deserialize)]
 pub struct Payload {
+    #[serde(rename = "downloadUrl")]
     pub download_url: String,
+    #[serde(rename = "uploadUrl")]
     pub upload_url: String,
 }
 
