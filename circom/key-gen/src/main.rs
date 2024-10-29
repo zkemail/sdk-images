@@ -26,11 +26,7 @@ async fn main() -> Result<()> {
 
     generate_keys("artifacts").await?;
 
-    upload_to_url(
-        &payload.upload_url,
-        "artifacts/compiled_circuit_with_keys.zip",
-    )
-    .await?;
+    upload_to_url(&payload.upload_url, "artifacts/keys.zip").await?;
 
     Ok(())
 }
@@ -143,11 +139,11 @@ async fn generate_keys(artifact_dir: &str) -> Result<()> {
     )
     .await?;
 
-    // Zip all the files except compiled_circuit.zip
-    info!(LOG, "Zipping all files");
+    // Zip circuit.zkey and verification_key.json
+    info!(LOG, "Zipping circuit.zkey and verification_key.json");
     run_command(
         "zip",
-        &["-r", "compiled_circuit_with_keys.zip", "."],
+        &["keys.zip", "circuit.zkey", "verification_key.json"],
         Some(artifact_dir),
     )
     .await?;
