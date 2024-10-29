@@ -53,7 +53,7 @@ async fn compile_circuit(circuit_path: &str) -> Result<()> {
 
     // Run make in the circuit_cpp folder
     info!(LOG, "Running make");
-    run_command("make", &[], Some("artifacts/circuit_cpp")).await?;
+    run_command("make", &["-j$(nproc)"], Some("artifacts/circuit_cpp")).await?;
 
     // Copy r1cs and sym files to the circuit_cpp folder
     info!(LOG, "Copying r1cs and sym files");
