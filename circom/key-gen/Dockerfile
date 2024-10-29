@@ -5,7 +5,8 @@ FROM rust:latest
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    build-essential
+    build-essential \
+    zip
 
 WORKDIR /
 
@@ -30,6 +31,6 @@ COPY Cargo.* ./
 
 COPY src ./src
 
-RUN cargo build --release
+RUN cargo build
 
-CMD ["./target/release/circom-key-gen"]
+CMD ["cargo", "run"]

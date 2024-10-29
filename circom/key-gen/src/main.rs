@@ -4,8 +4,8 @@ use rand::Rng;
 use regex::Regex;
 use relayer_utils::LOG;
 use sdk_utils::{
-    download_file, get_client, run_command, run_command_and_return_output, run_command_with_input,
-    upload_file,
+    download_from_url, run_command, run_command_and_return_output, run_command_with_input,
+    upload_to_url, Payload,
 };
 use slog::info;
 
@@ -13,32 +13,22 @@ use slog::info;
 async fn main() -> Result<()> {
     dotenv().ok();
 
-    let client = get_client().await?;
-
-    // Read bucket and object from env
-    let bucket = std::env::var("BUCKET")?;
-    let blueprint_id = std::env::var("BLUEPRINT_ID")?;
-    let object = format!("{}/compiled_circuit.zip", blueprint_id);
+    let payload: Payload = serde_json::from_str(
+        std::env::var("PAYLOAD")
+            .expect("PAYLOAD environment variable not set")
+            .as_str(),
+    )?;
 
     // Create an artifact folder if it doesn't exist
     std::fs::create_dir_all("artifacts")?;
 
-    download_file(
-        &client,
-        bucket.clone(),
-        object,
-        "artifacts/compiled_circuit.zip".to_string(),
-    )
-    .await?;
+    download_from_url(&payload.download_url, "artifacts/compiled_circuit.zip").await?;
 
     generate_keys("artifacts").await?;
 
-    upload_file(
-        &client,
-        bucket,
-        blueprint_id,
-        "compiled_circuit_with_keys.zip".to_string(),
-        "artifacts/compiled_circuit_with_keys.zip".to_string(),
+    upload_to_url(
+        &payload.upload_url,
+        "artifacts/compiled_circuit_with_keys.zip",
     )
     .await?;
 

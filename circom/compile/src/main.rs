@@ -1,41 +1,27 @@
 use anyhow::Result;
 use dotenv::dotenv;
 use relayer_utils::LOG;
-use sdk_utils::{download_file, get_client, run_command, upload_file};
+use sdk_utils::{download_from_url, run_command, upload_to_url, Payload};
 use slog::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
 
-    let client = get_client().await?;
-
-    // Read bucket and object from env
-    let bucket = std::env::var("BUCKET")?;
-    let blueprint_id = std::env::var("BLUEPRINT_ID")?;
-    let object = format!("{}/circuit.zip", blueprint_id);
+    let payload: Payload = serde_json::from_str(
+        std::env::var("PAYLOAD")
+            .expect("PAYLOAD environment variable not set")
+            .as_str(),
+    )?;
 
     // Create an artifact folder if it doesn't exist
     std::fs::create_dir_all("artifacts")?;
 
-    download_file(
-        &client,
-        bucket.clone(),
-        object,
-        "artifacts/circuit.zip".to_string(),
-    )
-    .await?;
+    download_from_url(&payload.download_url, "artifacts/circuit.zip").await?;
 
     compile_circuit("artifacts/circuit.zip").await?;
 
-    upload_file(
-        &client,
-        bucket,
-        blueprint_id,
-        "compiled_circuit.zip".to_string(),
-        "artifacts/circuit_cpp/compiled_circuit.zip".to_string(),
-    )
-    .await?;
+    upload_to_url(&payload.upload_url, "artifacts/compiled_circuit.zip").await?;
 
     Ok(())
 }
