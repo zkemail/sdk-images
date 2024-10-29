@@ -512,6 +512,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dotenv",
+ "num_cpus",
  "relayer-utils",
  "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=main)",
  "serde_json",
