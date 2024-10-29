@@ -38,6 +38,8 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
 
     {% if remove_soft_line_breaks %}
     signal input decodedEmailBodyIn[maxBodyLength];
+
+    EV.decodedEmailBodyIn <== decodedEmailBodyIn;
     {% endif %}
 
     {% if enable_body_masking %}
