@@ -10,20 +10,13 @@ use contract::{
 };
 use regex::Regex;
 use relayer_utils::LOG;
-use sdk_utils::{
-    download_file, get_client, run_command, run_command_and_return_output, upload_file,
-};
+use sdk_utils::{download_from_url, run_command, run_command_and_return_output, upload_to_url};
 use slog::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let config = config::load_config()?;
+    let payload = config::load_config()?;
     info!(LOG, "Loaded configuration: {:?}", config);
-
-    let client = get_client().await?;
-
-    // Read bucket and object from env
-    let object = format!("{}/circuit.zip", config.blueprint_id);
 
     // Create an artifact folder if it doesn't exist
     std::fs::create_dir_all("artifacts")?;

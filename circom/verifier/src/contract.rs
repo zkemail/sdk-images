@@ -8,7 +8,7 @@ use sdk_utils::{run_command, run_command_and_return_output};
 use serde::{Deserialize, Serialize};
 use slog::info;
 
-use crate::config::Config;
+use crate::config::Payload;
 
 #[derive(Serialize)]
 pub struct ContractData {
@@ -74,7 +74,7 @@ pub async fn generate_verifier_contract(artifact_dir: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn deploy_verifier_contract(config: Config) -> Result<()> {
+pub async fn deploy_verifier_contract(payload: Payload) -> Result<()> {
     info!(LOG, "Building contracts");
     run_command("yarn", &["build"], None).await?;
 
@@ -98,7 +98,7 @@ pub async fn deploy_verifier_contract(config: Config) -> Result<()> {
         &[
             "verify-contract",
             "--chain-id",
-            config.chain_id.to_string().as_str(),
+            payload.chain_id.to_string().as_str(),
             contract_addresses.get("Groth16Verifier").unwrap(),
             "src/verifier.sol:Groth16Verifier",
         ],
@@ -111,7 +111,7 @@ pub async fn deploy_verifier_contract(config: Config) -> Result<()> {
         &[
             "verify-contract",
             "--chain-id",
-            config.chain_id.to_string().as_str(),
+            payload.chain_id.to_string().as_str(),
             contract_addresses.get("Contract").unwrap(),
             "src/contract.sol:Contract",
         ],

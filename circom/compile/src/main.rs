@@ -21,7 +21,11 @@ async fn main() -> Result<()> {
 
     compile_circuit("artifacts/circuit.zip").await?;
 
-    upload_to_url(&payload.upload_url, "artifacts/compiled_circuit.zip").await?;
+    upload_to_url(
+        &payload.upload_url,
+        "artifacts/circuit_cpp/compiled_circuit.zip",
+    )
+    .await?;
 
     Ok(())
 }
