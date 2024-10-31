@@ -1,12 +1,17 @@
-mod blueprint;
 mod template;
-
-use blueprint::Payload;
 
 use anyhow::Result;
 use dotenv::dotenv;
-use sdk_utils::{run_command, upload_to_url};
+use sdk_utils::{run_command, upload_to_url, Blueprint};
+use serde::{Deserialize, Serialize};
 use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Payload {
+    pub blueprint: Blueprint,
+    #[serde(rename = "uploadUrl")]
+    pub upload_url: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {

@@ -1,11 +1,10 @@
 use std::collections::VecDeque;
 
 use anyhow::Result;
+use sdk_utils::{compute_signal_length, Blueprint, DecomposedRegex};
 use serde::Serialize;
 use tera::{Context, Tera};
 use zk_regex_compiler::{gen_circom_from_decomposed_regex, DecomposedRegexConfig, RegexPartConfig};
-
-use crate::blueprint::{Blueprint, DecomposedRegex};
 
 #[derive(Serialize)]
 struct Regex {
@@ -107,10 +106,6 @@ impl From<Blueprint> for CircuitTemplateInputs {
             public_args_string,
         }
     }
-}
-
-fn compute_signal_length(max_length: usize) -> usize {
-    (max_length / 31) + if max_length % 31 != 0 { 1 } else { 0 }
 }
 
 pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result<String> {

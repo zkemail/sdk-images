@@ -5,36 +5,25 @@ FROM rust:latest
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    build-essential
+    build-essential \
+    zip \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs
+
+# Install Yarn via npm
+RUN npm install -g snarkjs
 
 WORKDIR /
-
-ENV NVM_DIR=/usr/local/nvm
-ENV NODE_VERSION=22
-
-RUN mkdir -p /usr/local/nvm
-
-# Install nvm with node and npm
-RUN curl https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
-    && . $NVM_DIR/nvm.sh \
-    && nvm install $NODE_VERSION \
-    && nvm alias default $NODE_VERSION \
-    && nvm use default
-
-ENV NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
-ENV PATH=$NVM_DIR/v$NODE_VERSION/bin:$PATH
 
 # Install Foundry
 RUN curl -L https://foundry.paradigm.xyz | bash
 ENV PATH="/root/.foundry/bin:$PATH"
 RUN foundryup
 
-RUN npm install -g snarkjs
-
 COPY Cargo.* ./
 
 COPY src ./src
 
-RUN cargo build --release
+RUN cargo build
 
-CMD ["./target/release/circom-verifier"]
+CMD ["cargo", "run"]

@@ -61,7 +61,7 @@ impl<'de> Deserialize<'de> for Status {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExternalInput {
     pub name: String,
-    pub max_length: i32,
+    pub max_length: usize,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -74,7 +74,7 @@ pub struct DecomposedRegexPart {
 pub struct DecomposedRegex {
     pub parts: Vec<DecomposedRegexPart>,
     pub name: String,
-    pub max_length: i32,
+    pub max_length: usize,
     pub location: String,
 }
 
@@ -97,8 +97,8 @@ pub struct Blueprint {
     pub ignore_body_hash_check: Option<bool>,
     pub remove_soft_line_breaks: Option<bool>,
     pub sha_precompute_selector: Option<String>,
-    pub email_header_max_length: Option<i32>,
-    pub email_body_max_length: Option<i32>,
+    pub email_header_max_length: Option<usize>,
+    pub email_body_max_length: Option<usize>,
     pub sender_domain: Option<String>,
     pub enable_header_masking: Option<bool>,
     pub enable_body_masking: Option<bool>,
@@ -109,14 +109,7 @@ pub struct Blueprint {
     pub external_inputs: Option<Vec<ExternalInput>>,
     pub decomposed_regexes: Vec<DecomposedRegex>,
     pub status: Option<Status>,
-    pub verifier_contract_chain: Option<i32>,
+    pub verifier_contract_chain: Option<usize>,
     pub verifier_contract_address: Option<String>,
-    pub version: Option<i32>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Payload {
-    pub blueprint: Blueprint,
-    #[serde(rename = "uploadUrl")]
-    pub upload_url: String,
+    pub version: Option<usize>,
 }

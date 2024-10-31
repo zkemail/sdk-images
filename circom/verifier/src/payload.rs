@@ -1,25 +1,30 @@
 use std::env;
 
 use anyhow::Result;
+use dotenv::dotenv;
 use relayer_utils::LOG;
+use sdk_utils::Blueprint;
 use serde::Deserialize;
 use slog::info;
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Payload {
+    pub blueprint: Blueprint,
     pub download_url: String,
-    pub blueprint_id: String,
+    pub upload_url: String,
     pub database_url: String,
     pub private_key: String,
     pub rpc_url: String,
     pub chain_id: u32,
     pub etherscan_api_key: String,
-    pub dkim_registry: String,
+    pub dkim_registry_address: String,
 }
 
-// Function to load the configuration from a JSON file
-pub fn load_config() -> Result<Payload> {
+// Function to load the payload
+pub fn load_payload() -> Result<Payload> {
+    dotenv().ok();
+
     let payload: Payload = serde_json::from_str(
         std::env::var("PAYLOAD")
             .expect("PAYLOAD environment variable not set")
@@ -42,8 +47,8 @@ pub fn load_config() -> Result<Payload> {
     if payload.etherscan_api_key != "" {
         env::set_var("ETHERSCAN_API_KEY", &payload.etherscan_api_key);
     }
-    if payload.dkim_registry != "" {
-        env::set_var("DKIM_REGISTRY", &payload.dkim_registry);
+    if payload.dkim_registry_address != "" {
+        env::set_var("DKIM_REGISTRY", &payload.dkim_registry_address);
     }
 
     Ok(payload)

@@ -1,5 +1,7 @@
 /target
 
+tmp
+circuit.zkey
 node_modules
 **/.env
 **/credentials.json
