@@ -485,10 +485,7 @@ checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
- "js-sys",
  "num-traits",
- "serde",
- "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -1762,14 +1759,12 @@ name = "generate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "chrono",
  "dotenv",
  "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=main)",
  "serde",
  "serde_json",
  "tera",
  "tokio",
- "uuid 1.11.0",
  "zk-regex-compiler",
 ]
 
@@ -3975,13 +3970,14 @@ dependencies = [
 [[package]]
 name = "sdk-utils"
 version = "0.1.0"
-source = "git+https://github.com/zkemail/sdk-images?branch=main#b7bda5af303e284ae88198e304115c5b64c557f6"
+source = "git+https://github.com/zkemail/sdk-images?branch=main#a05fdafd090a7697645032101789a9b85fa9a5f8"
 dependencies = [
  "anyhow",
  "relayer-utils",
  "reqwest 0.12.9",
  "serde",
  "slog",
+ "uuid 1.11.0",
 ]
 
 [[package]]

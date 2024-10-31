@@ -5,12 +5,10 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.91"
-chrono = { version = "0.4.38", features = ["serde"] }
 dotenv = "0.15.0"
 serde = { version = "1.0.213", features = ["derive"] }
 serde_json = "1.0.132"
 tera = "1.20.0"
 tokio = { version = "1.41.0", features = ["full"] }
-uuid = { version = "1.11.0", features = ["serde"] }
 zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", branch = "main" }
 sdk-utils = { git = "https://github.com/zkemail/sdk-images", branch = "main" }
