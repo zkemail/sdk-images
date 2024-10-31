@@ -20,9 +20,7 @@ RUN curl -L https://foundry.paradigm.xyz | bash
 ENV PATH="/root/.foundry/bin:$PATH"
 RUN foundryup
 
-COPY Cargo.* ./
-
-COPY src ./src
+COPY . .
 
 RUN cargo build
 
