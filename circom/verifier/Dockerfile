@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y nodejs
 
 # Install Yarn via npm
-RUN npm install -g snarkjs
+RUN npm install -g snarkjs yarn
 
 WORKDIR /
 
