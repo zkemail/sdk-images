@@ -1,51 +1,27 @@
-FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
+# Use the official Rust image as the base
+FROM rust:latest
 
-RUN apt-get update && apt-get upgrade -y 
-# Update the package list and install necessary dependencies
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
-    cmake \
-    build-essential \
-    pkg-config \
-    libssl-dev \
-    libgmp-dev \
-    libffi-dev \
-    libsodium-dev \
-    nasm \
+# Install necessary packages and Node.js 22.x
+RUN apt-get update && apt-get install -y \
     git \
-    awscli \
-    gcc \
-    nodejs \
-    npm \
     curl \
-    m4 \
-    python3 \
-    python3-pip \
-    python3-dev \
-    wget \
-    software-properties-common \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    nlohmann-json3-dev \
+    libgmp-dev \
+    nasm \
+    zip \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs
 
-# Install gsutil via pip
-RUN pip3 install gsutil
+# Install Yarn via npm
+RUN npm install -g yarn
 
-# Verify gsutil installation
-RUN gsutil version -l
+WORKDIR /
 
-COPY proofgen.sh /root/proofgen.sh
-WORKDIR /root
-RUN chmod +x proofgen.sh
+# Copy the Cargo files and source code
+COPY Cargo.* ./
+COPY src ./src
 
-RUN git clone https://github.com/Orbiter-Finance/rapidsnark.git rapidsnark
-WORKDIR /root/rapidsnark
-RUN yarn
-RUN git submodule init
-RUN git submodule update
-RUN ./build_gmp.sh host
-RUN mkdir build_prover
-WORKDIR /root/rapidsnark/build_prover
-RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package -DNVML_LIBRARY=/usr/local/cuda-12.4/targets/x86_64-linux/lib/stubs/libnvidia-ml.so
-RUN make -j$(nproc) && make install
-RUN chmod +x ../package/bin/prover_cuda
-WORKDIR /root
+RUN cargo build
+
+CMD ["cargo", "run"]
