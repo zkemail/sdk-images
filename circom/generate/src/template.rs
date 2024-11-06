@@ -66,12 +66,12 @@ impl From<Blueprint> for CircuitTemplateInputs {
                     "emailBody".to_string()
                 }
             };
-            let max_length_of_location = if location == "Header" {
+            let max_length_of_location = if regex.location == "header" {
                 email_header_max_length
             } else {
                 email_body_max_length
             };
-            let max_length_of_location_name = if location == "Header" {
+            let max_length_of_location_name = if regex.location == "header" {
                 "maxHeaderLength".to_string()
             } else {
                 "maxBodyLength".to_string()
