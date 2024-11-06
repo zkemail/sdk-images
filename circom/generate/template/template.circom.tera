@@ -52,8 +52,8 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% endif %}
 
     {% if enable_header_masking %}
-    signal input headerMask[maxHeadersLength];
-    signal output maskedHeader[maxHeadersLength];
+    signal input headerMask[maxHeaderLength];
+    signal output maskedHeader[maxHeaderLength];
     
     EV.headerMask <== headerMask;
     {% endif %}
@@ -76,7 +76,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     var {{ regex.name }}MaxLength = {{ regex.max_length }};
     signal {{ regex.name }}RegexOut, {{ regex.name }}RegexReveal[{{ regex.max_length_of_location }}];
 
-    ({{ regex.name }}RegexOut, {{ regex.name }}RegexReveal) <== {{ regex.regex_circuit_name }}(max{{ regex.location }}Length)(email{{ regex.location }});
+    ({{ regex.name }}RegexOut, {{ regex.name }}RegexReveal) <== {{ regex.regex_circuit_name }}(max{{ regex.location }}Length)({{ regex.location }});
 
     {{ regex.name }}RegexOut === 1;
 

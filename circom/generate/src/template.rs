@@ -57,9 +57,13 @@ impl From<Blueprint> for CircuitTemplateInputs {
             let max_length = regex.max_length as usize;
             let regex_circuit_name = format!("{}Regex", regex.name);
             let location = if regex.location == "header" {
-                "Header".to_string()
+                "emailHeader".to_string()
             } else {
-                "Body".to_string()
+                if remove_soft_line_breaks {
+                    "decodedEmailBodyIn".to_string()
+                } else {
+                    "emailBody".to_string()
+                }
             };
             let max_length_of_location = if location == "Header" {
                 email_header_max_length
