@@ -14,6 +14,7 @@ struct Regex {
     regex_circuit_name: String, // Computed field
     location: String,
     max_length_of_location: usize,
+    max_length_of_location_name: String, // Computed field
 }
 
 #[derive(Serialize)]
@@ -70,6 +71,11 @@ impl From<Blueprint> for CircuitTemplateInputs {
             } else {
                 email_body_max_length
             };
+            let max_length_of_location_name = if location == "Header" {
+                "maxHeaderLength".to_string()
+            } else {
+                "maxBodyLength".to_string()
+            };
             regexes.push(Regex {
                 name,
                 uppercased_name,
@@ -77,6 +83,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 regex_circuit_name,
                 location,
                 max_length_of_location,
+                max_length_of_location_name,
             });
         }
 

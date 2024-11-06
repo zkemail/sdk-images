@@ -76,12 +76,12 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     var {{ regex.name }}MaxLength = {{ regex.max_length }};
     signal {{ regex.name }}RegexOut, {{ regex.name }}RegexReveal[{{ regex.max_length_of_location }}];
 
-    ({{ regex.name }}RegexOut, {{ regex.name }}RegexReveal) <== {{ regex.regex_circuit_name }}(max{{ regex.location }}Length)({{ regex.location }});
+    ({{ regex.name }}RegexOut, {{ regex.name }}RegexReveal) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }})({{ regex.location }});
 
     {{ regex.name }}RegexOut === 1;
 
     signal output {{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
-    {{ regex.name }}PackedOut <== PackRegexReveal(max{{ regex.location }}Length, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
+    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
     {% endfor %}
 }
 
