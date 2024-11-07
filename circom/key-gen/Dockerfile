@@ -20,4 +20,6 @@ COPY src ./src
 
 RUN cargo build
 
+ENV NODE_OPTIONS=--max_old_space_size=65536
+
 CMD ["cargo", "run"]
