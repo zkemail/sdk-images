@@ -16,4 +16,5 @@ regex = "1.10.6"
 tera = "1.20.0"
 sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "migrate", "uuid", "time", "chrono", "runtime-tokio-rustls"] }
 dotenv = "0.15.0"
+base64 = "0.22.1"
 

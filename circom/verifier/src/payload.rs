@@ -25,11 +25,15 @@ pub struct Payload {
 pub fn load_payload() -> Result<Payload> {
     dotenv().ok();
 
-    let payload: Payload = serde_json::from_str(
-        std::env::var("PAYLOAD")
-            .expect("PAYLOAD environment variable not set")
-            .as_str(),
-    )?;
+    // Decode the base64-encoded PAYLOAD environment variable
+    let decoded_payload =
+        base64::decode(std::env::var("PAYLOAD").expect("PAYLOAD environment variable not set"))?;
+
+    // Convert the decoded bytes to a string
+    let payload_str = String::from_utf8(decoded_payload)?;
+
+    // Deserialize the JSON string into a Payload struct
+    let payload: Payload = serde_json::from_str(&payload_str)?;
 
     // Setting ENV
     info!(LOG, "Setting ENV variables");

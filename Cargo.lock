@@ -526,6 +526,7 @@ name = "circom-compile"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "dotenv",
  "num_cpus",
  "relayer-utils",
@@ -540,6 +541,7 @@ name = "circom-key-gen"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "dotenv",
  "rand",
  "regex",
@@ -555,6 +557,7 @@ name = "circom-verifier"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "dotenv",
  "handlebars",
  "regex",
@@ -1759,6 +1762,7 @@ name = "generate"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "dotenv",
  "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=main)",
  "serde",

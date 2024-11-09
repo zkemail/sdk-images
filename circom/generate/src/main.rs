@@ -17,11 +17,15 @@ pub struct Payload {
 async fn main() -> Result<()> {
     dotenv().ok();
 
-    let payload: Payload = serde_json::from_str(
-        std::env::var("PAYLOAD")
-            .expect("PAYLOAD environment variable not set")
-            .as_str(),
-    )?;
+    // Decode the base64-encoded PAYLOAD environment variable
+    let decoded_payload =
+        base64::decode(std::env::var("PAYLOAD").expect("PAYLOAD environment variable not set"))?;
+
+    // Convert the decoded bytes to a string
+    let payload_str = String::from_utf8(decoded_payload)?;
+
+    // Deserialize the JSON string into a Payload struct
+    let payload: Payload = serde_json::from_str(&payload_str)?;
 
     let blueprint = payload.blueprint;
     let upload_url = payload.upload_url;

@@ -12,3 +12,4 @@ tera = "1.20.0"
 tokio = { version = "1.41.0", features = ["full"] }
 zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", branch = "main" }
 sdk-utils = { git = "https://github.com/zkemail/sdk-images", branch = "main" }
+base64 = "0.22.1"
