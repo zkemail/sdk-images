@@ -27,23 +27,23 @@ async fn main() -> Result<()> {
     let blueprint = payload.blueprint;
     let upload_url = payload.upload_url;
 
-    setup().await?;
+    // setup().await?;
 
-    generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
+    // generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
 
     let circuit_template_inputs = CircuitTemplateInputs::from(blueprint);
 
-    let circuit = generate_circuit(circuit_template_inputs)?;
+    // let circuit = generate_circuit(circuit_template_inputs)?;
 
-    // Write the circuit to a file
-    let circuit_path = "./tmp/circuit.circom";
-    std::fs::write(circuit_path, circuit)?;
+    // // Write the circuit to a file
+    // let circuit_path = "./tmp/circuit.circom";
+    // std::fs::write(circuit_path, circuit)?;
 
     let ptau: usize = compile_circuit("tmp/circuit.zip").await?;
 
     println!("ptau: {}", ptau);
 
-    // generate_keys("tmp", ptau).await?;
+    generate_keys("tmp", ptau).await?;
 
     Ok(())
 }
@@ -117,12 +117,35 @@ async fn compile_circuit(circuit_path: &str) -> Result<usize> {
 
     println!("k: {}", k);
 
+    // Find current directory
+    let current_dir = std::env::current_dir()?;
+    let current_dir_str = current_dir.to_str().unwrap_or("");
+
+    // Get Home directory
+    let home_dir = std::env::var("HOME")?;
+    let home_dir_str = home_dir.as_str();
+
     // Run make in the circuit_cpp folder
-    info!(LOG, "Compiling circuit");
+    info!(LOG, "Compiling circuit binary");
     run_command(
-        "circuit-compile",
-        &["--cpp", "circuit.cpp"],
-        Some("tmp/circuit_cpp"),
+        "bazel-bin/circomlib/build/compile_witness_generator",
+        &[
+            "--cpp",
+            &format!("{}/tmp/circuit_cpp/circuit.cpp", current_dir_str),
+        ],
+        Some(format!("{}/tachyon/vendors/circom", home_dir_str).as_str()),
+    )
+    .await?;
+
+    // Move the binary
+    info!(LOG, "Copying binary");
+    run_command(
+        "mv",
+        &[
+            "witness_generator",
+            &format!("{}/tmp/circuit_cpp/circuit", current_dir_str),
+        ],
+        Some(format!("{}/tachyon/vendors/circom", home_dir_str).as_str()),
     )
     .await?;
 
