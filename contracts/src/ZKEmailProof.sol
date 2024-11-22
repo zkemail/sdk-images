@@ -13,6 +13,10 @@ struct ZKEmailProofMetadata {
     string publicOutputs;
 }
 
+/**
+ * @title ZKEmailProof
+ * @notice A soulbound NFT contract that represents valid ZK Email proofs
+ */
 contract ZKEmailProof is ERC721, ERC721URIStorage {
     using Strings for uint256;
     using Strings for address;
@@ -27,6 +31,15 @@ contract ZKEmailProof is ERC721, ERC721URIStorage {
 
     constructor() ERC721("ZKEmailProof", "ZKEP") {}
 
+    /**
+     * @notice Mints a new soulbound NFT representing a ZK email proof
+     * @dev First element of proof must be the recipient address
+     * @param to Address to mint the NFT to
+     * @param blueprintId ID of the blueprint used for the proof
+     * @param proof Proof
+     * @param verifier Address of the verifier contract
+     * @param publicOutputs String of public outputs from the proof
+     */
     function safeMint(
         address to,
         uint256 blueprintId,
@@ -52,6 +65,11 @@ contract ZKEmailProof is ERC721, ERC721URIStorage {
         _setTokenURI(tokenId, tokenURI(tokenId));
     }
 
+    /**
+     * @notice Generates the token URI containing metadata for a given token
+     * @param tokenId ID of the token to generate the URI for
+     * @return Base64 encoded JSON metadata string
+     */
     function tokenURI(
         uint256 tokenId
     ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
@@ -97,18 +115,36 @@ contract ZKEmailProof is ERC721, ERC721URIStorage {
             );
     }
 
+    /**
+     * @notice Checks if contract supports an interface
+     * @param interfaceId Interface identifier to check
+     * @return bool indicating if interface is supported
+     */
     function supportsInterface(
         bytes4 interfaceId
     ) public view override(ERC721, ERC721URIStorage) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
+    /**
+     * @notice Gets the metadata for a given owner's NFT
+     * @param owner Address to get metadata for
+     * @return ZKEmailProofMetadata struct containing the NFT metadata
+     */
     function getMetadata(
         address owner
     ) public view returns (ZKEmailProofMetadata memory) {
         return ownerToMetadata[owner];
     }
 
+    /**
+     * @notice Internal function to handle token transfers
+     * @dev Overridden to prevent token transfers, thus making the NFTs soulbound
+     * @param to Address to transfer to
+     * @param tokenId ID of token being transferred
+     * @param auth Address authorized to make transfer
+     * @return Address token was transferred from
+     */
     function _update(
         address to,
         uint256 tokenId,
