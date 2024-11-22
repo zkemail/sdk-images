@@ -49,8 +49,8 @@ contract ZKEmailProof_SafeMint_Test is Test {
         address verifier = address(0x789);
         string memory publicOutputs = "Test Public Outputs";
 
-        vm.expectRevert(ZKEmailProof.OwnerNotInProof.selector);
         vm.prank(alice);
+        vm.expectRevert(ZKEmailProof.OwnerNotInProof.selector);
         zkEmailProof.safeMint(
             alice,
             blueprintId,
