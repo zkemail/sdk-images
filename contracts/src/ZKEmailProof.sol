@@ -149,7 +149,7 @@ contract ZKEmailProof is ERC721, Ownable {
             metadata.blueprintId.toString(),
             '" },',
             _buildProofJson(metadata.proof),
-            '{ "trait_type": "Public Outputs", "value": ',
+            ', { "trait_type": "Public Outputs", "value": ',
             _buildPublicOutputsJson(metadata.publicOutputs),
             " },",
             '{ "trait_type": "Decoded Public Outputs", "value": {',
