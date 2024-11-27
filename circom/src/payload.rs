@@ -11,13 +11,24 @@ use slog::info;
 #[serde(rename_all = "camelCase")]
 pub struct Payload {
     pub blueprint: Blueprint,
-    pub upload_url: String,
+    pub upload_url: UploadUrls,
     pub database_url: String,
     pub private_key: String,
     pub rpc_url: String,
     pub chain_id: u32,
     pub etherscan_api_key: String,
     pub dkim_registry_address: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UploadUrls {
+    pub circuit: String,
+    pub circuit_cpp: String,
+    pub circuit_wasm: String,
+    pub witness_calculator: String,
+    pub circuit_zkey: String,
+    pub vk: String,
 }
 
 // Function to load the payload

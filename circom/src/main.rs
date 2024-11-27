@@ -9,9 +9,13 @@ use anyhow::Result;
 use contract::{
     create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
 };
+use db::update_db;
+use payload::UploadUrls;
 use rand::Rng;
 use relayer_utils::LOG;
-use sdk_utils::{run_command, run_command_and_return_output, run_command_with_input};
+use sdk_utils::{
+    run_command, run_command_and_return_output, run_command_with_input, upload_to_url,
+};
 use slog::info;
 use sqlx::postgres::PgPoolOptions;
 use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs};
@@ -28,13 +32,12 @@ async fn main() -> Result<()> {
     println!("Database connection established");
 
     let blueprint = payload.clone().blueprint;
-    let upload_url = payload.clone().upload_url;
 
     setup().await?;
 
     generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
 
-    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint);
+    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint.clone());
 
     let circuit = generate_circuit(circuit_template_inputs)?;
 
@@ -54,9 +57,21 @@ async fn main() -> Result<()> {
 
     generate_verifier_contract("tmp").await?;
 
-    let contract_address = deploy_verifier_contract(payload).await?;
+    let contract_address = deploy_verifier_contract(payload.clone()).await?;
 
     info!(LOG, "Contract deployed at: {}", contract_address);
+
+    cleanup().await?;
+
+    update_db(
+        &pool,
+        blueprint.id.expect("No ID found"),
+        &contract_address,
+        ptau as i32,
+    )
+    .await?;
+
+    upload_files(payload.upload_url)?;
 
     Ok(())
 }
@@ -230,6 +245,83 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
         Some(tmp_dir),
     )
     .await?;
+
+    Ok(())
+}
+
+async fn cleanup() -> Result<()> {
+    info!(LOG, "Cleaning up");
+    // std::fs::remove_file("./tmp/circuit_0000.zkey")?;
+    // std::fs::remove_file("./tmp/pot_final.ptau")?;
+
+    run_command("cp", &["remappings.txt", "./tmp"], None).await?;
+    run_command("cp", &["package.json", "./tmp"], None).await?;
+    run_command("cp", &["foundry.toml", "./tmp"], None).await?;
+    run_command("cp", &["Deploy.s.sol", "./tmp"], None).await?;
+
+    info!(LOG, "Zipping files");
+    run_command(
+        "zip",
+        &[
+            "-r",
+            "circuit.zip",
+            "regex",
+            "circuit.circom",
+            "contract.sol",
+            "Deploy.s.sol",
+            "foundry.toml",
+            "package.json",
+            "remappings.txt",
+            "verifier.sol",
+        ],
+        Some("tmp"),
+    )
+    .await?;
+
+    run_command(
+        "zip",
+        &["-r", "circuit_cpp.zip", "."],
+        Some("tmp/circuit_cpp"),
+    )
+    .await?;
+
+    run_command(
+        "zip",
+        &["-r", "circuit_zkey.zip", "circuit.zkey"],
+        Some("tmp"),
+    )
+    .await?;
+
+    run_command("mv", &["verification_key.json", "vk.json"], Some("tmp")).await?;
+
+    Ok(())
+}
+
+fn upload_files(upload_urls: UploadUrls) -> Result<()> {
+    info!(LOG, "Uploading files");
+
+    upload_to_url(&upload_urls.circuit, "./tmp/circuit.zip", "application/zip")?;
+    upload_to_url(
+        &upload_urls.circuit_cpp,
+        "./tmp/circuit_cpp.zip",
+        "application/zip",
+    )?;
+    upload_to_url(
+        &upload_urls.circuit_zkey,
+        "./tmp/circuit_zkey.zip",
+        "application/zip",
+    )?;
+    upload_to_url(&upload_urls.vk, "./tmp/vk.json", "application/json")?;
+    upload_to_url(
+        &upload_urls.witness_calculator,
+        "./tmp/circuit_js/witness_calculator.js",
+        "application/octet-stream",
+    )?;
+    upload_to_url(
+        &upload_urls.circuit_wasm,
+        "./tmp/circuit_js/circuit.wasm",
+        "application/wasm",
+    )?;
 
     Ok(())
 }
