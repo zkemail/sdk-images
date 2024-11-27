@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
     )
     .await?;
 
-    upload_files(payload.upload_url)?;
+    upload_files(payload.upload_url).await?;
 
     Ok(())
 }
@@ -297,31 +297,35 @@ async fn cleanup() -> Result<()> {
     Ok(())
 }
 
-fn upload_files(upload_urls: UploadUrls) -> Result<()> {
+async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
     info!(LOG, "Uploading files");
 
-    upload_to_url(&upload_urls.circuit, "./tmp/circuit.zip", "application/zip")?;
+    upload_to_url(&upload_urls.circuit, "./tmp/circuit.zip", "application/zip").await?;
     upload_to_url(
         &upload_urls.circuit_cpp,
         "./tmp/circuit_cpp.zip",
         "application/zip",
-    )?;
+    )
+    .await?;
     upload_to_url(
         &upload_urls.circuit_zkey,
         "./tmp/circuit_zkey.zip",
         "application/zip",
-    )?;
-    upload_to_url(&upload_urls.vk, "./tmp/vk.json", "application/json")?;
+    )
+    .await?;
+    upload_to_url(&upload_urls.vk, "./tmp/vk.json", "application/json").await?;
     upload_to_url(
         &upload_urls.witness_calculator,
         "./tmp/circuit_js/witness_calculator.js",
         "application/octet-stream",
-    )?;
+    )
+    .await?;
     upload_to_url(
         &upload_urls.circuit_wasm,
         "./tmp/circuit_js/circuit.wasm",
         "application/wasm",
-    )?;
+    )
+    .await?;
 
     Ok(())
 }
