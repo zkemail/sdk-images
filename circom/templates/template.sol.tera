@@ -16,7 +16,6 @@ contract Contract is Ownable {
     // Prover Constants (Auto-generated)
     // ============================
     uint16 public constant pack_size = 31;
-    uint16 public constant pubkey_hash_len = 1;
     string public constant domain = "{{ sender_domain }}";
 
 {% for field in values %}
@@ -27,17 +26,12 @@ contract Contract is Ownable {
     uint16 public constant {{ field.name }}_len = {{ field.pack_size }};
 {% endfor %}
 
-    // ============================
-    // Nullifier
-    // ============================
-    // mapping (string => bool) public nullifiers;    
-
     constructor (IDKIMRegistry r, Groth16Verifier v) Ownable(msg.sender) {
         dkimRegistry = r;
         verifier = v;
     }
 
-    function verify(uint[2] calldata a, uint[2][2] calldata b, uint[2] calldata c, uint[{{ signal_size }}] calldata signals) external {
+    function verify(uint[2] calldata a, uint[2][2] calldata b, uint[2] calldata c, uint[{{ signal_size }}] calldata signals) external view {
         // verify RSA
         bytes32 ph = bytes32(signals[0]);
         require(dkimRegistry.isDKIMPublicKeyHashValid(domain, ph), "RSA public key incorrect");
@@ -51,6 +45,8 @@ contract Contract is Ownable {
         string memory {{ field.name }}_string = StringUtils.convertPackedBytesToString(packed_{{ field.name }}, pack_size * {{ field.name }}_len, pack_size); 
 {% endfor %}
 
+        address proverETHAddress = address(uint160(signals[{{ prover_eth_address_idx }}]));
+
 {% for field in external_inputs %}
         // unpack {{ field.name }}
         uint[] memory packed_{{ field.name }} = new uint[]({{ field.name }}_len);
@@ -60,10 +56,7 @@ contract Contract is Ownable {
         string memory {{ field.name }}_string = StringUtils.convertPackedBytesToString(packed_{{ field.name }}, pack_size * {{ field.name }}_len, pack_size); 
 {% endfor %}
 
-        // require(!nullifiers[handleString], "Unique handle required");
-
         // verify proof
-        require(verifier.verifyProof(a,b,c,signals));
-        // nullifiers[handleString] = true;
+        require(verifier.verifyProof(a,b,c,signals), "Invalid proof");
     }
 }

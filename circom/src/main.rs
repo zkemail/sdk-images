@@ -6,6 +6,9 @@ mod template;
 use std::cmp::max;
 
 use anyhow::Result;
+use contract::{
+    create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
+};
 use rand::Rng;
 use relayer_utils::LOG;
 use sdk_utils::{run_command, run_command_and_return_output, run_command_with_input};
@@ -18,32 +21,42 @@ async fn main() -> Result<()> {
     let payload = payload::load_payload()?;
     info!(LOG, "Loaded configuration: {:?}", payload);
 
-    // let pool = PgPoolOptions::new()
-    //     .max_connections(10)
-    //     .connect(&payload.database_url)
-    //     .await?;
-    // println!("Database connection established");
+    let pool = PgPoolOptions::new()
+        .max_connections(10)
+        .connect(&payload.database_url)
+        .await?;
+    println!("Database connection established");
 
-    let blueprint = payload.blueprint;
-    let upload_url = payload.upload_url;
+    let blueprint = payload.clone().blueprint;
+    let upload_url = payload.clone().upload_url;
 
-    // setup().await?;
+    setup().await?;
 
-    // generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
+    generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
 
     let circuit_template_inputs = CircuitTemplateInputs::from(blueprint);
 
-    // let circuit = generate_circuit(circuit_template_inputs)?;
+    let circuit = generate_circuit(circuit_template_inputs)?;
 
-    // // Write the circuit to a file
-    // let circuit_path = "./tmp/circuit.circom";
-    // std::fs::write(circuit_path, circuit)?;
+    // Write the circuit to a file
+    let circuit_path = "./tmp/circuit.circom";
+    std::fs::write(circuit_path, circuit)?;
 
     let ptau: usize = compile_circuit("tmp/circuit.zip").await?;
 
     println!("ptau: {}", ptau);
 
     generate_keys("tmp", ptau).await?;
+
+    let contract_data = prepare_contract_data(&payload);
+
+    create_contract(&contract_data)?;
+
+    generate_verifier_contract("tmp").await?;
+
+    let contract_address = deploy_verifier_contract(payload).await?;
+
+    info!(LOG, "Contract deployed at: {}", contract_address);
 
     Ok(())
 }

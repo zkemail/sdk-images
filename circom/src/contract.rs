@@ -16,6 +16,7 @@ pub struct ContractData {
     pub values: Vec<Field>,
     pub external_inputs: Vec<Field>,
     pub signal_size: usize,
+    pub prover_eth_address_idx: usize,
 }
 
 #[derive(Serialize)]
@@ -29,24 +30,32 @@ pub struct Field {
 pub fn create_contract(contract_data: &ContractData) -> Result<()> {
     // Initialize Tera
     let mut tera = Tera::default();
-    tera.add_template_file("./template/contract.sol.tera", Some("contract.sol"))?;
+    tera.add_template_file("./templates/template.sol.tera", Some("contract.sol"))?;
 
     let mut context = Context::new();
     context.insert("sender_domain", &contract_data.sender_domain);
     context.insert("values", &contract_data.values);
     context.insert("external_inputs", &contract_data.external_inputs);
     context.insert("signal_size", &contract_data.signal_size);
+    context.insert(
+        "prover_eth_address_idx",
+        &contract_data.prover_eth_address_idx,
+    );
 
     let rendered_contract = tera.render("contract.sol", &context)?;
 
+    let re = regex::Regex::new(r"\n+").unwrap();
+
+    let cleaned_contract = re.replace_all(&rendered_contract, "\n").to_string();
+
     // Write the rendered template to a file
-    std::fs::write("src/contract.sol", rendered_contract)?;
+    std::fs::write("tmp/contract.sol", cleaned_contract)?;
 
     Ok(())
 }
 
 pub fn prepare_contract_data(payload: &Payload) -> ContractData {
-    let mut signal_size = 1; // Start with 1 as per your logic
+    let mut signal_size = 2; // Start with 1 as per your logic
     let mut current_idx = 1; // Start index for the first field
 
     let mut values = Vec::new();
@@ -62,6 +71,9 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
         current_idx += pack_size;
         values.push(field);
     }
+
+    let prover_eth_address_idx = current_idx;
+    current_idx += 1; // Add 1 prover ETH address
 
     let mut external_inputs = Vec::new();
     if let Some(inputs) = &payload.blueprint.external_inputs {
@@ -90,14 +102,11 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
         values,
         external_inputs,
         signal_size,
+        prover_eth_address_idx,
     }
 }
 
 pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
-    // Unzip circuit files into the tmps folder
-    info!(LOG, "Unzipping circuit");
-    run_command("unzip", &["-o", "keys.zip"], Some(tmp_dir)).await?;
-
     // Generate the verifier contract
     info!(LOG, "Generating verifier contract");
     run_command(
@@ -109,15 +118,6 @@ pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
             "circuit.zkey",
             "verifier.sol",
         ],
-        Some(tmp_dir),
-    )
-    .await?;
-
-    // Copy the verifier contract to the src folder
-    info!(LOG, "Copying verifier contract");
-    run_command(
-        "cp",
-        &["verifier.sol", "../src/verifier.sol"],
         Some(tmp_dir),
     )
     .await?;
@@ -143,6 +143,20 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         info!(LOG, "Deployed {} at address: {}", contract_name, address);
     }
 
+    // Write constructor arguments to a file
+    info!(LOG, "Writing constructor arguments to a file");
+    let constructor_args = run_command_and_return_output(
+        "cast",
+        &[
+            "abi-encode",
+            "constructor(address,address)",
+            contract_addresses.get("DKIMRegistry").unwrap(),
+            contract_addresses.get("Groth16Verifier").unwrap(),
+        ],
+        None,
+    )
+    .await?;
+
     info!(LOG, "Verify contracts");
     run_command(
         "forge",
@@ -151,7 +165,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             "--chain-id",
             payload.chain_id.to_string().as_str(),
             contract_addresses.get("Groth16Verifier").unwrap(),
-            "src/verifier.sol:Groth16Verifier",
+            "tmp/verifier.sol:Groth16Verifier",
         ],
         None,
     )
@@ -163,8 +177,10 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             "verify-contract",
             "--chain-id",
             payload.chain_id.to_string().as_str(),
+            "--constructor-args",
+            &constructor_args,
             contract_addresses.get("Contract").unwrap(),
-            "src/contract.sol:Contract",
+            "tmp/contract.sol:Contract",
         ],
         None,
     )

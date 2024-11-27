@@ -14,6 +14,8 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     signal input pubkey[k]; // RSA pubkey, verified with smart contract + DNSSEC proof. Split up into k parts of n bits each.
     signal input signature[k]; // RSA signature. Split up into k parts of n bits each.
 
+    signal input proverETHAddress;
+
     {% for external_input in external_inputs %}
     signal input {{ external_input.name }}[{{ external_input.signal_length }}];
     {% endfor %}
@@ -85,8 +87,4 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% endfor %}
 }
 
-{% if public_args_length > 0 %}
-component main { public [{{ public_args_string }}] } = {{ circuit_name }}({{ email_header_max_length }}, {% if ignore_body_hash_check %}0{% else %}{{ email_body_max_length }}{% endif %}, 121, 17, 7);
-{% else %}
-component main = {{ circuit_name }}({{ email_header_max_length }}, {% if ignore_body_hash_check %}0{% else %}{{ email_body_max_length }}{% endif %}, 121, 17, 7);
-{% endif %}
+component main { public [proverETHAddress{{ public_args_string }}] } = {{ circuit_name }}({{ email_header_max_length }}, {% if ignore_body_hash_check %}0{% else %}{{ email_body_max_length }}{% endif %}, 121, 17, 7);

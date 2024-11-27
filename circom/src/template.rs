@@ -35,7 +35,6 @@ pub struct CircuitTemplateInputs {
     remove_soft_line_breaks: bool,
     regexes: Vec<Regex>,
     external_inputs: Vec<ExternalInput>,
-    public_args_length: usize,  // Computed field
     public_args_string: String, // Computed field
 }
 
@@ -100,8 +99,10 @@ impl From<Blueprint> for CircuitTemplateInputs {
         }
 
         let public_args: Vec<String> = external_inputs.iter().map(|i| i.name.clone()).collect();
-        let public_args_length = public_args.len();
-        let public_args_string = public_args.join(", ");
+        let mut public_args_string = public_args.join(", ");
+        if !public_args_string.is_empty() {
+            public_args_string.insert_str(0, ", ");
+        }
 
         CircuitTemplateInputs {
             circuit_name,
@@ -113,7 +114,6 @@ impl From<Blueprint> for CircuitTemplateInputs {
             remove_soft_line_breaks,
             regexes,
             external_inputs,
-            public_args_length,
             public_args_string,
         }
     }
@@ -154,10 +154,6 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
     );
     context.insert("regexes", &circuit_template_input.regexes);
     context.insert("external_inputs", &circuit_template_input.external_inputs);
-    context.insert(
-        "public_args_length",
-        &circuit_template_input.public_args_length,
-    );
     context.insert(
         "public_args_string",
         &circuit_template_input.public_args_string,

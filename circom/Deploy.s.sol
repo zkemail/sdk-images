@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import "@zk-email/contracts/DKIMRegistry.sol";
-import "./src/verifier.sol";
-import "./src/contract.sol";
+import "./tmp/verifier.sol";
+import "./tmp/contract.sol";
 
 contract Deploy is Script {
     IDKIMRegistry dkimRegistry;
@@ -29,6 +29,8 @@ contract Deploy is Script {
             dkimRegistry = new DKIMRegistry(msg.sender);
             dkimRegistryAddr = address(dkimRegistry);
         }
+
+        dkimRegistry = IDKIMRegistry(dkimRegistryAddr);
 
         Groth16Verifier verifier = new Groth16Verifier();
         Contract circuitContract = new Contract(dkimRegistry, verifier);
