@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.13;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -15,6 +15,7 @@ struct Proof {
 
 struct ZKEmailProofMetadata {
     uint256 blueprintId;
+    address verifier;
     Proof proof;
     uint256[] publicOutputs;
     string decodedPublicOutputs;
@@ -33,36 +34,60 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
     error OnlyVerifier();
     error InvalidVerifier();
 
-    address public verifier;
+    // Mapping of addresses that are allowed to mint NFTs
+    mapping(address => bool) public verifiers;
 
     uint256 private _nextTokenId;
 
-    mapping(address owner => ZKEmailProofMetadata metadata)
-        private _ownerToMetadata;
+    mapping(address => ZKEmailProofMetadata) private _ownerToMetadata;
 
     modifier onlyVerifier() {
-        if (msg.sender != verifier) {
+        if (!verifiers[msg.sender]) {
             revert OnlyVerifier();
         }
         _;
     }
 
-    constructor(
-        address initialOwner
-    ) ERC721("ZKEmailProof", "ZKEP") Ownable(initialOwner) {}
+    constructor(address initialOwner) ERC721("ZKEmailProof", "ZKEP") {
+        _transferOwnership(initialOwner);
+    }
+
+    /**
+     * @notice Adds a verifier contract. Can only be called by the owner
+     * @param _verifier The new verifier contract address
+     */
+    function addVerifier(address _verifier) external onlyOwner {
+        if (_verifier == address(0)) {
+            revert InvalidVerifier();
+        }
+        verifiers[_verifier] = true;
+    }
+
+    /**
+     * @notice Removes a verifier contract. Can only be called by the owner
+     * @param _verifier The verifier contract address to remove
+     */
+    function removeVerifier(address _verifier) external onlyOwner {
+        if (!verifiers[_verifier]) {
+            revert InvalidVerifier();
+        }
+        verifiers[_verifier] = false;
+    }
 
     /**
      * @notice Mints a new soulbound NFT representing a ZK email proof
-     * @dev First element of proof must be the recipient address
+     * @dev First element of publicOutputs must be the recipient address
      * @param to Address to mint the NFT to
      * @param blueprintId ID of the blueprint used for the proof
-     * @param proof Proof
+     * @param verifier Address of the verifier contract
+     * @param proof Proof struct
      * @param publicOutputs uint256[] of public outputs
      * @param decodedPublicOutputs Decoded public outputs as flattened json
      */
     function safeMint(
         address to,
         uint256 blueprintId,
+        address verifier,
         Proof memory proof,
         uint256[] memory publicOutputs,
         string memory decodedPublicOutputs
@@ -75,6 +100,7 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
 
         _ownerToMetadata[to] = ZKEmailProofMetadata({
             blueprintId: blueprintId,
+            verifier: verifier,
             proof: proof,
             publicOutputs: publicOutputs,
             decodedPublicOutputs: decodedPublicOutputs
@@ -85,11 +111,34 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
         _setTokenURI(tokenId, tokenURI(tokenId));
     }
 
-    /**
-     * @notice Generates the token URI containing metadata for a given token
-     * @param tokenId ID of the token to generate the URI for
-     * @return Base64 encoded JSON metadata string
-     */
+    // Override functions to prevent transfers, making the NFTs soulbound
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721URIStorage) {
+        if (from != address(0) && to != address(0)) {
+            // Prevent transfers between addresses (soulbound)
+            revert CannotTransferSoulboundToken();
+        }
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    // Override required by Solidity for multiple inheritance
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721, ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    // Override burn functions to prevent burning
+    function _burn(
+        uint256 tokenId
+    ) internal override(ERC721, ERC721URIStorage) {
+        revert CannotTransferSoulboundToken();
+    }
+
     function tokenURI(
         uint256 tokenId
     ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
@@ -114,7 +163,7 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
             metadata.decodedPublicOutputs,
             "} },",
             '{ "trait_type": "Verifier", "value": "',
-            verifier.toHexString(),
+            metadata.verifier.toHexString(),
             '" }]}'
         );
 
@@ -153,7 +202,7 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
                 proof.c[0].toString(),
                 ",",
                 proof.c[1].toString(),
-                "] },"
+                "] }"
             );
     }
 
@@ -176,17 +225,6 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
     }
 
     /**
-     * @notice Checks if contract supports an interface
-     * @param interfaceId Interface identifier to check
-     * @return bool indicating if interface is supported
-     */
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721, ERC721URIStorage) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
-
-    /**
      * @notice Gets the metadata for a given owner's NFT
      * @param owner Address to get metadata for
      * @return ZKEmailProofMetadata struct containing the NFT metadata
@@ -195,36 +233,5 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
         address owner
     ) public view returns (ZKEmailProofMetadata memory) {
         return _ownerToMetadata[owner];
-    }
-
-    /**
-     * @notice Sets the verifier contract. Can only be called by the owner
-     * @param _verifier The new verifier contract
-     */
-    function setVerifier(address _verifier) external onlyOwner {
-        if (_verifier == address(0)) {
-            revert InvalidVerifier();
-        }
-        verifier = _verifier;
-    }
-
-    /**
-     * @notice Internal function to handle token transfers
-     * @dev Overridden to prevent token transfers, thus making the NFTs soulbound
-     * @param to Address to transfer to
-     * @param tokenId ID of token being transferred
-     * @param auth Address authorized to make transfer
-     * @return Address token was transferred from
-     */
-    function _update(
-        address to,
-        uint256 tokenId,
-        address auth
-    ) internal override returns (address) {
-        address from = _ownerOf(tokenId);
-        if (from != address(0)) {
-            revert CannotTransferSoulboundToken();
-        }
-        return super._update(to, tokenId, auth);
     }
 }
