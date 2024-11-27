@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -17,26 +18,38 @@ struct ZKEmailProofMetadata {
     Proof proof;
     uint256[] publicOutputs;
     string decodedPublicOutputs;
-    address verifier;
 }
 
 /**
  * @title ZKEmailProof
  * @notice A soulbound NFT contract that represents valid ZK Email proofs
  */
-contract ZKEmailProof is ERC721, ERC721URIStorage {
+contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
     using Strings for uint256;
     using Strings for address;
 
     error OwnerNotInProof();
     error CannotTransferSoulboundToken();
+    error OnlyVerifier();
+    error InvalidVerifier();
+
+    address public verifier;
 
     uint256 private _nextTokenId;
 
     mapping(address owner => ZKEmailProofMetadata metadata)
-        private ownerToMetadata;
+        private _ownerToMetadata;
 
-    constructor() ERC721("ZKEmailProof", "ZKEP") {}
+    modifier onlyVerifier() {
+        if (msg.sender != verifier) {
+            revert OnlyVerifier();
+        }
+        _;
+    }
+
+    constructor(
+        address initialOwner
+    ) ERC721("ZKEmailProof", "ZKEP") Ownable(initialOwner) {}
 
     /**
      * @notice Mints a new soulbound NFT representing a ZK email proof
@@ -46,28 +59,25 @@ contract ZKEmailProof is ERC721, ERC721URIStorage {
      * @param proof Proof
      * @param publicOutputs uint256[] of public outputs
      * @param decodedPublicOutputs Decoded public outputs as flattened json
-     * @param verifier Address of the verifier contract
      */
     function safeMint(
         address to,
         uint256 blueprintId,
         Proof memory proof,
         uint256[] memory publicOutputs,
-        string memory decodedPublicOutputs,
-        address verifier
-    ) public {
+        string memory decodedPublicOutputs
+    ) public onlyVerifier {
         // Owner should be committed to in each proof. This prevents
         // frontrunning safeMint with a valid proof but malicious "to" address
         if (address(uint160(publicOutputs[0])) != to) {
             revert OwnerNotInProof();
         }
 
-        ownerToMetadata[to] = ZKEmailProofMetadata({
+        _ownerToMetadata[to] = ZKEmailProofMetadata({
             blueprintId: blueprintId,
             proof: proof,
             publicOutputs: publicOutputs,
-            decodedPublicOutputs: decodedPublicOutputs,
-            verifier: verifier
+            decodedPublicOutputs: decodedPublicOutputs
         });
 
         uint256 tokenId = _nextTokenId++;
@@ -84,7 +94,7 @@ contract ZKEmailProof is ERC721, ERC721URIStorage {
         uint256 tokenId
     ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         address owner = ownerOf(tokenId);
-        ZKEmailProofMetadata memory metadata = ownerToMetadata[owner];
+        ZKEmailProofMetadata memory metadata = _ownerToMetadata[owner];
 
         string memory baseJson = string.concat(
             '{"name": "ZKEmailProof NFT #',
@@ -104,7 +114,7 @@ contract ZKEmailProof is ERC721, ERC721URIStorage {
             metadata.decodedPublicOutputs,
             "} },",
             '{ "trait_type": "Verifier", "value": "',
-            metadata.verifier.toHexString(),
+            verifier.toHexString(),
             '" }]}'
         );
 
@@ -184,7 +194,18 @@ contract ZKEmailProof is ERC721, ERC721URIStorage {
     function getMetadata(
         address owner
     ) public view returns (ZKEmailProofMetadata memory) {
-        return ownerToMetadata[owner];
+        return _ownerToMetadata[owner];
+    }
+
+    /**
+     * @notice Sets the verifier contract. Can only be called by the owner
+     * @param _verifier The new verifier contract
+     */
+    function setVerifier(address _verifier) external onlyOwner {
+        if (_verifier == address(0)) {
+            revert InvalidVerifier();
+        }
+        verifier = _verifier;
     }
 
     /**

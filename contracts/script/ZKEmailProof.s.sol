@@ -8,7 +8,10 @@ contract ZKEmailProof_Script is Script {
     function run() public {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
-        new ZKEmailProof();
+        address owner = vm.envAddress("INITIAL_OWNER");
+        new ZKEmailProof(owner);
+
+        // TODO: (merge-ok) Set verifier
 
         vm.stopBroadcast();
     }
