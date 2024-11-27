@@ -31,9 +31,11 @@ contract TestVerifier {
         ZKEmailProof(soulboundNFT).safeMint(
             to,
             blueprintId,
+            msg.sender,
             proof,
             publicOutputs,
-            decodedPublicOutputs
+            decodedPublicOutputs,
+            0
         );
         return true;
     }

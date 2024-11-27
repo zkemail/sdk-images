@@ -22,7 +22,12 @@ contract ZKEmailProofTest is Test {
         // Try minting from verifier1 (should succeed)
         vm.startPrank(verifier1);
 
-        Proof memory proof;
+        Proof memory proof = Proof({
+            a: [uint256(1), uint256(2)],
+            b: [[uint256(3), uint256(4)], [uint256(5), uint256(6)]],
+            c: [uint256(7), uint256(8)]
+        });
+
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
 
@@ -32,20 +37,30 @@ contract ZKEmailProofTest is Test {
             verifier1,
             proof,
             publicOutputs,
-            "{}" // decodedPublicOutputs
+            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            0
         );
 
         vm.stopPrank();
 
         // Check that the token was minted to the user
         assertEq(zkEmailProof.balanceOf(user), 1);
+
+        // Retrieve and display the token URI
+        string memory tokenURI = zkEmailProof.tokenURI(0);
+        console.log("Token URI: ", tokenURI);
     }
 
     function testNonVerifierCannotMint() public {
         // Try minting from an unauthorized address (should fail)
         vm.startPrank(address(0x5)); // Unauthorized address
 
-        Proof memory proof;
+        Proof memory proof = Proof({
+            a: [uint256(1), uint256(2)],
+            b: [[uint256(3), uint256(4)], [uint256(5), uint256(6)]],
+            c: [uint256(7), uint256(8)]
+        });
+
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
 
@@ -56,7 +71,8 @@ contract ZKEmailProofTest is Test {
             verifier1,
             proof,
             publicOutputs,
-            "{}" // decodedPublicOutputs
+            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            0
         );
 
         vm.stopPrank();
@@ -66,7 +82,12 @@ contract ZKEmailProofTest is Test {
         // Mint NFT to user
         vm.startPrank(verifier1);
 
-        Proof memory proof;
+        Proof memory proof = Proof({
+            a: [uint256(1), uint256(2)],
+            b: [[uint256(3), uint256(4)], [uint256(5), uint256(6)]],
+            c: [uint256(7), uint256(8)]
+        });
+
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
 
@@ -76,7 +97,8 @@ contract ZKEmailProofTest is Test {
             verifier1,
             proof,
             publicOutputs,
-            "{}" // decodedPublicOutputs
+            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            0
         );
 
         vm.stopPrank();
@@ -88,6 +110,10 @@ contract ZKEmailProofTest is Test {
         zkEmailProof.transferFrom(user, address(0x6), 0);
 
         vm.stopPrank();
+
+        // Retrieve and display the token URI
+        string memory tokenURI = zkEmailProof.tokenURI(0);
+        console.log("Token URI: ", tokenURI);
     }
 
     function testAddAndRemoveVerifier() public {
@@ -99,7 +125,12 @@ contract ZKEmailProofTest is Test {
         // Verifier2 should be able to mint now
         vm.startPrank(verifier2);
 
-        Proof memory proof;
+        Proof memory proof = Proof({
+            a: [uint256(10), uint256(20)],
+            b: [[uint256(30), uint256(40)], [uint256(50), uint256(60)]],
+            c: [uint256(70), uint256(80)]
+        });
+
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
 
@@ -109,10 +140,15 @@ contract ZKEmailProofTest is Test {
             verifier2,
             proof,
             publicOutputs,
-            "{}" // decodedPublicOutputs
+            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            0
         );
 
         vm.stopPrank();
+
+        // Retrieve and display the token URI
+        string memory tokenURI = zkEmailProof.tokenURI(0);
+        console.log("Token URI: ", tokenURI);
 
         // Remove verifier2
         vm.startPrank(owner);
@@ -129,7 +165,8 @@ contract ZKEmailProofTest is Test {
             verifier2,
             proof,
             publicOutputs,
-            "{}" // decodedPublicOutputs
+            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            0
         );
 
         vm.stopPrank();

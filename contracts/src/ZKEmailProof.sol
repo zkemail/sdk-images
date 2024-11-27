@@ -25,7 +25,7 @@ struct ZKEmailProofMetadata {
  * @title ZKEmailProof
  * @notice A soulbound NFT contract that represents valid ZK Email proofs
  */
-contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
+contract ZKEmailProof is ERC721, Ownable {
     using Strings for uint256;
     using Strings for address;
 
@@ -90,11 +90,12 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
         address verifier,
         Proof memory proof,
         uint256[] memory publicOutputs,
-        string memory decodedPublicOutputs
+        string memory decodedPublicOutputs,
+        uint proverEthAddressIdx
     ) public onlyVerifier {
         // Owner should be committed to in each proof. This prevents
         // frontrunning safeMint with a valid proof but malicious "to" address
-        if (address(uint160(publicOutputs[0])) != to) {
+        if (address(uint160(publicOutputs[proverEthAddressIdx])) != to) {
             revert OwnerNotInProof();
         }
 
@@ -108,7 +109,6 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
 
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, tokenURI(tokenId));
     }
 
     // Override functions to prevent transfers, making the NFTs soulbound
@@ -117,7 +117,7 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
         address to,
         uint256 tokenId,
         uint256 batchSize
-    ) internal override(ERC721, ERC721URIStorage) {
+    ) internal override {
         if (from != address(0) && to != address(0)) {
             // Prevent transfers between addresses (soulbound)
             revert CannotTransferSoulboundToken();
@@ -128,20 +128,13 @@ contract ZKEmailProof is ERC721, ERC721URIStorage, Ownable {
     // Override required by Solidity for multiple inheritance
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, ERC721URIStorage) returns (bool) {
+    ) public view override(ERC721) returns (bool) {
         return super.supportsInterface(interfaceId);
-    }
-
-    // Override burn functions to prevent burning
-    function _burn(
-        uint256 tokenId
-    ) internal override(ERC721, ERC721URIStorage) {
-        revert CannotTransferSoulboundToken();
     }
 
     function tokenURI(
         uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    ) public view override returns (string memory) {
         address owner = ownerOf(tokenId);
         ZKEmailProofMetadata memory metadata = _ownerToMetadata[owner];
 
