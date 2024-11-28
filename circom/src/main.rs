@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
     let circuit_path = "./tmp/circuit.circom";
     std::fs::write(circuit_path, circuit)?;
 
-    let ptau: usize = compile_circuit("tmp/circuit.zip").await?;
+    let ptau: usize = compile_circuit().await?;
 
     println!("ptau: {}", ptau);
 
@@ -63,15 +63,9 @@ async fn main() -> Result<()> {
 
     cleanup().await?;
 
-    update_db(
-        &pool,
-        blueprint.id.expect("No ID found"),
-        &contract_address,
-        ptau as i32,
-    )
-    .await?;
+    update_db(&pool, blueprint.id.expect("No ID found"), &contract_address).await?;
 
-    upload_files(payload.upload_url).await?;
+    upload_files(payload.upload_urls).await?;
 
     Ok(())
 }
@@ -92,7 +86,7 @@ async fn setup() -> Result<()> {
     Ok(())
 }
 
-async fn compile_circuit(circuit_path: &str) -> Result<usize> {
+async fn compile_circuit() -> Result<usize> {
     // Run yarn install in the tmp folder
     info!(LOG, "Running yarn install");
     run_command("yarn", &[], Some("tmp")).await?;
@@ -303,7 +297,7 @@ async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
     upload_to_url(&upload_urls.circuit, "./tmp/circuit.zip", "application/zip").await?;
     upload_to_url(
         &upload_urls.circuit_cpp,
-        "./tmp/circuit_cpp.zip",
+        "./tmp/circuit_cpp/circuit_cpp.zip",
         "application/zip",
     )
     .await?;

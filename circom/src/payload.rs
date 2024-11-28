@@ -11,7 +11,7 @@ use slog::info;
 #[serde(rename_all = "camelCase")]
 pub struct Payload {
     pub blueprint: Blueprint,
-    pub upload_url: UploadUrls,
+    pub upload_urls: UploadUrls,
     pub database_url: String,
     pub private_key: String,
     pub rpc_url: String,
