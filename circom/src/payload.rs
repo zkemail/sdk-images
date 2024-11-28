@@ -65,5 +65,13 @@ pub fn load_payload() -> Result<Payload> {
         env::set_var("DKIM_REGISTRY", &payload.dkim_registry_address);
     }
 
+    // Check if TACHYON_DIR is set
+    if let Ok(tachyon_dir) = std::env::var("TACHYON_DIR") {
+        env::set_var("TACHYON_DIR", tachyon_dir);
+    } else {
+        let home_dir = std::env::var("HOME")?;
+        env::set_var("TACHYON_DIR", format!("{}/tachyon", home_dir));
+    }
+
     Ok(payload)
 }

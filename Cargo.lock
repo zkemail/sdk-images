@@ -531,7 +531,7 @@ dependencies = [
  "rand",
  "regex",
  "relayer-utils",
- "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=main)",
+ "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=feat%2Frefactor)",
  "serde",
  "serde_json",
  "slog",
@@ -4043,7 +4043,7 @@ dependencies = [
 [[package]]
 name = "sdk-utils"
 version = "0.1.0"
-source = "git+https://github.com/zkemail/sdk-images?branch=main#6a4bde417028349b1a01e37063526bb970553a7e"
+source = "git+https://github.com/zkemail/sdk-images?branch=feat%2Frefactor#32536e4339be398554efa73267b6402662c364bf"
 dependencies = [
  "anyhow",
  "relayer-utils",

@@ -150,8 +150,8 @@ async fn compile_circuit(circuit_path: &str) -> Result<usize> {
     let current_dir_str = current_dir.to_str().unwrap_or("");
 
     // Get Home directory
-    let home_dir = std::env::var("HOME")?;
-    let home_dir_str = home_dir.as_str();
+    let tachyon_dir = std::env::var("TACHYON_DIR")?;
+    let tachyon_dir_str = tachyon_dir.as_str();
 
     // Run make in the circuit_cpp folder
     info!(LOG, "Compiling circuit binary");
@@ -161,7 +161,7 @@ async fn compile_circuit(circuit_path: &str) -> Result<usize> {
             "--cpp",
             &format!("{}/tmp/circuit_cpp/circuit.cpp", current_dir_str),
         ],
-        Some(format!("{}/tachyon/vendors/circom", home_dir_str).as_str()),
+        Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
     )
     .await?;
 
@@ -173,7 +173,7 @@ async fn compile_circuit(circuit_path: &str) -> Result<usize> {
             "witness_generator",
             &format!("{}/tmp/circuit_cpp/circuit", current_dir_str),
         ],
-        Some(format!("{}/tachyon/vendors/circom", home_dir_str).as_str()),
+        Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
     )
     .await?;
 
