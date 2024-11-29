@@ -6,6 +6,8 @@ import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
+import {IGroth16Verifier} from "./IGroth16Verifier.sol";
 
 struct Proof {
     uint256[2] a;
@@ -84,7 +86,7 @@ contract ZKEmailProof is ERC721, Ownable {
      * @param publicOutputs uint256[] of public outputs
      * @param decodedPublicOutputs Decoded public outputs as flattened json
      */
-    function safeMint(
+    function mintProof(
         address to,
         string memory blueprintId,
         address verifier,
@@ -93,6 +95,21 @@ contract ZKEmailProof is ERC721, Ownable {
         string memory decodedPublicOutputs,
         uint proverEthAddressIdx
     ) public onlyVerifier {
+        // verify RSA
+        bytes32 ph = bytes32(publicOutputs[0]);
+        require(
+            dkimRegistry.isDKIMPublicKeyHashValid(domain, ph),
+            "RSA public key incorrect"
+        );
+
+        IGroth16Verifier v = IGroth16Verifier(verifier);
+
+        // verify proof
+        require(
+            v.verifyProof(proof.a, proof.b, proof.c, publicOutputs),
+            "Invalid proof"
+        );
+
         // Owner should be committed to in each proof. This prevents
         // frontrunning safeMint with a valid proof but malicious "to" address
         if (address(uint160(publicOutputs[proverEthAddressIdx])) != to) {
