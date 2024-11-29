@@ -14,7 +14,7 @@ struct Proof {
 }
 
 struct ZKEmailProofMetadata {
-    uint256 blueprintId;
+    string blueprintId;
     address verifier;
     Proof proof;
     uint256[] publicOutputs;
@@ -86,7 +86,7 @@ contract ZKEmailProof is ERC721, Ownable {
      */
     function safeMint(
         address to,
-        uint256 blueprintId,
+        string memory blueprintId,
         address verifier,
         Proof memory proof,
         uint256[] memory publicOutputs,
@@ -139,22 +139,22 @@ contract ZKEmailProof is ERC721, Ownable {
         ZKEmailProofMetadata memory metadata = _ownerToMetadata[owner];
 
         string memory baseJson = string.concat(
-            '{"name": "ZKEmailProof NFT #',
+            '{"name": "ZKEmail Proof #',
             tokenId.toString(),
             '","description": "Soulbound NFT representing a valid ZK Email proof for an account","attributes": ['
         );
 
         string memory attributes = string.concat(
             '{ "trait_type": "Blueprint ID", "value": "',
-            metadata.blueprintId.toString(),
+            metadata.blueprintId,
             '" },',
             _buildProofJson(metadata.proof),
             ', { "trait_type": "Public Outputs", "value": ',
             _buildPublicOutputsJson(metadata.publicOutputs),
             " },",
-            '{ "trait_type": "Decoded Public Outputs", "value": {',
+            '{ "trait_type": "Decoded Public Outputs", "value": "{',
             metadata.decodedPublicOutputs,
-            "} },",
+            '}" }, ',
             '{ "trait_type": "Verifier", "value": "',
             metadata.verifier.toHexString(),
             '" }]}'
@@ -177,25 +177,25 @@ contract ZKEmailProof is ERC721, Ownable {
     ) private pure returns (string memory) {
         return
             string.concat(
-                '{ "trait_type": "Proof_a", "value": [',
+                '{ "trait_type": "Proof_a", "value": "[',
                 proof.a[0].toString(),
-                ",",
+                ", ",
                 proof.a[1].toString(),
-                "] },",
-                '{ "trait_type": "Proof_b", "value": [[',
+                ']" },',
+                '{ "trait_type": "Proof_b", "value": "[[',
                 proof.b[0][0].toString(),
-                ",",
+                ", ",
                 proof.b[0][1].toString(),
-                "],[",
+                "], [",
                 proof.b[1][0].toString(),
-                ",",
+                ", ",
                 proof.b[1][1].toString(),
-                "]] },",
-                '{ "trait_type": "Proof_c", "value": [',
+                ']]" }, ',
+                '{ "trait_type": "Proof_c", "value": "[',
                 proof.c[0].toString(),
-                ",",
+                ", ",
                 proof.c[1].toString(),
-                "] }"
+                ']" }'
             );
     }
 
@@ -207,14 +207,14 @@ contract ZKEmailProof is ERC721, Ownable {
     function _buildPublicOutputsJson(
         uint256[] memory publicOutputs
     ) private pure returns (string memory) {
-        string memory result = "[";
+        string memory result = '"[';
         for (uint256 i = 0; i < publicOutputs.length; i++) {
             result = string.concat(result, publicOutputs[i].toString());
             if (i < publicOutputs.length - 1) {
-                result = string.concat(result, ",");
+                result = string.concat(result, ", ");
             }
         }
-        return string.concat(result, "]");
+        return string.concat(result, ']"');
     }
 
     /**
