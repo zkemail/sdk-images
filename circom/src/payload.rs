@@ -73,5 +73,10 @@ pub fn load_payload() -> Result<Payload> {
         env::set_var("TACHYON_DIR", format!("{}/tachyon", home_dir));
     }
 
+    // If NODE_OPTIONS is not set, set it to --max-old-space-size=65536
+    if std::env::var("NODE_OPTIONS").is_err() {
+        env::set_var("NODE_OPTIONS", "--max-old-space-size=65536");
+    }
+
     Ok(payload)
 }
