@@ -3,7 +3,7 @@ mod db;
 mod payload;
 mod template;
 
-use std::cmp::max;
+use std::{cmp::max, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
@@ -71,17 +71,31 @@ async fn main() -> Result<()> {
 }
 
 async fn setup() -> Result<()> {
-    // Remove and recreate tmp and regex directories
-    if std::path::Path::new("./tmp").exists() {
-        std::fs::remove_dir_all("./tmp")?;
-    }
-    std::fs::create_dir_all("./tmp")?;
+    // Define the tmp path
+    let tmp_path = Path::new("./tmp");
 
-    // Create regex directory inside tmp
-    if std::path::Path::new("./tmp/regex").exists() {
-        std::fs::remove_dir_all("./tmp/regex")?;
+    // If tmp exists, remove its contents
+    if tmp_path.exists() {
+        for entry in fs::read_dir(tmp_path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                fs::remove_dir_all(&path)?;
+            } else {
+                fs::remove_file(&path)?;
+            }
+        }
+    } else {
+        // If tmp doesn't exist, create it
+        fs::create_dir_all(tmp_path)?;
     }
-    std::fs::create_dir_all("./tmp/regex")?;
+
+    // Ensure the regex directory exists inside tmp
+    let regex_path = tmp_path.join("regex");
+    if regex_path.exists() {
+        fs::remove_dir_all(&regex_path)?;
+    }
+    fs::create_dir_all(&regex_path)?;
 
     Ok(())
 }
@@ -207,6 +221,8 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
     )
     .await?;
 
+    run_command("rm", &["pot_final.ptau"], Some(tmp_dir)).await?;
+
     // Contribute to zkey
     info!(LOG, "Contributing to zkey");
     let random_input: u32 = rand::thread_rng().gen_range(100..1000);
@@ -224,6 +240,8 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
         &random_input_str,
     )
     .await?;
+
+    run_command("rm", &["circuit_0000.zkey"], Some(tmp_dir)).await?;
 
     // Export verification key
     info!(LOG, "Exporting verification key");
@@ -245,8 +263,6 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
 
 async fn cleanup() -> Result<()> {
     info!(LOG, "Cleaning up");
-    // std::fs::remove_file("./tmp/circuit_0000.zkey")?;
-    // std::fs::remove_file("./tmp/pot_final.ptau")?;
 
     run_command("cp", &["remappings.txt", "./tmp"], None).await?;
     run_command("cp", &["package.json", "./tmp"], None).await?;
