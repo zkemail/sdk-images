@@ -1,5 +1,5 @@
 [workspace]
-members = ["circom/compile", "circom/generate", "circom/key-gen", "circom/prove", "circom/verifier", "sdk-utils"]
+members = [ "circom", "sdk-utils"]
 version = "0.1.0"
 edition = "2021"
 resolver = "2"

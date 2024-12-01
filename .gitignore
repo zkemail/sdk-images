@@ -16,3 +16,5 @@ contract.sol
 verifier.sol
 
 nohup.out
+
+node_modules
