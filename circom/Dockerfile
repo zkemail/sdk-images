@@ -68,9 +68,6 @@ RUN curl -L https://foundry.paradigm.xyz | bash
 ENV PATH="/root/.foundry/bin:$PATH"
 RUN foundryup
 
-# Set Node.js memory limits
-ENV NODE_OPTIONS=--max_old_space_size=65536
-
 # Clone and build Circom
 RUN git clone https://github.com/iden3/circom.git /circom
 WORKDIR /circom
@@ -82,6 +79,11 @@ WORKDIR /root/circom
 # Copy project files and build Tachyon
 COPY . .
 RUN cargo build
+
+# Set Node.js memory limits
+ENV NODE_OPTIONS=--max_old_space_size=65536
+
+RUN sysctl -w vm.max_map_count=262144
 
 # Final command
 CMD ["cargo", "run"]

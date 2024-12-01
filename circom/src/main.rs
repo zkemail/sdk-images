@@ -111,6 +111,7 @@ async fn compile_circuit() -> Result<usize> {
         "circom",
         &[
             "circuit.circom",
+            // "--O2",
             "--sym",
             "--r1cs",
             "--c",
@@ -206,11 +207,29 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
     )
     .await?;
 
+    let node_path = run_command_and_return_output("which", &["node"], None)
+        .await?
+        .trim()
+        .to_string();
+    let snarkjs_path = run_command_and_return_output("which", &["snarkjs"], None)
+        .await?
+        .trim()
+        .to_string();
+
+    println!("node_path: {}", node_path);
+    println!("snarkjs_path: {}", snarkjs_path);
+
     // Generate zkey
     info!(LOG, "Generating zkey");
     run_command(
-        "snarkjs",
+        &node_path,
         &[
+            "--max-old-space-size=65536",
+            "--initial-old-space-size=65536",
+            "--max-semi-space-size=1024",
+            "--initial-heap-size=65536",
+            "--expose-gc",
+            &snarkjs_path,
             "groth16",
             "setup",
             "circuit.r1cs",
