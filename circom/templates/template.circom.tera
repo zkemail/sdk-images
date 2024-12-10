@@ -74,16 +74,19 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
 
     {% for regex in regexes %}
     // {{ regex.uppercased_name }} Extraction
-    signal input {{ regex.name }}RegexIdx;
+    {% if regex.has_public_parts %}
     var {{ regex.name }}MaxLength = {{ regex.max_length }};
-    signal {{ regex.name }}RegexOut, {{ regex.name }}RegexReveal[{{ regex.max_length_of_location }}];
-
-    ({{ regex.name }}RegexOut, {{ regex.name }}RegexReveal) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }})({{ regex.location }});
-
+    signal input {{ regex.regex_idx_name }};
+    {% endif %}
+    signal {{ regex.name }}RegexOut{{ regex.signal_regex_out_string }};
+    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }})({{ regex.location }});
     {{ regex.name }}RegexOut === 1;
-
-    signal output {{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
-    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
+    {% if regex.has_public_parts %}
+    {% for i in range(end=regex.num_reveal_signals) %}
+    signal output {{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.name }}MaxLength)];
+    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}RegexIdx{{ i }});
+    {% endfor %}
+    {% endif %}
     {% endfor %}
 }
 
