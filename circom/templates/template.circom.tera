@@ -1,0 +1,93 @@
+pragma circom 2.1.6;
+include "@zk-email/circuits/email-verifier.circom";
+include "@zk-email/circuits/utils/regex.circom";
+
+{% for regex in regexes %}
+include "./regex/{{ regex.regex_circuit_name }}.circom";
+{% endfor %}
+
+template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
+    assert(n * k > 1024); // constraints for 1024 bit RSA
+
+    signal input emailHeader[maxHeaderLength]; // prehashed email data, includes up to 512 + 64 bytes of padding pre SHA256, and padded with lots of 0s at end after the length
+    signal input emailHeaderLength;
+    signal input pubkey[k]; // RSA pubkey, verified with smart contract + DNSSEC proof. Split up into k parts of n bits each.
+    signal input signature[k]; // RSA signature. Split up into k parts of n bits each.
+
+    signal input proverETHAddress;
+
+    {% for external_input in external_inputs %}
+    signal input {{ external_input.name }}[{{ external_input.signal_length }}];
+    {% endfor %}
+
+    // DKIM Verification
+    component EV = EmailVerifier(maxHeaderLength, maxBodyLength, n, k, {% if ignore_body_hash_check %}1{% else %}0{% endif %}, {% if enable_header_masking %}1{% else %}0{% endif %}, {% if enable_body_masking %}1{% else %}0{% endif %}, {% if remove_soft_line_breaks %}1{% else %}0{% endif %});
+    EV.emailHeader <== emailHeader;
+    EV.emailHeaderLength <== emailHeaderLength;
+    EV.pubkey <== pubkey;
+    EV.signature <== signature;
+
+    {% if not ignore_body_hash_check %}
+    signal input bodyHashIndex;
+    signal input precomputedSHA[32];
+    signal input emailBody[maxBodyLength];
+    signal input emailBodyLength;
+
+    EV.bodyHashIndex <== bodyHashIndex;
+    EV.precomputedSHA <== precomputedSHA;
+    EV.emailBody <== emailBody;
+    EV.emailBodyLength <== emailBodyLength;
+
+    {% if remove_soft_line_breaks %}
+    signal input decodedEmailBodyIn[maxBodyLength];
+
+    EV.decodedEmailBodyIn <== decodedEmailBodyIn;
+    {% endif %}
+
+    {% if enable_body_masking %}
+    signal input bodyMask[maxBodyLength];
+    signal output maskedBody[maxBodyLength];
+
+    EV.bodyMask <== bodyMask;
+    {% endif %}
+
+    {% endif %}
+
+    {% if enable_header_masking %}
+    signal input headerMask[maxHeaderLength];
+    signal output maskedHeader[maxHeaderLength];
+    
+    EV.headerMask <== headerMask;
+    {% endif %}
+
+    signal output pubkeyHash;
+    pubkeyHash <== EV.pubkeyHash;
+    {% if enable_header_masking %}
+    maskedHeader <== EV.maskedHeader;
+    {% endif %}
+    {% if enable_body_masking %}
+    maskedBody <== EV.maskedBody;
+    {% endif %}
+
+    // Used for nullifier later
+    signal headerHash[256] <== EV.sha;
+
+    {% for regex in regexes %}
+    // {{ regex.uppercased_name }} Extraction
+    {% if regex.has_public_parts %}
+    var {{ regex.name }}MaxLength = {{ regex.max_length }};
+    signal input {{ regex.regex_idx_name }};
+    {% endif %}
+    signal {{ regex.name }}RegexOut{{ regex.signal_regex_out_string }};
+    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }})({{ regex.location }});
+    {{ regex.name }}RegexOut === 1;
+    {% if regex.has_public_parts %}
+    {% for i in range(end=regex.num_reveal_signals) %}
+    signal output {{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.name }}MaxLength)];
+    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}RegexIdx{{ i }});
+    {% endfor %}
+    {% endif %}
+    {% endfor %}
+}
+
+component main { public [proverETHAddress{{ public_args_string }}] } = {{ circuit_name }}({{ email_header_max_length }}, {% if ignore_body_hash_check %}0{% else %}{{ email_body_max_length }}{% endif %}, 121, 17, 7);

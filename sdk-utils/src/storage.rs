@@ -27,13 +27,13 @@ pub async fn download_from_url(download_url: &str, file_path: &str) -> Result<()
     Ok(())
 }
 
-pub async fn upload_to_url(upload_url: &str, file_path: &str) -> Result<()> {
+pub async fn upload_to_url(upload_url: &str, file_path: &str, file_type: &str) -> Result<()> {
     let client = reqwest::Client::new();
     let file = std::fs::read(file_path)?;
 
     let response = client
         .put(upload_url)
-        .header(CONTENT_TYPE, "application/zip")
+        .header(CONTENT_TYPE, file_type)
         .body(file)
         .send()
         .await?;

@@ -1,8 +1,0 @@
-[profile.default]
-src = 'src'
-out = "artifacts"
-libs = ["./node_modules", "lib"]
-optimizer = true
-evm_version = 'shanghai'
-via-ir = true
-solc = "0.8.26"
