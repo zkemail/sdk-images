@@ -67,8 +67,12 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
             pack_size,
             start_idx: current_idx,
         };
-        signal_size += pack_size;
-        current_idx += pack_size;
+        for part in regex.parts.iter() {
+            if part.is_public {
+                signal_size += pack_size;
+                current_idx += pack_size;
+            }
+        }
         values.push(field);
     }
 
