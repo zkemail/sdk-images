@@ -101,18 +101,30 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 if part.is_public {
                     num_reveal_signals += 1;
                     if regex_idx_name.is_empty() {
-                        regex_idx_name = format!("{}RegexIdx{}", name, num_reveal_signals);
+                        regex_idx_name = format!("{}RegexIdx", name);
                     } else {
                         regex_idx_name
                             .push_str(&format!(", {}RegexIdx{}", name, num_reveal_signals));
                     }
 
                     has_public_parts = true;
-                    reveal_string.push_str(&format!(", {}RegexReveal{}", name, num_reveal_signals));
-                    signal_regex_out_string.push_str(&format!(
-                        ", {}RegexReveal{}[{}]",
-                        name, num_reveal_signals, max_length_of_location
-                    ));
+                    if reveal_string.is_empty() {
+                        reveal_string.push_str(&format!(", {}RegexReveal", name));
+                    } else {
+                        reveal_string
+                            .push_str(&format!(", {}RegexReveal{}", name, num_reveal_signals));
+                    }
+                    if num_reveal_signals == 0 {
+                        signal_regex_out_string.push_str(&format!(
+                            ", {}RegexReveal[{}]",
+                            name, max_length_of_location
+                        ));
+                    } else {
+                        signal_regex_out_string.push_str(&format!(
+                            ", {}RegexReveal{}[{}]",
+                            name, num_reveal_signals, max_length_of_location
+                        ));
+                    }
                 }
             }
 

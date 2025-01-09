@@ -83,11 +83,17 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {{ regex.name }}RegexOut === 1;
     {% if regex.has_public_parts %}
     {% for i in range(end=regex.num_reveal_signals) %}
+    {% if i == 0 %}
+    signal output {{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
+    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
+    {% else %}
     signal output {{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.name }}MaxLength)];
     {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}RegexIdx{{ i }});
+    {% endif %}
     {% endfor %}
     {% endif %}
     {% endfor %}
 }
 
 component main { public [proverETHAddress{{ public_args_string }}] } = {{ circuit_name }}({{ email_header_max_length }}, {% if ignore_body_hash_check %}0{% else %}{{ email_body_max_length }}{% endif %}, 121, 17, 7);
+
