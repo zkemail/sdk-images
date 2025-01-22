@@ -3,24 +3,19 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import {IVerifier} from "../../../contracts/IVerifier.sol";
+import {Proof} from "../../../contracts/ZKEmailProof.sol";
+import {BaseTest} from "../ZKEmailProof/BaseTest.t.sol";
 
-struct Proof {
-    uint256[2] a;
-    uint256[2][2] b;
-    uint256[2] c;
-}
+contract ZKEmailProof_Fork_Test is BaseTest {
+    address deployedVerifier = 0x7019c2E274c77dd6E9e4C2707068BC6e690eA0AF;
 
-contract ZKEmailProof_Fork_Test is Test {
-    address verifier = 0x7019c2E274c77dd6E9e4C2707068BC6e690eA0AF;
-
-    function setUp() public {
+    function setUp() public override {
+        super.setUp();
         string memory BASE_SEPOLIA_RPC_URL = vm.envString(
             "BASE_SEPOLIA_RPC_URL"
         );
         vm.createSelectFork(BASE_SEPOLIA_RPC_URL);
-        console.log("Current block:", block.number);
         vm.rollFork(20880810);
-        console.log("Rolled to block:", block.number);
     }
 
     function testVerify() public view {
@@ -52,15 +47,12 @@ contract ZKEmailProof_Fork_Test is Test {
             0,
             0
         ];
-        // uint256[] memory publicOutputs = new uint256[](5);
-        // publicOutputs[
-        //     0
-        // ] = 3024598485745563149860456768272954250618223591034926533254923041921841324429;
-        // publicOutputs[1] = 2440484440003696966756646629102736908273017697;
-        // publicOutputs[2] = uint256(0);
-        // publicOutputs[3] = uint256(0);
-        // publicOutputs[4] = uint256(0);
 
-        IVerifier(verifier).verify(proof.a, proof.b, proof.c, publicOutputs);
+        IVerifier(deployedVerifier).verify(
+            proof.a,
+            proof.b,
+            proof.c,
+            publicOutputs
+        );
     }
 }
