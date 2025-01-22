@@ -38,8 +38,10 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install # will run `yarn install` command
+          dir: circom
 
       - name: Copy .env
+        working-directory: circom
         run: cp .env.example .env
 
       - name: Show Forge version
@@ -48,16 +50,19 @@ jobs:
 
       # TODO: configure formatting better
       # - name: Run Forge fmt
+      #   working-directory: circom
       #   run: |
       #     forge fmt --check
       #   id: fmt
 
       - name: Run Forge build
+        working-directory: circom
         run: |
           forge build --sizes
         id: build
 
       - name: Run Forge tests
+        working-directory: circom
         run: |
           forge test -vvv
         id: test
