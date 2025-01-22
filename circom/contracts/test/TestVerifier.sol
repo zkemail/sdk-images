@@ -25,8 +25,8 @@ contract TestVerifier {
         uint[2][2] calldata b,
         uint[2] calldata c,
         uint[5] calldata signals,
-        string memory domain,
-        bytes32 publicKeyHash
+        string memory domain, // FIXME: Needs moving
+        bytes32 publicKeyHash // FIXME: Needs moving
     ) external view {
         require(
             IDKIMRegistry(dkimRegistry).isDKIMPublicKeyHashValid(
@@ -47,8 +47,8 @@ contract TestVerifier {
         uint[2][2] calldata b,
         uint[2] calldata c,
         uint[5] calldata signals,
-        string memory domain,
-        bytes32 publicKeyHash,
+        string memory domain, // FIXME: Needs moving
+        bytes32 publicKeyHash, // FIXME: Needs moving
         address to,
         uint256 blueprintId,
         string memory decodedPublicOutputs,
