@@ -4,12 +4,15 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import {DKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
 import {ZKEmailProof, Proof} from "../../../contracts/ZKEmailProof.sol";
-import {MockVerifier} from "../../../contracts/test/MockVerifier.sol";
+import {MockGroth16Verifier} from "../../../contracts/test/MockGroth16Verifier.sol";
+
+import {TestVerifier} from "../../../contracts/test/TestVerifier.sol";
 
 contract BaseTest is Test {
+    DKIMRegistry dkimRegistry;
+    MockGroth16Verifier groth16Verifier;
     ZKEmailProof zkEmailProof;
-    address dkimRegistry;
-    address verifier;
+    TestVerifier verifier;
 
     address public owner;
     address public alice;
@@ -29,9 +32,15 @@ contract BaseTest is Test {
         alice = address(2);
         bob = address(3);
 
-        dkimRegistry = address(new DKIMRegistry(owner));
-        verifier = address(new MockVerifier());
-        zkEmailProof = new ZKEmailProof(owner, dkimRegistry);
+        dkimRegistry = new DKIMRegistry(owner);
+        groth16Verifier = new MockGroth16Verifier();
+        zkEmailProof = new ZKEmailProof(owner);
+
+        verifier = new TestVerifier(
+            address(dkimRegistry),
+            address(groth16Verifier),
+            address(zkEmailProof)
+        );
 
         blueprintId = 1;
         proof = Proof({
@@ -47,11 +56,8 @@ contract BaseTest is Test {
         publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
 
         vm.startPrank(owner);
-        zkEmailProof.addVerifier(verifier);
-        DKIMRegistry(dkimRegistry).setDKIMPublicKeyHash(
-            domainName,
-            publicKeyHash
-        );
+        zkEmailProof.addVerifier(address(verifier));
+        dkimRegistry.setDKIMPublicKeyHash(domainName, publicKeyHash);
         vm.stopPrank();
     }
 }

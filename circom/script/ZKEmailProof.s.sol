@@ -9,9 +9,8 @@ contract ZKEmailProof_Script is Script {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
         address owner = vm.envAddress("OWNER");
-        address dkimRegistry = vm.envAddress("DKIM_REGISTRY");
 
-        new ZKEmailProof(owner, dkimRegistry);
+        new ZKEmailProof(owner);
 
         // TODO: (merge-ok) Set verifier
 

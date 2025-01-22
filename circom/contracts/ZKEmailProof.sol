@@ -7,8 +7,6 @@ import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
-import {IVerifier} from "./IVerifier.sol";
 
 struct Proof {
     uint256[2] a;
@@ -36,30 +34,22 @@ contract ZKEmailProof is ERC721, Ownable {
     error CannotTransferSoulboundToken();
     error OnlyVerifier();
     error InvalidVerifier();
-    error InvalidDkimRegistry();
-
-    address public dkimRegistry;
-
-    // Mapping of addresses that are allowed to mint NFTs
-    mapping(address => bool) public verifiers;
 
     uint256 private _nextTokenId;
 
+    mapping(address verifier => bool approved) public approvedVerifiers;
     mapping(address => ZKEmailProofMetadata) private _ownerToMetadata;
 
     modifier onlyVerifier() {
-        if (!verifiers[msg.sender]) {
+        if (!approvedVerifiers[msg.sender]) {
             revert OnlyVerifier();
         }
         _;
     }
 
     constructor(
-        address _initialOwner,
-        address _dkimRegistry
-    ) ERC721("ZKEmailProof", "ZKEP") Ownable(_initialOwner) {
-        dkimRegistry = _dkimRegistry;
-    }
+        address _initialOwner
+    ) ERC721("ZKEmailProof", "ZKEP") Ownable(_initialOwner) {}
 
     /**
      * @notice Adds a verifier contract. Can only be called by the owner
@@ -69,7 +59,7 @@ contract ZKEmailProof is ERC721, Ownable {
         if (_verifier == address(0)) {
             revert InvalidVerifier();
         }
-        verifiers[_verifier] = true;
+        approvedVerifiers[_verifier] = true;
     }
 
     /**
@@ -77,17 +67,10 @@ contract ZKEmailProof is ERC721, Ownable {
      * @param _verifier The verifier contract address to remove
      */
     function removeVerifier(address _verifier) external onlyOwner {
-        if (!verifiers[_verifier]) {
+        if (!approvedVerifiers[_verifier]) {
             revert InvalidVerifier();
         }
-        verifiers[_verifier] = false;
-    }
-
-    function updateDkimRegistry(address dkim) external onlyOwner {
-        if (dkim == address(0)) {
-            revert InvalidDkimRegistry();
-        }
-        dkimRegistry = dkim;
+        approvedVerifiers[_verifier] = false;
     }
 
     /**
@@ -95,48 +78,28 @@ contract ZKEmailProof is ERC721, Ownable {
      * @dev First element of publicOutputs must be the recipient address
      * @param to Address to mint the NFT to
      * @param blueprintId ID of the blueprint used for the proof
-     * @param verifier Address of the verifier contract
      * @param proof Proof struct
      * @param publicOutputs uint256[] of public outputs
      * @param decodedPublicOutputs Decoded public outputs as flattened json
+     * @param toAddressIndex Index of the to address in the publicOutputs array
      */
     function mintProof(
         address to,
         uint256 blueprintId,
-        address verifier,
-        string memory domainName,
-        bytes32 publicKeyHash,
         Proof memory proof,
         uint256[] memory publicOutputs,
         string memory decodedPublicOutputs,
-        uint256 proverEthAddressIdx
+        uint256 toAddressIndex
     ) public onlyVerifier {
-        require(
-            IDKIMRegistry(dkimRegistry).isDKIMPublicKeyHashValid(
-                domainName,
-                publicKeyHash
-            ),
-            "RSA public key incorrect"
-        );
-        // require(
-        //     IVerifier(verifier).verify(
-        //         proof.a,
-        //         proof.b,
-        //         proof.c,
-        //         publicOutputs
-        //     ),
-        //     "Invalid proof"
-        // );
-
         // Owner should be committed to in each proof. This prevents
         // frontrunning safeMint with a valid proof but malicious "to" address
-        if (address(uint160(publicOutputs[proverEthAddressIdx])) != to) {
+        if (address(uint160(publicOutputs[toAddressIndex])) != to) {
             revert OwnerNotInProof();
         }
 
         _ownerToMetadata[to] = ZKEmailProofMetadata({
             blueprintId: blueprintId,
-            verifier: verifier,
+            verifier: msg.sender,
             proof: proof,
             publicOutputs: publicOutputs,
             decodedPublicOutputs: decodedPublicOutputs

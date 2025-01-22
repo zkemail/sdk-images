@@ -11,15 +11,12 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
     }
 
     function test_ZKEmailProof_MintProof_RevertWhen_VerifierNotSet() public {
-        ZKEmailProof newZkEmailProof = new ZKEmailProof(owner, dkimRegistry);
+        ZKEmailProof newZkEmailProof = new ZKEmailProof(owner);
 
         vm.expectRevert(ZKEmailProof.OnlyVerifier.selector);
         newZkEmailProof.mintProof(
             alice,
             blueprintId,
-            verifier,
-            domainName,
-            publicKeyHash,
             proof,
             publicOutputs,
             decodedPublicOutputs,
@@ -32,9 +29,6 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
         zkEmailProof.mintProof(
             alice,
             blueprintId,
-            verifier,
-            domainName,
-            publicKeyHash,
             proof,
             publicOutputs,
             decodedPublicOutputs,
@@ -47,9 +41,6 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
         zkEmailProof.mintProof(
             alice,
             blueprintId,
-            verifier,
-            domainName,
-            publicKeyHash,
             proof,
             publicOutputs,
             decodedPublicOutputs,
@@ -84,9 +75,6 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
         zkEmailProof.mintProof(
             alice,
             blueprintId,
-            verifier,
-            domainName,
-            publicKeyHash,
             proof,
             publicOutputs,
             decodedPublicOutputs,

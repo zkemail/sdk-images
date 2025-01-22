@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import {IVerifier} from "../../../contracts/IVerifier.sol";
+import {IVerifier} from "../../../contracts/interfaces/IVerifier.sol";
 import {Proof} from "../../../contracts/ZKEmailProof.sol";
 import {BaseTest} from "../ZKEmailProof/BaseTest.t.sol";
 

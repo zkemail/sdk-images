@@ -10,14 +10,14 @@ contract ZKEmailProof_RemoveVerifier_Test is BaseTest {
     }
 
     function test_ZKEmailProof_RemoveVerifier_RemovesVerifier() public {
-        bool isVerifier = zkEmailProof.verifiers(verifier);
+        bool isVerifier = zkEmailProof.approvedVerifiers(address(verifier));
         assertTrue(isVerifier);
 
         vm.startPrank(owner);
-        zkEmailProof.removeVerifier(verifier);
+        zkEmailProof.removeVerifier(address(verifier));
         vm.stopPrank();
 
-        isVerifier = zkEmailProof.verifiers(verifier);
+        isVerifier = zkEmailProof.approvedVerifiers(address(verifier));
         assertFalse(isVerifier);
     }
 }

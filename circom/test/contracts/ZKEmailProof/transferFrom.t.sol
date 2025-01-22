@@ -18,9 +18,6 @@ contract ZKEmailProof_SafeTransferFrom_Test is BaseTest {
         zkEmailProof.mintProof(
             alice,
             blueprintId,
-            address(verifier),
-            domainName,
-            publicKeyHash,
             proof,
             publicOutputs,
             decodedPublicOutputs,
@@ -37,9 +34,6 @@ contract ZKEmailProof_SafeTransferFrom_Test is BaseTest {
         zkEmailProof.mintProof(
             alice,
             blueprintId,
-            address(verifier),
-            domainName,
-            publicKeyHash,
             proof,
             publicOutputs,
             decodedPublicOutputs,
