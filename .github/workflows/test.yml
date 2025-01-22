@@ -15,11 +15,10 @@ jobs:
 
     name: Foundry project
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: circom
     steps:
-      - name: Set Working Directory and Copy .env
-        working-directory: ./circom
-        run: cp .env.example .env
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -39,6 +38,9 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install # will run `yarn install` command
+
+      - name: Copy .env
+        run: cp .env.example .env
 
       - name: Show Forge version
         run: |
