@@ -129,11 +129,13 @@ contract ZKEmailProof is ERC721, Ownable {
         );
 
         string memory attributes = string.concat(
-            '{"trait_type":"Blueprint ID","value":"',
+            '{"trait_type":"Blueprint ID","value":',
             metadata.blueprintId.toString(),
-            '"},',
+            "},",
+            '{"trait_type":"Proof","value":',
             _buildProofJson(metadata.proof),
-            ',{"trait_type":"Public Outputs","value":',
+            "},",
+            '{"trait_type":"Public Outputs","value":',
             _buildPublicOutputsJson(metadata.publicOutputs),
             "},",
             '{"trait_type":"Decoded Public Outputs","value":{',
@@ -161,12 +163,12 @@ contract ZKEmailProof is ERC721, Ownable {
     ) private pure returns (string memory) {
         return
             string.concat(
-                '{"trait_type":"Proof_a","value":[',
+                "[[",
                 proof.a[0].toString(),
                 ",",
                 proof.a[1].toString(),
-                "]},",
-                '{"trait_type":"Proof_b","value":[[',
+                "],",
+                "[[",
                 proof.b[0][0].toString(),
                 ",",
                 proof.b[0][1].toString(),
@@ -174,12 +176,12 @@ contract ZKEmailProof is ERC721, Ownable {
                 proof.b[1][0].toString(),
                 ",",
                 proof.b[1][1].toString(),
-                "]]},",
-                '{"trait_type":"Proof_c","value":[',
+                "]],",
+                "[",
                 proof.c[0].toString(),
                 ",",
                 proof.c[1].toString(),
-                "]}"
+                "]]"
             );
     }
 

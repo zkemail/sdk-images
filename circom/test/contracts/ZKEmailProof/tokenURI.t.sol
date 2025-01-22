@@ -32,7 +32,7 @@ contract ZKEmailProof_TokenURI_Test is BaseTest {
         string memory tokenUri = zkEmailProof.tokenURI(tokenId);
 
         string memory expectedJson = string.concat(
-            '{"name":"ZKEmail Proof #0","description":"Soulbound NFT representing a valid ZK Email proof for an account","attributes":[{"trait_type":"Blueprint ID","value":"1"},{"trait_type":"Proof_a","value":[1,2]},{"trait_type":"Proof_b","value":[[3,4],[5,6]]},{"trait_type":"Proof_c","value":[7,8]},{"trait_type":"Public Outputs","value":"[2]"},{"trait_type":"Decoded Public Outputs","value":{"to":2,"username":"John Smith"}},{"trait_type":"Verifier","value":"',
+            '{"name":"ZKEmail Proof #0","description":"Soulbound NFT representing a valid ZK Email proof for an account","attributes":[{"trait_type":"Blueprint ID","value":1},{"trait_type":"Proof","value":[[1,2],[[3,4],[5,6]],[7,8]]},{"trait_type":"Public Outputs","value":"[2]"},{"trait_type":"Decoded Public Outputs","value":{"to":2,"username":"John Smith"}},{"trait_type":"Verifier","value":"',
             address(verifier).toHexString(),
             '"}]}'
         );
