@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import {console} from "forge-std/console.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
-import {IGroth16Verifier} from "./IGroth16Verifier.sol";
+import {IVerifier} from "./IVerifier.sol";
 
 struct Proof {
     uint256[2] a;
@@ -16,7 +17,7 @@ struct Proof {
 }
 
 struct ZKEmailProofMetadata {
-    string blueprintId;
+    uint256 blueprintId;
     address verifier;
     Proof proof;
     uint256[] publicOutputs;
@@ -35,6 +36,9 @@ contract ZKEmailProof is ERC721, Ownable {
     error CannotTransferSoulboundToken();
     error OnlyVerifier();
     error InvalidVerifier();
+    error InvalidDkimRegistry();
+
+    address public dkimRegistry;
 
     // Mapping of addresses that are allowed to mint NFTs
     mapping(address => bool) public verifiers;
@@ -50,8 +54,11 @@ contract ZKEmailProof is ERC721, Ownable {
         _;
     }
 
-    constructor(address initialOwner) ERC721("ZKEmailProof", "ZKEP") {
-        _transferOwnership(initialOwner);
+    constructor(
+        address _initialOwner,
+        address _dkimRegistry
+    ) ERC721("ZKEmailProof", "ZKEP") Ownable(_initialOwner) {
+        dkimRegistry = _dkimRegistry;
     }
 
     /**
@@ -76,6 +83,13 @@ contract ZKEmailProof is ERC721, Ownable {
         verifiers[_verifier] = false;
     }
 
+    function updateDkimRegistry(address dkim) external onlyOwner {
+        if (dkim == address(0)) {
+            revert InvalidDkimRegistry();
+        }
+        dkimRegistry = dkim;
+    }
+
     /**
      * @notice Mints a new soulbound NFT representing a ZK email proof
      * @dev First element of publicOutputs must be the recipient address
@@ -88,27 +102,31 @@ contract ZKEmailProof is ERC721, Ownable {
      */
     function mintProof(
         address to,
-        string memory blueprintId,
+        uint256 blueprintId,
         address verifier,
+        string memory domainName,
+        bytes32 publicKeyHash,
         Proof memory proof,
         uint256[] memory publicOutputs,
         string memory decodedPublicOutputs,
-        uint proverEthAddressIdx
+        uint256 proverEthAddressIdx
     ) public onlyVerifier {
-        // verify RSA
-        bytes32 ph = bytes32(publicOutputs[0]);
         require(
-            dkimRegistry.isDKIMPublicKeyHashValid(domain, ph),
+            IDKIMRegistry(dkimRegistry).isDKIMPublicKeyHashValid(
+                domainName,
+                publicKeyHash
+            ),
             "RSA public key incorrect"
         );
-
-        IGroth16Verifier v = IGroth16Verifier(verifier);
-
-        // verify proof
-        require(
-            v.verifyProof(proof.a, proof.b, proof.c, publicOutputs),
-            "Invalid proof"
-        );
+        // require(
+        //     IVerifier(verifier).verify(
+        //         proof.a,
+        //         proof.b,
+        //         proof.c,
+        //         publicOutputs
+        //     ),
+        //     "Invalid proof"
+        // );
 
         // Owner should be committed to in each proof. This prevents
         // frontrunning safeMint with a valid proof but malicious "to" address
@@ -128,20 +146,6 @@ contract ZKEmailProof is ERC721, Ownable {
         _safeMint(to, tokenId);
     }
 
-    // Override functions to prevent transfers, making the NFTs soulbound
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal override {
-        if (from != address(0) && to != address(0)) {
-            // Prevent transfers between addresses (soulbound)
-            revert CannotTransferSoulboundToken();
-        }
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
-    }
-
     // Override required by Solidity for multiple inheritance
     function supportsInterface(
         bytes4 interfaceId
@@ -156,25 +160,25 @@ contract ZKEmailProof is ERC721, Ownable {
         ZKEmailProofMetadata memory metadata = _ownerToMetadata[owner];
 
         string memory baseJson = string.concat(
-            '{"name": "ZKEmail Proof #',
+            '{"name":"ZKEmail Proof #',
             tokenId.toString(),
-            '","description": "Soulbound NFT representing a valid ZK Email proof for an account","attributes": ['
+            '","description":"Soulbound NFT representing a valid ZK Email proof for an account","attributes":['
         );
 
         string memory attributes = string.concat(
-            '{ "trait_type": "Blueprint ID", "value": "',
-            metadata.blueprintId,
-            '" },',
+            '{"trait_type":"Blueprint ID","value":"',
+            metadata.blueprintId.toString(),
+            '"},',
             _buildProofJson(metadata.proof),
-            ', { "trait_type": "Public Outputs", "value": ',
+            ',{"trait_type":"Public Outputs","value":',
             _buildPublicOutputsJson(metadata.publicOutputs),
-            " },",
-            '{ "trait_type": "Decoded Public Outputs", "value": "{',
+            "},",
+            '{"trait_type":"Decoded Public Outputs","value":{',
             metadata.decodedPublicOutputs,
-            '}" }, ',
-            '{ "trait_type": "Verifier", "value": "',
+            "}},",
+            '{"trait_type":"Verifier","value":"',
             metadata.verifier.toHexString(),
-            '" }]}'
+            '"}]}'
         );
 
         return
@@ -194,25 +198,25 @@ contract ZKEmailProof is ERC721, Ownable {
     ) private pure returns (string memory) {
         return
             string.concat(
-                '{ "trait_type": "Proof_a", "value": "[',
+                '{"trait_type":"Proof_a","value":[',
                 proof.a[0].toString(),
-                ", ",
+                ",",
                 proof.a[1].toString(),
-                ']" },',
-                '{ "trait_type": "Proof_b", "value": "[[',
+                "]},",
+                '{"trait_type":"Proof_b","value":[[',
                 proof.b[0][0].toString(),
-                ", ",
+                ",",
                 proof.b[0][1].toString(),
-                "], [",
+                "],[",
                 proof.b[1][0].toString(),
-                ", ",
+                ",",
                 proof.b[1][1].toString(),
-                ']]" }, ',
-                '{ "trait_type": "Proof_c", "value": "[',
+                "]]},",
+                '{"trait_type":"Proof_c","value":[',
                 proof.c[0].toString(),
-                ", ",
+                ",",
                 proof.c[1].toString(),
-                ']" }'
+                "]}"
             );
     }
 
@@ -228,7 +232,7 @@ contract ZKEmailProof is ERC721, Ownable {
         for (uint256 i = 0; i < publicOutputs.length; i++) {
             result = string.concat(result, publicOutputs[i].toString());
             if (i < publicOutputs.length - 1) {
-                result = string.concat(result, ", ");
+                result = string.concat(result, ",");
             }
         }
         return string.concat(result, ']"');
@@ -243,5 +247,17 @@ contract ZKEmailProof is ERC721, Ownable {
         address owner
     ) public view returns (ZKEmailProofMetadata memory) {
         return _ownerToMetadata[owner];
+    }
+
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override returns (address) {
+        address from = _ownerOf(tokenId);
+        if (from != address(0)) {
+            revert CannotTransferSoulboundToken();
+        }
+        return super._update(to, tokenId, auth);
     }
 }

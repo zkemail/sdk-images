@@ -2,19 +2,30 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../../src/ZKEmailProof.sol";
+import {DKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
+import "../../../contracts/ZKEmailProof.sol";
+import {MockVerifier} from "../../../contracts/test/MockVerifier.sol";
 
 contract ZKEmailProofTest is Test {
     ZKEmailProof zkEmailProof;
     address owner = address(0x1);
-    address verifier1 = address(0x2);
-    address verifier2 = address(0x3);
-    address user = address(0x4);
+    address dkimRegistry = address(new DKIMRegistry(owner));
+    address verifier1 = address(new MockVerifier());
+    address verifier2 = address(new MockVerifier());
+    address user = address(0x5);
+    string domainName = "gmail.com";
+    bytes32 publicKeyHash =
+        0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
 
     function setUp() public {
         vm.startPrank(owner);
-        zkEmailProof = new ZKEmailProof(owner);
+        zkEmailProof = new ZKEmailProof(owner, dkimRegistry);
         zkEmailProof.addVerifier(verifier1);
+
+        DKIMRegistry(dkimRegistry).setDKIMPublicKeyHash(
+            domainName,
+            publicKeyHash
+        );
         vm.stopPrank();
     }
 
@@ -30,14 +41,18 @@ contract ZKEmailProofTest is Test {
 
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
+        string
+            memory decodedPublicOutputs = '"email":"user@example.com", "name": "test"';
 
-        zkEmailProof.safeMint(
+        zkEmailProof.mintProof(
             user,
-            1, // blueprintId
+            1,
             verifier1,
+            domainName,
+            publicKeyHash,
             proof,
             publicOutputs,
-            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            decodedPublicOutputs,
             0
         );
 
@@ -63,15 +78,19 @@ contract ZKEmailProofTest is Test {
 
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
+        string
+            memory decodedPublicOutputs = '"email":"user@example.com", "name": "test"';
 
         vm.expectRevert(ZKEmailProof.OnlyVerifier.selector);
-        zkEmailProof.safeMint(
+        zkEmailProof.mintProof(
             user,
             1, // blueprintId
             verifier1,
+            domainName,
+            publicKeyHash,
             proof,
             publicOutputs,
-            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            decodedPublicOutputs,
             0
         );
 
@@ -90,14 +109,18 @@ contract ZKEmailProofTest is Test {
 
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
+        string
+            memory decodedPublicOutputs = '"email":"user@example.com", "name": "test"';
 
-        zkEmailProof.safeMint(
+        zkEmailProof.mintProof(
             user,
             1, // blueprintId
             verifier1,
+            domainName,
+            publicKeyHash,
             proof,
             publicOutputs,
-            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            decodedPublicOutputs,
             0
         );
 
@@ -133,14 +156,18 @@ contract ZKEmailProofTest is Test {
 
         uint256[] memory publicOutputs = new uint256[](1); // Initialize publicOutputs as an array with one element
         publicOutputs[0] = uint256(uint160(user)); // publicOutputs[0] is user address
+        string
+            memory decodedPublicOutputs = '"email":"user@example.com", "name": "test"';
 
-        zkEmailProof.safeMint(
+        zkEmailProof.mintProof(
             user,
             2, // blueprintId
             verifier2,
+            domainName,
+            publicKeyHash,
             proof,
             publicOutputs,
-            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            decodedPublicOutputs,
             0
         );
 
@@ -159,13 +186,15 @@ contract ZKEmailProofTest is Test {
         vm.startPrank(verifier2);
 
         vm.expectRevert(ZKEmailProof.OnlyVerifier.selector);
-        zkEmailProof.safeMint(
+        zkEmailProof.mintProof(
             user,
             3, // blueprintId
             verifier2,
+            domainName,
+            publicKeyHash,
             proof,
             publicOutputs,
-            '"email":"user@example.com", "name": "test"', // decodedPublicOutputs
+            decodedPublicOutputs,
             0
         );
 
