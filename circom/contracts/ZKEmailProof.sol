@@ -7,6 +7,7 @@ import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {NFTSVG} from "./NFTSVG.sol";
 
 struct Proof {
     uint256[2] a;
@@ -122,10 +123,19 @@ contract ZKEmailProof is ERC721, Ownable {
         address owner = ownerOf(tokenId);
         ZKEmailProofMetadata memory metadata = _ownerToMetadata[owner];
 
+        NFTSVG.SVGParams memory svgParams = NFTSVG.generateSVGParams(
+            metadata.decodedPublicOutputs,
+            tokenId
+        );
+        string memory svg = NFTSVG.generateSVG(svgParams);
+
         string memory baseJson = string.concat(
             '{"name":"ZKEmail Proof #',
             tokenId.toString(),
-            '","description":"Soulbound NFT representing a valid ZK Email proof for an account","attributes":['
+            '","description":"Soulbound NFT representing a valid ZK Email proof for an account",',
+            '"image": "data:image/svg+xml;base64,',
+            Base64.encode(bytes(svg)),
+            '","attributes":['
         );
 
         string memory attributes = string.concat(
