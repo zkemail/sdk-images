@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs};
 
 use anyhow::Result;
 use regex::Regex;
@@ -59,21 +59,23 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     let mut current_idx = 1; // Start index for the first field
 
     let mut values = Vec::new();
-    for regex in payload.blueprint.decomposed_regexes.iter() {
-        let pack_size = ((regex.max_length as f64) / 31.0).ceil() as usize;
-        let field = Field {
-            name: regex.name.clone(),
-            max_length: regex.max_length,
-            pack_size,
-            start_idx: current_idx,
-        };
-        for part in regex.parts.iter() {
-            if part.is_public {
-                signal_size += pack_size;
-                current_idx += pack_size;
+    if let Some(decomposed_regexes) = &payload.blueprint.decomposed_regexes {
+        for regex in decomposed_regexes {
+            let pack_size = ((regex.max_length as f64) / 31.0).ceil() as usize;
+            let field = Field {
+                name: regex.name.clone(),
+                max_length: regex.max_length,
+                pack_size,
+                start_idx: current_idx,
+            };
+            for part in regex.parts.iter() {
+                if part.is_public {
+                    signal_size += pack_size;
+                    current_idx += pack_size;
+                }
             }
+            values.push(field);
         }
-        values.push(field);
     }
 
     let prover_eth_address_idx = current_idx;
@@ -111,10 +113,12 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
 }
 
 pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
+    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+
     // Generate the verifier contract
     info!(LOG, "Generating verifier contract");
     run_command(
-        "snarkjs",
+        &chunked_snarkjs_path,
         &[
             "zkey",
             "export",
@@ -125,6 +129,20 @@ pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
         Some(tmp_dir),
     )
     .await?;
+
+    // Update sol version
+    let path = "tmp/verifier.sol";
+
+    // Read the file content
+    let content = fs::read_to_string(path)?;
+
+    // Replace the pragma line
+    let updated_content = content.replace("pragma solidity ^0.6.11;", "pragma solidity ^0.8.13;");
+
+    // Write back to file
+    fs::write(path, updated_content)?;
+
+    info!(LOG, "Updated verifier.sol to Solidity 0.8.13");
 
     Ok(())
 }
@@ -137,7 +155,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
 
     // Parse the output to extract addresses
-    let re = Regex::new(r"Deployed (Groth16Verifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})")
+    let re = Regex::new(r"Deployed (Verifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})")
         .unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
@@ -155,7 +173,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             "abi-encode",
             "constructor(address,address)",
             contract_addresses.get("DKIMRegistry").unwrap(),
-            contract_addresses.get("Groth16Verifier").unwrap(),
+            contract_addresses.get("Verifier").unwrap(),
         ],
         None,
     )
@@ -168,8 +186,8 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             "verify-contract",
             "--chain-id",
             payload.chain_id.to_string().as_str(),
-            contract_addresses.get("Groth16Verifier").unwrap(),
-            "tmp/verifier.sol:Groth16Verifier",
+            contract_addresses.get("Verifier").unwrap(),
+            "tmp/verifier.sol:Verifier",
         ],
         None,
     )

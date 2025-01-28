@@ -27,8 +27,20 @@ pub struct UploadUrls {
     pub circuit_cpp: String,
     pub circuit_wasm: String,
     pub witness_calculator: String,
-    pub circuit_zkey: String,
+    pub generate_witness: String,
+    pub circuit_full_zkey: String,
     pub vk: String,
+    pub circuit_zkey: String,
+    pub zkey_b: String,
+    pub zkey_c: String,
+    pub zkey_d: String,
+    pub zkey_e: String,
+    pub zkey_f: String,
+    pub zkey_g: String,
+    pub zkey_h: String,
+    pub zkey_i: String,
+    pub zkey_j: String,
+    pub zkey_k: String,
 }
 
 // Function to load the payload

@@ -10,7 +10,7 @@ contract Contract is Ownable {
     // Dependent Contracts
     // ============================
     IDKIMRegistry public dkimRegistry;
-    Groth16Verifier public verifier;
+    Verifier public verifier;
 
     // ============================
     // Prover Constants (Auto-generated)
@@ -26,7 +26,7 @@ contract Contract is Ownable {
     uint16 public constant {{ field.name }}_len = {{ field.pack_size }};
 {% endfor %}
 
-    constructor (IDKIMRegistry r, Groth16Verifier v) Ownable(msg.sender) {
+    constructor (IDKIMRegistry r, Verifier v) Ownable(msg.sender) {
         dkimRegistry = r;
         verifier = v;
     }

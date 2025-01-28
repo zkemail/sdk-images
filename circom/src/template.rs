@@ -62,89 +62,91 @@ impl From<Blueprint> for CircuitTemplateInputs {
 
         // Process regexes
         let mut regexes = Vec::new();
-        for regex in &value.decomposed_regexes {
-            let name = regex.name.clone();
-            let uppercased_name = name.to_uppercase();
-            let max_length = regex.max_length as usize;
-            let regex_circuit_name = format!("{}Regex", regex.name);
+        if let Some(decomposed_regexes) = value.decomposed_regexes {
+            for regex in decomposed_regexes {
+                let name = regex.name.clone();
+                let uppercased_name = name.to_uppercase();
+                let max_length = regex.max_length as usize;
+                let regex_circuit_name = format!("{}Regex", regex.name);
 
-            // Determine location and its max length
-            let (location, max_length_of_location, max_length_of_location_name) =
-                if regex.location == "header" {
-                    (
-                        "emailHeader".to_string(),
-                        email_header_max_length,
-                        "maxHeaderLength".to_string(),
-                    )
-                } else if remove_soft_line_breaks {
-                    (
-                        "decodedEmailBodyIn".to_string(),
-                        email_body_max_length,
-                        "maxBodyLength".to_string(),
-                    )
-                } else {
-                    (
-                        "emailBody".to_string(),
-                        email_body_max_length,
-                        "maxBodyLength".to_string(),
-                    )
-                };
-
-            // Compute reveal and indexing strings
-            let mut reveal_string = String::new();
-            let mut has_public_parts = false;
-            let mut regex_idx_name = String::new();
-            let mut num_reveal_signals: i32 = -1;
-            let mut signal_regex_out_string = String::new();
-
-            for part in &regex.parts {
-                if part.is_public {
-                    num_reveal_signals += 1;
-                    if regex_idx_name.is_empty() {
-                        regex_idx_name = format!("{}RegexIdx", name);
+                // Determine location and its max length
+                let (location, max_length_of_location, max_length_of_location_name) =
+                    if regex.location == "header" {
+                        (
+                            "emailHeader".to_string(),
+                            email_header_max_length,
+                            "maxHeaderLength".to_string(),
+                        )
+                    } else if remove_soft_line_breaks {
+                        (
+                            "decodedEmailBodyIn".to_string(),
+                            email_body_max_length,
+                            "maxBodyLength".to_string(),
+                        )
                     } else {
-                        regex_idx_name
-                            .push_str(&format!(", {}RegexIdx{}", name, num_reveal_signals));
-                    }
+                        (
+                            "emailBody".to_string(),
+                            email_body_max_length,
+                            "maxBodyLength".to_string(),
+                        )
+                    };
 
-                    has_public_parts = true;
-                    if reveal_string.is_empty() {
-                        reveal_string.push_str(&format!(", {}RegexReveal", name));
-                    } else {
-                        reveal_string
-                            .push_str(&format!(", {}RegexReveal{}", name, num_reveal_signals));
-                    }
-                    if num_reveal_signals == 0 {
-                        signal_regex_out_string.push_str(&format!(
-                            ", {}RegexReveal[{}]",
-                            name, max_length_of_location
-                        ));
-                    } else {
-                        signal_regex_out_string.push_str(&format!(
-                            ", {}RegexReveal{}[{}]",
-                            name, num_reveal_signals, max_length_of_location
-                        ));
+                // Compute reveal and indexing strings
+                let mut reveal_string = String::new();
+                let mut has_public_parts = false;
+                let mut regex_idx_name = String::new();
+                let mut num_reveal_signals: i32 = -1;
+                let mut signal_regex_out_string = String::new();
+
+                for part in &regex.parts {
+                    if part.is_public {
+                        num_reveal_signals += 1;
+                        if regex_idx_name.is_empty() {
+                            regex_idx_name = format!("{}RegexIdx", name);
+                        } else {
+                            regex_idx_name
+                                .push_str(&format!(", {}RegexIdx{}", name, num_reveal_signals));
+                        }
+
+                        has_public_parts = true;
+                        if reveal_string.is_empty() {
+                            reveal_string.push_str(&format!(", {}RegexReveal", name));
+                        } else {
+                            reveal_string
+                                .push_str(&format!(", {}RegexReveal{}", name, num_reveal_signals));
+                        }
+                        if num_reveal_signals == 0 {
+                            signal_regex_out_string.push_str(&format!(
+                                ", {}RegexReveal[{}]",
+                                name, max_length_of_location
+                            ));
+                        } else {
+                            signal_regex_out_string.push_str(&format!(
+                                ", {}RegexReveal{}[{}]",
+                                name, num_reveal_signals, max_length_of_location
+                            ));
+                        }
                     }
                 }
+
+                // Increment once more to account for indexing
+                num_reveal_signals += 1;
+
+                regexes.push(RegexEntry {
+                    name,
+                    uppercased_name,
+                    max_length,
+                    regex_circuit_name,
+                    location,
+                    max_length_of_location,
+                    max_length_of_location_name,
+                    reveal_string,
+                    has_public_parts,
+                    regex_idx_name,
+                    num_reveal_signals,
+                    signal_regex_out_string,
+                });
             }
-
-            // Increment once more to account for indexing
-            num_reveal_signals += 1;
-
-            regexes.push(RegexEntry {
-                name,
-                uppercased_name,
-                max_length,
-                regex_circuit_name,
-                location,
-                max_length_of_location,
-                max_length_of_location_name,
-                reveal_string,
-                has_public_parts,
-                regex_idx_name,
-                num_reveal_signals,
-                signal_regex_out_string,
-            });
         }
 
         // Process external inputs
@@ -229,30 +231,32 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
 }
 
 /// Generates CIRCOM files for the provided decomposed regexes.
-pub fn generate_regex_circuits(decomposed_regexes: Vec<DecomposedRegex>) -> Result<()> {
-    for decomposed_regex in decomposed_regexes {
-        let mut decomposed_regex_config = VecDeque::new();
-        for part in decomposed_regex.parts {
-            let part_config = RegexPartConfig {
-                is_public: part.is_public,
-                regex_def: part.regex_def.clone(),
+pub fn generate_regex_circuits(decomposed_regexes: Option<Vec<DecomposedRegex>>) -> Result<()> {
+    if let Some(decomposed_regexes) = decomposed_regexes {
+        for decomposed_regex in decomposed_regexes {
+            let mut decomposed_regex_config = VecDeque::new();
+            for part in decomposed_regex.parts {
+                let part_config = RegexPartConfig {
+                    is_public: part.is_public,
+                    regex_def: part.regex_def.clone(),
+                };
+                decomposed_regex_config.push_back(part_config);
+            }
+
+            let config = DecomposedRegexConfig {
+                parts: decomposed_regex_config,
             };
-            decomposed_regex_config.push_back(part_config);
+
+            gen_circom_from_decomposed_regex(
+                &mut config.clone(),
+                Some(&format!(
+                    "./tmp/regex/{}Regex.circom",
+                    decomposed_regex.name
+                )),
+                Some(&format!("{}Regex", decomposed_regex.name)),
+                Some(true),
+            )?;
         }
-
-        let config = DecomposedRegexConfig {
-            parts: decomposed_regex_config,
-        };
-
-        gen_circom_from_decomposed_regex(
-            &mut config.clone(),
-            Some(&format!(
-                "./tmp/regex/{}Regex.circom",
-                decomposed_regex.name
-            )),
-            Some(&format!("{}Regex", decomposed_regex.name)),
-            Some(true),
-        )?;
     }
     Ok(())
 }

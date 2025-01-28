@@ -30,6 +30,7 @@ RUN apt update && \
     libomp-dev \
     nasm \
     nlohmann-json3-dev \
+    gzip \
     zip && \
     rm -rf /var/lib/apt/lists/*
 

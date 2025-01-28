@@ -32,11 +32,11 @@ contract Deploy is Script {
 
         dkimRegistry = IDKIMRegistry(dkimRegistryAddr);
 
-        Groth16Verifier verifier = new Groth16Verifier();
+        Verifier verifier = new Verifier();
         Contract circuitContract = new Contract(dkimRegistry, verifier);
         vm.stopBroadcast();
 
-        console.log("Deployed Groth16Verifier at", address(verifier));
+        console.log("Deployed Verifier at", address(verifier));
         console.log("Deployed Contract at", address(circuitContract));
         console.log("Deployed DKIMRegistry at", dkimRegistryAddr);
         return;
