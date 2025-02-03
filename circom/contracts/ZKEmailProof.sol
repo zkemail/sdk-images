@@ -134,7 +134,7 @@ contract ZKEmailProof is ERC721, Ownable {
             '{"name":"ZKEmail Proof #',
             tokenId.toString(),
             '","description":"Soulbound NFT representing a valid ZK Email proof for an account",',
-            '"image": "data:image/svg+xml;base64,',
+            '"image":"data:image/svg+xml;base64,',
             Base64.encode(bytes(svg)),
             '","attributes":['
         );
@@ -149,9 +149,9 @@ contract ZKEmailProof is ERC721, Ownable {
             '{"trait_type":"Public Outputs","value":',
             _buildPublicOutputsJson(metadata.publicOutputs),
             "},",
-            '{"trait_type":"Decoded Public Outputs","value":{',
+            '{"trait_type":"Decoded Public Outputs","value":',
             metadata.decodedPublicOutputs,
-            "}},",
+            "},",
             '{"trait_type":"Verifier","value":"',
             metadata.verifier.toHexString(),
             '"}]}'

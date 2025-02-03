@@ -42,18 +42,18 @@ contract BaseTest is Test {
             address(zkEmailProof)
         );
 
+        domainName = "gmail.com";
+        publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
+
         blueprintId = 1;
         proof = Proof({
             a: [uint256(1), uint256(2)],
             b: [[uint256(3), uint256(4)], [uint256(5), uint256(6)]],
             c: [uint256(7), uint256(8)]
         });
-        publicOutputs[0] = uint256(uint160(alice));
-        decodedPublicOutputs = '"to": blueprintId, "username": "John Smith"';
+        publicOutputs[0] = uint256(publicKeyHash);
+        decodedPublicOutputs = '{"publicKeyHash":0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788,"to":0x0000000000000000000000000000000000000002}';
         proverEthAddressIdx = 0;
-
-        domainName = "gmail.com";
-        publicKeyHash = 0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788;
 
         vm.startPrank(owner);
         zkEmailProof.addVerifier(address(verifier));
