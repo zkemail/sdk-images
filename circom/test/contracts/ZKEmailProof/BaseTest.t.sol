@@ -20,7 +20,7 @@ contract BaseTest is Test {
 
     uint256 blueprintId;
     Proof proof;
-    uint256[] publicOutputs = new uint256[](1);
+    uint256[] publicOutputs = new uint256[](2);
     string decodedPublicOutputs;
     uint256 proverEthAddressIdx;
 
@@ -52,8 +52,9 @@ contract BaseTest is Test {
             c: [uint256(7), uint256(8)]
         });
         publicOutputs[0] = uint256(publicKeyHash);
-        decodedPublicOutputs = '{"publicKeyHash":0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788,"to":0x0000000000000000000000000000000000000002}';
-        proverEthAddressIdx = 0;
+        publicOutputs[1] = uint256(uint160(alice));
+        decodedPublicOutputs = '{"publicKeyHash":"0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788","to":"0x0000000000000000000000000000000000000002"}';
+        proverEthAddressIdx = 1;
 
         vm.startPrank(owner);
         zkEmailProof.addVerifier(address(verifier));

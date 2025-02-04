@@ -7,9 +7,12 @@ import {MockGroth16Verifier} from "./MockGroth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
 /**
- * @title TestVerifier
+ * @title ExtractGoogleDomain_Verifier
+ * @notice Test verifier to "Reveal Only Email Domain for any Gmail Account"
+ * Looks for any email from "no-replyaccounts.google.com" and extracts only the domain.
+ * https://registry.zk.email/65d93479-957d-4c0e-8f3f-a292e9359f64/proofs/ae6c58da-2517-4863-a5e3-75e58f0a853e?emailProofInfo=%7B%22status%22%3A2%2C%22id%22%3A%22ae6c58da-2517-4863-a5e3-75e58f0a853e%22%2C%22blueprintId%22%3A%2265d93479-957d-4c0e-8f3f-a292e9359f64%22%2C%22proofData%22%3A%7B%22pi_a%22%3A%5B%2213802435031720962941661669244130696069021578908317704452734390362048770904272%22%2C%2219441376773042620786965941724943347902801781248969807158896752352931643540382%22%2C%221%22%5D%2C%22pi_b%22%3A%5B%5B%2214958311338642265739599103401577340624134193198256815763885004819488719899315%22%2C%2214111732826198729483928446199843358556391351877952773728506071401698891113251%22%5D%2C%5B%2217724731386053148126258101258851230873769052565424991244706990092784722642738%22%2C%226728230226090034507651931034428987533292344523848990959495064060171479578524%22%5D%2C%5B%221%22%2C%220%22%5D%5D%2C%22pi_c%22%3A%5B%2219636258068919222251243054711023733754024767123236240955025887040110890562534%22%2C%2213412079532522716989769443326707115150531489858360807881116498484797828213498%22%2C%221%22%5D%2C%22protocol%22%3A%22groth16%22%7D%2C%22publicData%22%3A%7B%22sender_domain%22%3A%5B%22accounts.google.com%22%5D%7D%2C%22externalInputs%22%3A%7B%7D%2C%22startedAt%22%3A%222025-02-03T17%3A21%3A49.000Z%22%2C%22provedAt%22%3A%222025-02-03T17%3A22%3A01.000Z%22%2C%22isLocal%22%3Afalse%7D
  */
-contract TestVerifier {
+contract ExtractGoogleDomain_Verifier {
     address public immutable dkimRegistry;
     address public immutable verifier;
     address public immutable zkEmailProof;
@@ -54,7 +57,7 @@ contract TestVerifier {
         uint256[2][2] calldata b,
         uint256[2] calldata c,
         uint256[5] calldata publicOutputs,
-        string[2] calldata publicOutputFieldNames,
+        string[1] calldata publicOutputFieldNames,
         address to,
         uint256 blueprintId,
         uint256 toAddressIndex
@@ -94,7 +97,7 @@ contract TestVerifier {
     }
 
     function decodePublicOutputs(
-        string[2] calldata publicOutputFieldNames,
+        string[1] calldata publicOutputFieldNames,
         uint256[5] calldata publicOutputs
     ) internal pure returns (string memory) {
         uint256[] memory packed_sender_domain = new uint256[](

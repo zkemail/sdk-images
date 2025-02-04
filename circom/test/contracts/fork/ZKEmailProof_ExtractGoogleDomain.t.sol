@@ -3,11 +3,12 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import {DKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IVerifier} from "../../../contracts/interfaces/IVerifier.sol";
 import {ZKEmailProof, Proof, ZKEmailProofMetadata} from "../../../contracts/ZKEmailProof.sol";
-import {TestVerifier} from "../../../contracts/test/TestVerifier.sol";
+import {ExtractGoogleDomain_Verifier} from "../../../contracts/test/ExtractGoogleDomain_Verifier.sol";
 
-contract ZKEmailProof_Fork_Test is Test {
+contract ZKEmailProof_ExtractGoogleDomain_Verifier_Fork_Test is Test {
     address constant DEPLOYED_VERIFIER =
         0x7019c2E274c77dd6E9e4C2707068BC6e690eA0AF;
 
@@ -17,7 +18,7 @@ contract ZKEmailProof_Fork_Test is Test {
     DKIMRegistry dkimRegistry;
     IVerifier groth16Verifier;
     ZKEmailProof zkEmailProof;
-    TestVerifier verifier;
+    ExtractGoogleDomain_Verifier verifier;
 
     Proof proof;
     uint256[5] publicOutputs;
@@ -37,12 +38,14 @@ contract ZKEmailProof_Fork_Test is Test {
         vm.rollFork(20880810);
 
         owner = address(1);
-        alice = address(2);
+        // We're setting alice to a value in the publicOutputs array, but this is a bit of a hack as
+        // the value is not actually an owner address according to the original proof
+        alice = address(2440484440003696966756646629102736908273017697);
 
         dkimRegistry = new DKIMRegistry(owner);
         groth16Verifier = IVerifier(DEPLOYED_VERIFIER);
         zkEmailProof = new ZKEmailProof(owner);
-        verifier = new TestVerifier(
+        verifier = new ExtractGoogleDomain_Verifier(
             address(dkimRegistry),
             address(groth16Verifier),
             address(zkEmailProof)
@@ -78,7 +81,7 @@ contract ZKEmailProof_Fork_Test is Test {
         publicOutputFieldNames = ["sender_domain"];
         to = alice;
         blueprintId = 1;
-        toAddressIndex = 0;
+        toAddressIndex = 1;
 
         domainName = "accounts.google.com";
         publicKeyHash = bytes32(publicOutputs[0]);

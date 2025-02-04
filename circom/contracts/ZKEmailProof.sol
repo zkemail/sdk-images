@@ -92,12 +92,12 @@ contract ZKEmailProof is ERC721, Ownable {
         string memory decodedPublicOutputs,
         uint256 toAddressIndex
     ) public onlyVerifier {
-        // FIXME: Proof in fork test does not include this
-        // // Owner should be committed to in each proof. This prevents
-        // // frontrunning safeMint with a valid proof but malicious "to" address
-        // if (address(uint160(publicOutputs[toAddressIndex])) != to) {
-        //     revert OwnerNotInProof();
-        // }
+        // Owner should be committed to in each proof. This prevents
+        // frontrunning `mintProof` with a valid proof but malicious "to" address.
+        // An entity could also just mint the proof many times for different accounts
+        if (address(uint160(publicOutputs[toAddressIndex])) != to) {
+            revert OwnerNotInProof();
+        }
 
         _ownerToMetadata[to] = ZKEmailProofMetadata({
             blueprintId: blueprintId,
@@ -204,14 +204,14 @@ contract ZKEmailProof is ERC721, Ownable {
     function _buildPublicOutputsJson(
         uint256[] memory publicOutputs
     ) private pure returns (string memory) {
-        string memory result = '"[';
+        string memory result = "[";
         for (uint256 i = 0; i < publicOutputs.length; i++) {
             result = string.concat(result, publicOutputs[i].toString());
             if (i < publicOutputs.length - 1) {
                 result = string.concat(result, ",");
             }
         }
-        return string.concat(result, ']"');
+        return string.concat(result, "]");
     }
 
     /**

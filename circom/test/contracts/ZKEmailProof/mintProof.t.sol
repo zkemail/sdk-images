@@ -65,21 +65,20 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
         assertEq(metadata.decodedPublicOutputs, decodedPublicOutputs);
     }
 
-    // TODO: generate proof with commitment to owner in then uncomment this test
-    // function test_ZKEmailProof_MintProof_RevertWhen_OwnerNotInPublicOutputs()
-    //     public
-    // {
-    //     publicOutputs[0] = uint256(uint160(bob)); // invalid owner
+    function test_ZKEmailProof_MintProof_RevertWhen_OwnerNotInPublicOutputs()
+        public
+    {
+        publicOutputs[1] = uint256(uint160(bob));
 
-    //     vm.prank(address(verifier));
-    //     vm.expectRevert(ZKEmailProof.OwnerNotInProof.selector);
-    //     zkEmailProof.mintProof(
-    //         alice,
-    //         blueprintId,
-    //         proof,
-    //         publicOutputs,
-    //         decodedPublicOutputs,
-    //         proverEthAddressIdx
-    //     );
-    // }
+        vm.prank(address(verifier));
+        vm.expectRevert(ZKEmailProof.OwnerNotInProof.selector);
+        zkEmailProof.mintProof(
+            alice,
+            blueprintId,
+            proof,
+            publicOutputs,
+            decodedPublicOutputs,
+            proverEthAddressIdx
+        );
+    }
 }
