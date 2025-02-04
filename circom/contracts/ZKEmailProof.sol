@@ -64,17 +64,6 @@ contract ZKEmailProof is ERC721, Ownable {
     }
 
     /**
-     * @notice Removes a verifier contract. Can only be called by the owner
-     * @param _verifier The verifier contract address to remove
-     */
-    function removeVerifier(address _verifier) external onlyOwner {
-        if (!approvedVerifiers[_verifier]) {
-            revert InvalidVerifier();
-        }
-        approvedVerifiers[_verifier] = false;
-    }
-
-    /**
      * @notice Mints a new soulbound NFT representing a ZK email proof
      * @dev First element of publicOutputs must be the recipient address
      * @param to Address to mint the NFT to
