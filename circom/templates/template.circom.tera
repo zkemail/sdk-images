@@ -1,6 +1,7 @@
 pragma circom 2.1.6;
 include "@zk-email/circuits/email-verifier.circom";
 include "@zk-email/circuits/utils/regex.circom";
+include "@zk-email/circuits/utils/hash.circom";
 
 {% for regex in regexes %}
 include "./regex/{{ regex.regex_circuit_name }}.circom";
@@ -82,15 +83,33 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }})({{ regex.location }});
     {{ regex.name }}RegexOut === 1;
     {% if regex.has_public_parts %}
+    {% if regex.hash_public_parts %}
+    var {{ regex.name }}TotalPackedLength = computeIntChunkLength({{ regex.name }}MaxLength) * {{ regex.num_reveal_signals }};
+    signal {{ regex.name }}AllPackedOut[{{ regex.name }}TotalPackedLength];
+    {% endif %}
     {% for i in range(end=regex.num_reveal_signals) %}
     {% if i == 0 %}
-    signal output {{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
+    signal {% if not regex.hash_public_parts %}output {% endif %}{{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
     {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
+    {% if regex.hash_public_parts %}
+    for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
+        {{ regex.name }}AllPackedOut[j] <== {{ regex.name }}PackedOut[j];
+    }
+    {% endif %}
     {% else %}
-    signal output {{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.name }}MaxLength)];
+    signal {% if not regex.hash_public_parts %}output {% endif %}{{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.name }}MaxLength)];
     {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}RegexIdx{{ i }});
+    {% if regex.hash_public_parts %}
+    for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
+        {{ regex.name }}AllPackedOut[j + ({{ i }} * computeIntChunkLength({{ regex.name }}MaxLength))] <== {{ regex.name }}PackedOut{{ i }}[j];
+    }
+    {% endif %}
     {% endif %}
     {% endfor %}
+    {% if regex.hash_public_parts %}
+    signal output {{ regex.name }}PackedHash;
+    {{ regex.name }}PackedHash <== PoseidonModular({{ regex.name }}TotalPackedLength)({{ regex.name }}AllPackedOut);
+    {% endif %}
     {% endif %}
     {% endfor %}
 }

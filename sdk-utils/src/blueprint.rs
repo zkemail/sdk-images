@@ -67,6 +67,7 @@ pub struct ExternalInput {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DecomposedRegexPart {
     pub is_public: bool,
+    pub is_hashed: bool,
     pub regex_def: String,
 }
 
