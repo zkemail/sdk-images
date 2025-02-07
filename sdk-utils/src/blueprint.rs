@@ -76,7 +76,7 @@ pub struct DecomposedRegex {
     pub name: String,
     pub max_length: usize,
     pub location: String,
-    pub hash_public_parts: bool,
+    pub is_hashed: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
