@@ -95,7 +95,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 // Compute reveal and indexing strings
                 let mut reveal_string = String::new();
                 let mut has_public_parts = false;
-                let mut hash_public_parts = false;
+                let hash_public_parts = regex.hash_public_parts;
                 let mut regex_idx_name = String::new();
                 let mut num_reveal_signals: i32 = -1;
                 let mut signal_regex_out_string = String::new();
@@ -111,9 +111,6 @@ impl From<Blueprint> for CircuitTemplateInputs {
                         }
 
                         has_public_parts = true;
-                        if part.is_hashed {
-                            hash_public_parts = true;
-                        }
                         if reveal_string.is_empty() {
                             reveal_string.push_str(&format!(", {}RegexReveal", name));
                         } else {
