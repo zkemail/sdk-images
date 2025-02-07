@@ -374,9 +374,11 @@ async fn cleanup() -> Result<()> {
     )
     .await?;
 
+    run_command("mv", &["circuit_full.zkey", "circuit.zkey"], Some("tmp")).await?;
+
     run_command(
         "zip",
-        &["-r", "circuit_full_zkey.zip", "circuit_full.zkey"],
+        &["-r", "circuit_full_zkey.zip", "circuit.zkey"],
         Some("tmp"),
     )
     .await?;
