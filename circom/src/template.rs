@@ -20,7 +20,7 @@ struct RegexEntry {
     max_length_of_location_name: String,
     reveal_string: String,
     has_public_parts: bool,
-    hash_public_parts: bool,
+    is_hashed: bool,
     regex_idx_name: String,
     num_reveal_signals: i32,
     signal_regex_out_string: String,
@@ -95,7 +95,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 // Compute reveal and indexing strings
                 let mut reveal_string = String::new();
                 let mut has_public_parts = false;
-                let hash_public_parts = regex.hash_public_parts;
+                let is_hashed = regex.is_hashed;
                 let mut regex_idx_name = String::new();
                 let mut num_reveal_signals: i32 = -1;
                 let mut signal_regex_out_string = String::new();
@@ -144,7 +144,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
                     max_length_of_location_name,
                     reveal_string,
                     has_public_parts,
-                    hash_public_parts,
+                    is_hashed,
                     regex_idx_name,
                     num_reveal_signals,
                     signal_regex_out_string,
