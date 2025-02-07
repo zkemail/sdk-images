@@ -1,7 +1,9 @@
 pragma circom 2.1.6;
 include "@zk-email/circuits/email-verifier.circom";
 include "@zk-email/circuits/utils/regex.circom";
+{% if regexes | filter(attribute="hash_public_parts", value=true) | length > 0 %}
 include "@zk-email/circuits/utils/hash.circom";
+{% endif %}
 
 {% for regex in regexes %}
 include "./regex/{{ regex.regex_circuit_name }}.circom";
