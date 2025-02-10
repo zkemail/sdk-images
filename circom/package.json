@@ -4,10 +4,10 @@
   "description": "",
   "scripts": {
     "build": "forge build",
-    "deploy": "forge script Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast"
+    "deploy": "forge script Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast --non-interactive"
   },
   "dependencies": {
-    "@zk-email/circuits": "^6.2.0",
+    "@zk-email/circuits": "^6.3.3",
     "@openzeppelin/contracts": "^5.0.0",
     "@openzeppelin/contracts-upgradeable": "^5.0.0",
     "@zk-email/contracts": "^6.1.3",

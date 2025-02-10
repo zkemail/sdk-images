@@ -144,7 +144,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
                     max_length_of_location_name,
                     reveal_string,
                     has_public_parts,
-                    is_hashed,
+                    is_hashed: is_hashed.unwrap_or(false),
                     regex_idx_name,
                     num_reveal_signals,
                     signal_regex_out_string,

@@ -73,8 +73,8 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% endif %}
 
     // Used for nullifier later
-    signal output headerHash[256] <== EV.sha;
-
+    signal output headerHashHi <== EV.shaHi;
+    signal output headerHashLo <== EV.shaLo;
     {% for regex in regexes %}
     // {{ regex.uppercased_name }} Extraction
     {% if regex.has_public_parts %}

@@ -33,10 +33,10 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-5.1.0.tgz#4e61162f2a2bf414c4e10c45eca98ce5f1aadbd4"
   integrity sha512-p1ULhl7BXzjjbha5aqst+QMLY+4/LCWADXOCsmLHRM77AqiPjnd9vvUN9sosUfhL9JGKpZ0TjEGxgvnizmWGSA==
 
-"@zk-email/circuits@^6.2.0":
-  version "6.3.2"
-  resolved "https://registry.yarnpkg.com/@zk-email/circuits/-/circuits-6.3.2.tgz#4c2773055a3a3148be6cd7ee77698b7a8d593542"
-  integrity sha512-CJwVFUKUi6x0Hn/GSfn0XjI2WpMbNTon2UyMtzTALu1FS5kQOYES5byV7Jho8q4IuejDQ8ye70fN4R5EbIw77Q==
+"@zk-email/circuits@^6.3.3":
+  version "6.3.3"
+  resolved "https://registry.yarnpkg.com/@zk-email/circuits/-/circuits-6.3.3.tgz#82d40b4d57eefefaa64c408bff63ea4fc863a6ff"
+  integrity sha512-YwyeMhmyRNausmvIsNB/lLiRgj/qbWTD0ZpSsfW7goQQPkAhRieyImK8ik0g0YVFvPtGsEw2msd4Q+tSVRvKGw==
   dependencies:
     "@zk-email/zk-regex-circom" "^2.3.1"
     circomlib "^2.0.5"

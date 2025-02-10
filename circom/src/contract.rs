@@ -55,8 +55,8 @@ pub fn create_contract(contract_data: &ContractData) -> Result<()> {
 }
 
 pub fn prepare_contract_data(payload: &Payload) -> ContractData {
-    let mut signal_size = 2; // Start with 1 as per your logic
-    let mut current_idx = 1; // Start index for the first field
+    let mut signal_size = 1 + 1 + 2; // For pubkey, proverETHAddress and sha256 hash of header
+    let mut current_idx = 1;
 
     let mut values = Vec::new();
     if let Some(decomposed_regexes) = &payload.blueprint.decomposed_regexes {
@@ -70,8 +70,13 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
             };
             for part in regex.parts.iter() {
                 if part.is_public {
-                    signal_size += pack_size;
-                    current_idx += pack_size;
+                    if regex.is_hashed.unwrap_or(false) {
+                        signal_size += 1;
+                        current_idx += 1;
+                    } else {
+                        signal_size += pack_size;
+                        current_idx += pack_size;
+                    }
                 }
             }
             values.push(field);
@@ -155,8 +160,8 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
 
     // Parse the output to extract addresses
-    let re = Regex::new(r"Deployed (Verifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})")
-        .unwrap();
+    let re =
+        Regex::new(r"Deployed (Verifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})").unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
         let contract_name = &cap[1];
