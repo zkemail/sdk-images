@@ -3,23 +3,23 @@ pragma solidity ^0.8.13;
 
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import {StringUtils} from "@zk-email/contracts/utils/StringUtils.sol";
-import {IExtractGoogleDomain_Groth16Verifier} from "../interfaces/IExtractGoogleDomain_Groth16Verifier.sol";
+import {IProofOfTwitter_Groth16Verifier} from "../interfaces/IProofOfTwitter_Groth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
 /**
- * @title ExtractGoogleDomain_Verifier
- * @notice Test verifier to "Reveal Only Email Domain for any Gmail Account"
- * Looks for any email from "no-replyaccounts.google.com" and extracts only the domain.
- * https://registry.zk.email/65d93479-957d-4c0e-8f3f-a292e9359f64/proofs/ae6c58da-2517-4863-a5e3-75e58f0a853e?emailProofInfo=%7B%22status%22%3A2%2C%22id%22%3A%22ae6c58da-2517-4863-a5e3-75e58f0a853e%22%2C%22blueprintId%22%3A%2265d93479-957d-4c0e-8f3f-a292e9359f64%22%2C%22proofData%22%3A%7B%22pi_a%22%3A%5B%2213802435031720962941661669244130696069021578908317704452734390362048770904272%22%2C%2219441376773042620786965941724943347902801781248969807158896752352931643540382%22%2C%221%22%5D%2C%22pi_b%22%3A%5B%5B%2214958311338642265739599103401577340624134193198256815763885004819488719899315%22%2C%2214111732826198729483928446199843358556391351877952773728506071401698891113251%22%5D%2C%5B%2217724731386053148126258101258851230873769052565424991244706990092784722642738%22%2C%226728230226090034507651931034428987533292344523848990959495064060171479578524%22%5D%2C%5B%221%22%2C%220%22%5D%5D%2C%22pi_c%22%3A%5B%2219636258068919222251243054711023733754024767123236240955025887040110890562534%22%2C%2213412079532522716989769443326707115150531489858360807881116498484797828213498%22%2C%221%22%5D%2C%22protocol%22%3A%22groth16%22%7D%2C%22publicData%22%3A%7B%22sender_domain%22%3A%5B%22accounts.google.com%22%5D%7D%2C%22externalInputs%22%3A%7B%7D%2C%22startedAt%22%3A%222025-02-03T17%3A21%3A49.000Z%22%2C%22provedAt%22%3A%222025-02-03T17%3A22%3A01.000Z%22%2C%22isLocal%22%3Afalse%7D
+ * @title ProofOfTwitter_Verifier
+ * @notice Test verifier - "This blueprint is for proving that you owned a twitter handle"
+ * https://registry.zk.email/0935faed-002d-4b94-8cbf-476b3b05d9a6/proofs/67058735-af80-4fd8-9188-4f1dcf6fa313?emailProofInfo=%7B%22status%22%3A2%2C%22id%22%3A%2267058735-af80-4fd8-9188-4f1dcf6fa313%22%2C%22blueprintId%22%3A%220935faed-002d-4b94-8cbf-476b3b05d9a6%22%2C%22proofData%22%3A%7B%22pi_a%22%3A%5B%2219014357250828634823182307903338300175090724504730053381041748437315271534735%22%2C%224696736584263604331558996548418964379075298974995081308895901094664013414220%22%2C%221%22%5D%2C%22pi_b%22%3A%5B%5B%2214921817661383102514061633663737655278513086830555952892732430740252347498809%22%2C%222166854163583550883937146753361462030743291876364316237947986608198907783650%22%5D%2C%5B%223006462367602337020834301360939705755022854337806187866519397082844272003175%22%2C%2211235379133743098261599914832460495433729372576618727742968307957676590058492%22%5D%2C%5B%221%22%2C%220%22%5D%5D%2C%22pi_c%22%3A%5B%2212074728462639618962329481847660153022131782339938453563695793425878404386242%22%2C%226191198095661398861156257556629402133673552135534202763283703513866655390104%22%2C%221%22%5D%2C%22protocol%22%3A%22groth16%22%7D%2C%22publicData%22%3A%7B%22handle%22%3A%5B%22john_guilding%22%5D%7D%2C%22externalInputs%22%3A%7B%22address%22%3A%220x91AdDB0E8443C83bAf2aDa6B8157B38f814F0bcC%22%7D%2C%22startedAt%22%3A%222025-02-11T15%3A35%3A03.000Z%22%2C%22provedAt%22%3A%222025-02-11T15%3A35%3A49.000Z%22%2C%22isLocal%22%3Afalse%7D
  */
-contract ExtractGoogleDomain_Verifier {
+contract ProofOfTwitter_Verifier {
     address public immutable dkimRegistry;
     address public immutable verifier;
     address public immutable zkEmailProof;
 
-    uint256 public constant packSize = 31;
-    string public constant domain = "accounts.google.com";
-    uint16 public constant sender_domain_len = 3;
+    uint16 public constant packSize = 31;
+    string public constant domain = "x.com";
+    uint16 public constant handle_len = 3;
+    uint16 public constant address_len = 3;
 
     error InvalidDKIMPublicKeyHash();
     error InvalidProof();
@@ -35,10 +35,10 @@ contract ExtractGoogleDomain_Verifier {
     }
 
     function verify(
-        uint256[2] calldata a,
-        uint256[2][2] calldata b,
-        uint256[2] calldata c,
-        uint256[5] calldata publicOutputs
+        uint[2] calldata a,
+        uint[2][2] calldata b,
+        uint[2] calldata c,
+        uint[8] calldata publicOutputs
     ) external view {
         bytes32 publicKeyHash = bytes32(publicOutputs[0]);
         if (
@@ -49,19 +49,21 @@ contract ExtractGoogleDomain_Verifier {
         ) {
             revert InvalidDKIMPublicKeyHash();
         }
-        IExtractGoogleDomain_Groth16Verifier(verifier).verify(
-            a,
-            b,
-            c,
-            publicOutputs
-        );
+        if (
+            !IProofOfTwitter_Groth16Verifier(verifier).verifyProof(
+                a,
+                b,
+                c,
+                publicOutputs
+            )
+        ) revert InvalidProof();
     }
 
     function verifyAndMint(
         uint256[2] calldata a,
         uint256[2][2] calldata b,
         uint256[2] calldata c,
-        uint256[5] calldata publicOutputs,
+        uint256[8] calldata publicOutputs,
         string[1] calldata publicOutputFieldNames,
         address to,
         uint256 blueprintId,
@@ -76,12 +78,14 @@ contract ExtractGoogleDomain_Verifier {
         ) {
             revert InvalidDKIMPublicKeyHash();
         }
-        IExtractGoogleDomain_Groth16Verifier(verifier).verify(
-            a,
-            b,
-            c,
-            publicOutputs
-        );
+        if (
+            !IProofOfTwitter_Groth16Verifier(verifier).verifyProof(
+                a,
+                b,
+                c,
+                publicOutputs
+            )
+        ) revert InvalidProof();
 
         Proof memory proof = Proof(a, b, c);
 
@@ -108,21 +112,21 @@ contract ExtractGoogleDomain_Verifier {
 
     function decodePublicOutputs(
         string[1] calldata publicOutputFieldNames,
-        uint256[5] calldata publicOutputs
+        uint256[8] calldata publicOutputs
     ) internal pure returns (string memory) {
         uint256 startIndex = 1;
-        string memory sender_domain_string = convertPackedFieldsToPublicOutput(
+        string memory handle_string = convertPackedFieldsToPublicOutput(
             publicOutputs,
             startIndex,
             publicOutputFieldNames[0],
-            sender_domain_len
+            handle_len
         );
 
-        return string.concat("{", sender_domain_string, "}");
+        return string.concat("{", handle_string, "}");
     }
 
     function convertPackedFieldsToPublicOutput(
-        uint256[5] memory publicOutputs,
+        uint256[8] memory publicOutputs,
         uint256 startIndex,
         string memory publicOutputFieldName,
         uint256 field_len

@@ -4,25 +4,25 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import {DKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {IExtractGoogleDomain_Groth16Verifier} from "../../../contracts/interfaces/IExtractGoogleDomain_Groth16Verifier.sol";
+import {IProofOfDevconRejection_Groth16Verifier} from "../../../contracts/interfaces/IProofOfDevconRejection_Groth16Verifier.sol";
 import {ZKEmailProof, Proof, ZKEmailProofMetadata} from "../../../contracts/ZKEmailProof.sol";
-import {ExtractGoogleDomain_Verifier} from "../../../contracts/test/ExtractGoogleDomain_Verifier.sol";
+import {ProofOfDevconRejection_Verifier} from "../../../contracts/test/ProofOfDevconRejection_Verifier.sol";
 
-contract ZKEmailProof_ExtractGoogleDomain_Verifier_Fork_Test is Test {
+contract ZKEmailProof_ProofOfDevconRejection_Verifier_Fork_Test is Test {
     address constant DEPLOYED_VERIFIER =
-        0x7019c2E274c77dd6E9e4C2707068BC6e690eA0AF;
+        0x2747bA8A3036D92114c92502a40c8129bdCaBe54;
 
     address public owner;
     address public alice;
 
     DKIMRegistry dkimRegistry;
-    IExtractGoogleDomain_Groth16Verifier groth16Verifier;
+    IProofOfDevconRejection_Groth16Verifier groth16Verifier;
     ZKEmailProof zkEmailProof;
-    ExtractGoogleDomain_Verifier verifier;
+    ProofOfDevconRejection_Verifier verifier;
 
     Proof proof;
-    uint256[5] publicOutputs;
-    string[1] publicOutputFieldNames;
+    uint256[14] publicOutputs;
+    string[3] publicOutputFieldNames;
     address to;
     uint256 blueprintId;
     uint256 toAddressIndex;
@@ -31,23 +31,21 @@ contract ZKEmailProof_ExtractGoogleDomain_Verifier_Fork_Test is Test {
     bytes32 publicKeyHash;
 
     function setUp() public {
-        string memory BASE_SEPOLIA_RPC_URL = vm.envString(
-            "BASE_SEPOLIA_RPC_URL"
-        );
-        vm.createSelectFork(BASE_SEPOLIA_RPC_URL);
-        vm.rollFork(20880810);
+        string memory SEPOLIA_RPC_URL = vm.envString("SEPOLIA_RPC_URL");
+        vm.createSelectFork(SEPOLIA_RPC_URL);
+        vm.rollFork(6963526);
 
         owner = address(1);
         // We're setting alice to a value in the publicOutputs array, but this is a bit of a hack as
         // the value is not actually an owner address according to the original proof
-        alice = address(2440484440003696966756646629102736908273017697);
+        alice = address(1852337994);
 
         dkimRegistry = new DKIMRegistry(owner);
-        groth16Verifier = IExtractGoogleDomain_Groth16Verifier(
+        groth16Verifier = IProofOfDevconRejection_Groth16Verifier(
             DEPLOYED_VERIFIER
         );
         zkEmailProof = new ZKEmailProof(owner);
-        verifier = new ExtractGoogleDomain_Verifier(
+        verifier = new ProofOfDevconRejection_Verifier(
             address(dkimRegistry),
             address(groth16Verifier),
             address(zkEmailProof)
@@ -55,37 +53,50 @@ contract ZKEmailProof_ExtractGoogleDomain_Verifier_Fork_Test is Test {
 
         proof = Proof({
             a: [
-                1692793978230725134718537588656764633251068598376840802181836497833618927933,
-                17936084840096216584367612016954721127830087185756579787574184783724508377771
+                21787286103996958001159036814651275283921884310045619493637386483198756312803,
+                2205533941551717183218748965605497367819929589941304242492909336124299056793
             ],
             b: [
                 [
-                    19219283647539122059053522276695880879148407165532565741834089795370991358107,
-                    12847465177655014214596840354520911080160186515965227558637903538532772737079
+                    15711218089500275950782380242514744500211469485416930788764976422281265079884,
+                    16368380148416915391563570676054658378521066661349226974852210657544444151676
                 ],
                 [
-                    4767667169902665979072671086515676224560114043872022242063506932480784453004,
-                    4663911819773402879184509610027021038350291289101188966445234717972308766789
+                    8102132229674412045503895124318152233653700236174801369606001768756818831626,
+                    5111427434321208849913125573505169044530474322393548934654702436226987268363
                 ]
             ],
             c: [
-                13913147805600869559156345614958577304807929921893387548191618314601950326296,
-                20488551472834533113028258652399137644428184836935659104725497397636885729869
+                15810970334095572684469054695018586972286456935909780708255922956073629053888,
+                16659541395365721697047353511388989965567573573153580998891853733989213312666
             ]
         });
         publicOutputs = [
-            3024598485745563149860456768272954250618223591034926533254923041921841324429,
-            2440484440003696966756646629102736908273017697,
+            8011766048918436304234337347171138895102985966651471271518887910697337713809,
+            1852337994,
             0,
             0,
+            57377328031630107749936499991080080299453129889983133523939340367986255164,
+            5438187003054578043726741043588292439992695,
+            0,
+            0,
+            0,
+            0,
+            0,
+            203411379827238570491176173578436868093537450257881964775793530671143609719,
+            2037169922858342507125,
             0
         ];
-        publicOutputFieldNames = ["sender_domain"];
+        publicOutputFieldNames = [
+            "recipient_name",
+            "proposal_title",
+            "rejection_line"
+        ];
         to = alice;
         blueprintId = 1;
         toAddressIndex = 1;
 
-        domainName = "accounts.google.com";
+        domainName = "devcon.org";
         publicKeyHash = bytes32(publicOutputs[0]);
 
         vm.startPrank(owner);
@@ -100,7 +111,7 @@ contract ZKEmailProof_ExtractGoogleDomain_Verifier_Fork_Test is Test {
 
     function test_VerifyAndMint() public {
         string
-            memory expectedDecodedPublicOutputs = '{"sender_domain":"accounts.google.com"}';
+            memory expectedDecodedPublicOutputs = '{"recipient_name":"John","proposal_title":"<em>Making Smart Accounts easy with ZK Email</em>","rejection_line":"we were unable to accept this submission"}';
 
         verifier.verifyAndMint(
             proof.a,
@@ -132,6 +143,15 @@ contract ZKEmailProof_ExtractGoogleDomain_Verifier_Fork_Test is Test {
         assertEq(metadata.publicOutputs[2], publicOutputs[2]);
         assertEq(metadata.publicOutputs[3], publicOutputs[3]);
         assertEq(metadata.publicOutputs[4], publicOutputs[4]);
+        assertEq(metadata.publicOutputs[5], publicOutputs[5]);
+        assertEq(metadata.publicOutputs[6], publicOutputs[6]);
+        assertEq(metadata.publicOutputs[7], publicOutputs[7]);
+        assertEq(metadata.publicOutputs[8], publicOutputs[8]);
+        assertEq(metadata.publicOutputs[9], publicOutputs[9]);
+        assertEq(metadata.publicOutputs[10], publicOutputs[10]);
+        assertEq(metadata.publicOutputs[11], publicOutputs[11]);
+        assertEq(metadata.publicOutputs[12], publicOutputs[12]);
+        assertEq(metadata.publicOutputs[13], publicOutputs[13]);
         assertEq(metadata.decodedPublicOutputs, expectedDecodedPublicOutputs);
     }
 }

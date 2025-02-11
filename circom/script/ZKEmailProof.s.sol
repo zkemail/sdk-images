@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 import {DKIMRegistry} from "@zk-email/contracts/DKIMRegistry.sol";
-import {IVerifier} from "../contracts/interfaces/IVerifier.sol";
+import {IExtractGoogleDomain_Groth16Verifier} from "../contracts/interfaces/IExtractGoogleDomain_Groth16Verifier.sol";
 import {ZKEmailProof, Proof, ZKEmailProofMetadata} from "../contracts/ZKEmailProof.sol";
 import {TestVerifier} from "../contracts/test/TestVerifier.sol";
 
@@ -12,7 +12,7 @@ contract ZKEmailProof_Script is Script {
         0x7019c2E274c77dd6E9e4C2707068BC6e690eA0AF;
 
     DKIMRegistry dkimRegistry;
-    IVerifier groth16Verifier;
+    IExtractGoogleDomain_Groth16Verifier groth16Verifier;
     ZKEmailProof zkEmailProof;
     TestVerifier verifier;
 
@@ -26,7 +26,9 @@ contract ZKEmailProof_Script is Script {
         address owner = vm.envAddress("OWNER");
 
         dkimRegistry = new DKIMRegistry(owner);
-        groth16Verifier = IVerifier(DEPLOYED_VERIFIER);
+        groth16Verifier = IExtractGoogleDomain_Groth16Verifier(
+            DEPLOYED_VERIFIER
+        );
         zkEmailProof = new ZKEmailProof(owner);
         verifier = new TestVerifier(
             address(dkimRegistry),

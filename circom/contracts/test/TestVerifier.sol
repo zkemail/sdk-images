@@ -3,11 +3,11 @@ pragma solidity ^0.8.13;
 
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import {StringUtils} from "@zk-email/contracts/utils/StringUtils.sol";
-import {MockGroth16Verifier} from "./MockGroth16Verifier.sol";
+import {IGroth16Verifier} from "../interfaces/IGroth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
 /**
- * @title TestVerifier
+ * @title TestVerifier based on ExtractGoogleDomain_Verifier
  */
 contract TestVerifier {
     address public immutable dkimRegistry;
@@ -46,7 +46,7 @@ contract TestVerifier {
         ) {
             revert InvalidDKIMPublicKeyHash();
         }
-        MockGroth16Verifier(verifier).verify(a, b, c, publicOutputs);
+        IGroth16Verifier(verifier).verify(a, b, c, publicOutputs);
     }
 
     function verifyAndMint(
@@ -68,7 +68,7 @@ contract TestVerifier {
         ) {
             revert InvalidDKIMPublicKeyHash();
         }
-        MockGroth16Verifier(verifier).verify(a, b, c, publicOutputs);
+        IGroth16Verifier(verifier).verify(a, b, c, publicOutputs);
 
         Proof memory proof = Proof(a, b, c);
 
