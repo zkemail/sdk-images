@@ -119,6 +119,7 @@ contract ZKEmailProof_ExtractGoogleDomain_Verifier_Fork_Test is Test {
 
         ZKEmailProofMetadata memory metadata = zkEmailProof.getMetadata(alice);
         assertEq(metadata.blueprintId, blueprintId);
+        assertEq(metadata.verifier, address(verifier));
         assertEq(metadata.proof.a[0], proof.a[0]);
         assertEq(metadata.proof.a[1], proof.a[1]);
         assertEq(metadata.proof.b[0][0], proof.b[0][0]);

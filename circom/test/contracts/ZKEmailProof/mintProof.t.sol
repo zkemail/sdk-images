@@ -36,6 +36,23 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
         );
     }
 
+    function test_ZKEmailProof_MintProof_RevertWhen_OwnerNotInPublicOutputs()
+        public
+    {
+        publicOutputs[1] = uint256(uint160(bob));
+
+        vm.prank(address(verifier));
+        vm.expectRevert(ZKEmailProof.OwnerNotInProof.selector);
+        zkEmailProof.mintProof(
+            alice,
+            blueprintId,
+            proof,
+            publicOutputs,
+            decodedPublicOutputs,
+            proverEthAddressIdx
+        );
+    }
+
     function test_ZKEmailProof_MintProof() public {
         vm.prank(address(verifier));
         zkEmailProof.mintProof(
@@ -53,6 +70,7 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
 
         ZKEmailProofMetadata memory metadata = zkEmailProof.getMetadata(alice);
         assertEq(metadata.blueprintId, blueprintId);
+        assertEq(metadata.verifier, address(verifier));
         assertEq(metadata.proof.a[0], proof.a[0]);
         assertEq(metadata.proof.a[1], proof.a[1]);
         assertEq(metadata.proof.b[0][0], proof.b[0][0]);
@@ -63,22 +81,5 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
         assertEq(metadata.proof.c[1], proof.c[1]);
         assertEq(metadata.publicOutputs, publicOutputs);
         assertEq(metadata.decodedPublicOutputs, decodedPublicOutputs);
-    }
-
-    function test_ZKEmailProof_MintProof_RevertWhen_OwnerNotInPublicOutputs()
-        public
-    {
-        publicOutputs[1] = uint256(uint160(bob));
-
-        vm.prank(address(verifier));
-        vm.expectRevert(ZKEmailProof.OwnerNotInProof.selector);
-        zkEmailProof.mintProof(
-            alice,
-            blueprintId,
-            proof,
-            publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
-        );
     }
 }

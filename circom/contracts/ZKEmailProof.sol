@@ -100,12 +100,12 @@ contract ZKEmailProof is ERC721, Ownable {
         _safeMint(to, tokenId);
     }
 
-    // Override required by Solidity for multiple inheritance
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
+    // // Override required by Solidity for multiple inheritance
+    // function supportsInterface(
+    //     bytes4 interfaceId
+    // ) public view override(ERC721) returns (bool) {
+    //     return super.supportsInterface(interfaceId);
+    // }
 
     function tokenURI(
         uint256 tokenId
