@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import {StringUtils} from "@zk-email/contracts/utils/StringUtils.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IProofOfTwitter_Groth16Verifier} from "../interfaces/IProofOfTwitter_Groth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
@@ -23,6 +24,7 @@ contract ProofOfTwitter_Verifier {
 
     error InvalidDKIMPublicKeyHash();
     error InvalidProof();
+    error OwnerNotInProof();
 
     constructor(
         address _dkimRegistry,
@@ -67,7 +69,7 @@ contract ProofOfTwitter_Verifier {
         string[1] calldata publicOutputFieldNames,
         address to,
         uint256 blueprintId,
-        uint256 toAddressIndex
+        uint256 toAddressStartIndex
     ) external {
         bytes32 publicKeyHash = bytes32(publicOutputs[0]);
         if (
@@ -87,6 +89,8 @@ contract ProofOfTwitter_Verifier {
             )
         ) revert InvalidProof();
 
+        validateOwner(publicOutputs, toAddressStartIndex, to);
+
         Proof memory proof = Proof(a, b, c);
 
         uint256 publicOutputsLength = publicOutputs.length;
@@ -105,8 +109,7 @@ contract ProofOfTwitter_Verifier {
             blueprintId,
             proof,
             dynamicSignals,
-            decodedPublicOutputs,
-            toAddressIndex
+            decodedPublicOutputs
         );
     }
 
@@ -149,5 +152,30 @@ contract ProofOfTwitter_Verifier {
                 publicOutputFieldValue,
                 '"'
             );
+    }
+
+    function validateOwner(
+        uint256[8] memory publicOutputs,
+        uint256 toAddressStartIndex,
+        address to
+    ) internal pure {
+        uint256[] memory packed_address = new uint256[](address_len);
+        for (uint256 i = 0; i < address_len; i++) {
+            packed_address[i] = publicOutputs[toAddressStartIndex + i];
+        }
+        string memory toAddressString = StringUtils.convertPackedBytesToString(
+            packed_address,
+            packSize * address_len,
+            packSize
+        );
+
+        // Owner should be committed to in each proof. This prevents
+        // frontrunning `mintProof` with a valid proof but malicious "to" address.
+        // An entity could also just mint the proof many times for different accounts
+        // if (address(uint160(publicOutputs[toAddressStartIndex])) != to) {
+        // if (toAddressString.parseAddress() != to) {
+        if (Strings.parseAddress(toAddressString) != to) {
+            revert OwnerNotInProof();
+        }
     }
 }

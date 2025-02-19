@@ -23,8 +23,7 @@ contract ZKEmailProof_TokenURI_Test is BaseTest {
             blueprintId,
             proof,
             publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
+            decodedPublicOutputs
         );
 
         uint256 tokenId = 0;

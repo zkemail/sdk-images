@@ -20,8 +20,7 @@ contract ZKEmailProof_SafeTransferFrom_Test is BaseTest {
             blueprintId,
             proof,
             publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
+            decodedPublicOutputs
         );
         uint256 tokenId = 0;
 
@@ -36,8 +35,7 @@ contract ZKEmailProof_SafeTransferFrom_Test is BaseTest {
             blueprintId,
             proof,
             publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
+            decodedPublicOutputs
         );
         uint256 tokenId = 0;
 

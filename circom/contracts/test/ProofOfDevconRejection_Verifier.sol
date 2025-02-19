@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/console.sol";
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import {StringUtils} from "@zk-email/contracts/utils/StringUtils.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IProofOfDevconRejection_Groth16Verifier} from "../interfaces/IProofOfDevconRejection_Groth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
@@ -22,9 +23,11 @@ contract ProofOfDevconRejection_Verifier {
     uint16 public constant recipient_name_len = 3;
     uint16 public constant proposal_title_len = 7;
     uint16 public constant rejection_line_len = 3;
+    uint16 public constant address_len = 1;
 
     error InvalidDKIMPublicKeyHash();
     error InvalidProof();
+    error OwnerNotInProof();
 
     constructor(
         address _dkimRegistry,
@@ -69,7 +72,7 @@ contract ProofOfDevconRejection_Verifier {
         string[3] calldata publicOutputFieldNames,
         address to,
         uint256 blueprintId,
-        uint256 toAddressIndex
+        uint256 toAddressStartIndex
     ) external {
         bytes32 publicKeyHash = bytes32(publicOutputs[0]);
         if (
@@ -89,6 +92,8 @@ contract ProofOfDevconRejection_Verifier {
             )
         ) revert InvalidProof();
 
+        validateOwner(publicOutputs, toAddressStartIndex, to);
+
         Proof memory proof = Proof(a, b, c);
 
         uint256 publicOutputsLength = publicOutputs.length;
@@ -107,8 +112,7 @@ contract ProofOfDevconRejection_Verifier {
             blueprintId,
             proof,
             dynamicSignals,
-            decodedPublicOutputs,
-            toAddressIndex
+            decodedPublicOutputs
         );
     }
 
@@ -176,5 +180,25 @@ contract ProofOfDevconRejection_Verifier {
                 publicOutputFieldValue,
                 '"'
             );
+    }
+
+    // The proof to this fork test does not include a commitment to the owner address in the public outputs, so this check is commented out
+    function validateOwner(
+        uint256[14] memory /* publicOutputs */,
+        uint256 /* toAddressStartIndex */,
+        address /* to */
+    ) internal pure {
+        // uint256[] memory packed_address = new uint256[](address_len);
+        // for (uint256 i = 0; i < address_len; i++) {
+        //     packed_address[i] = publicOutputs[toAddressStartIndex + i];
+        // }
+        // string memory toAddressString = StringUtils.convertPackedBytesToString(
+        //     packed_address,
+        //     packSize * address_len,
+        //     packSize
+        // );
+        // if (Strings.parseAddress(toAddressString) != to) {
+        //     revert OwnerNotInProof();
+        // }
     }
 }

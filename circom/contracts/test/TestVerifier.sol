@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import {StringUtils} from "@zk-email/contracts/utils/StringUtils.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IGroth16Verifier} from "../interfaces/IGroth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
@@ -17,9 +18,11 @@ contract TestVerifier {
     uint256 public constant packSize = 31;
     string public constant domain = "accounts.google.com";
     uint16 public constant sender_domain_len = 3;
+    uint16 public constant address_len = 1;
 
     error InvalidDKIMPublicKeyHash();
     error InvalidProof();
+    error OwnerNotInProof();
 
     constructor(
         address _dkimRegistry,
@@ -57,7 +60,7 @@ contract TestVerifier {
         string[2] calldata publicOutputFieldNames,
         address to,
         uint256 blueprintId,
-        uint256 toAddressIndex
+        uint256 toAddressStartIndex
     ) external {
         bytes32 publicKeyHash = bytes32(publicOutputs[0]);
         if (
@@ -69,6 +72,8 @@ contract TestVerifier {
             revert InvalidDKIMPublicKeyHash();
         }
         IGroth16Verifier(verifier).verify(a, b, c, publicOutputs);
+
+        validateOwner(publicOutputs, toAddressStartIndex, to);
 
         Proof memory proof = Proof(a, b, c);
 
@@ -88,8 +93,7 @@ contract TestVerifier {
             blueprintId,
             proof,
             dynamicSignals,
-            decodedPublicOutputs,
-            toAddressIndex
+            decodedPublicOutputs
         );
     }
 
@@ -135,5 +139,30 @@ contract TestVerifier {
 
         string memory flattenedJson = string.concat("{", jsonFieldsString, "}");
         return flattenedJson;
+    }
+
+    function validateOwner(
+        uint256[5] memory publicOutputs,
+        uint256 toAddressStartIndex,
+        address to
+    ) internal pure {
+        uint256[] memory packed_address = new uint256[](address_len);
+        for (uint256 i = 0; i < address_len; i++) {
+            packed_address[i] = publicOutputs[toAddressStartIndex + i];
+        }
+        string memory toAddressString = StringUtils.convertPackedBytesToString(
+            packed_address,
+            packSize * address_len,
+            packSize
+        );
+
+        // Owner should be committed to in each proof. This prevents
+        // frontrunning `mintProof` with a valid proof but malicious "to" address.
+        // An entity could also just mint the proof many times for different accounts
+        // if (address(uint160(publicOutputs[toAddressStartIndex])) != to) {
+        // if (toAddressString.parseAddress() != to) {
+        if (Strings.parseAddress(toAddressString) != to) {
+            revert OwnerNotInProof();
+        }
     }
 }

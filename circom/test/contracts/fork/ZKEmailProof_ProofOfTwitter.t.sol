@@ -11,6 +11,8 @@ import {ProofOfTwitter_Verifier} from "../../../contracts/test/ProofOfTwitter_Ve
 contract ZKEmailProof_ProofOfTwitter_Verifier_Fork_Test is Test {
     address constant DEPLOYED_VERIFIER =
         0xe4Cab1425E02FF5Ae59fdD8a4e90c1F5b05C4164;
+    address constant EXTERNAL_INPUT_ADDRESS =
+        0x91AdDB0E8443C83bAf2aDa6B8157B38f814F0bcC;
 
     address public owner;
     address public alice;
@@ -25,7 +27,7 @@ contract ZKEmailProof_ProofOfTwitter_Verifier_Fork_Test is Test {
     string[1] publicOutputFieldNames;
     address to;
     uint256 blueprintId;
-    uint256 toAddressIndex;
+    uint256 toAddressStartIndex;
 
     string domainName;
     bytes32 publicKeyHash;
@@ -38,9 +40,7 @@ contract ZKEmailProof_ProofOfTwitter_Verifier_Fork_Test is Test {
         vm.rollFork(21546387);
 
         owner = address(1);
-        // We're setting alice to a value in the publicOutputs array, but this is a bit of a hack as
-        // the value is not actually an owner address according to the original proof
-        alice = address(8194671501497130006289079365482);
+        alice = EXTERNAL_INPUT_ADDRESS;
 
         dkimRegistry = new DKIMRegistry(owner);
         groth16Verifier = IProofOfTwitter_Groth16Verifier(DEPLOYED_VERIFIER);
@@ -84,7 +84,7 @@ contract ZKEmailProof_ProofOfTwitter_Verifier_Fork_Test is Test {
         publicOutputFieldNames = ["handle"];
         to = alice;
         blueprintId = 1;
-        toAddressIndex = 1;
+        toAddressStartIndex = 4;
 
         domainName = "x.com";
         publicKeyHash = bytes32(publicOutputs[0]);
@@ -111,7 +111,7 @@ contract ZKEmailProof_ProofOfTwitter_Verifier_Fork_Test is Test {
             publicOutputFieldNames,
             to,
             blueprintId,
-            toAddressIndex
+            toAddressStartIndex
         );
 
         uint256 tokenId = 0;

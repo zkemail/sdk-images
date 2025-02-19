@@ -71,23 +71,14 @@ contract ZKEmailProof is ERC721, Ownable {
      * @param proof Proof struct
      * @param publicOutputs uint256[] of public outputs
      * @param decodedPublicOutputs Decoded public outputs as flattened json
-     * @param toAddressIndex Index of the to address in the publicOutputs array
      */
     function mintProof(
         address to,
         uint256 blueprintId,
         Proof memory proof,
         uint256[] memory publicOutputs,
-        string memory decodedPublicOutputs,
-        uint256 toAddressIndex
+        string memory decodedPublicOutputs
     ) public onlyVerifier {
-        // Owner should be committed to in each proof. This prevents
-        // frontrunning `mintProof` with a valid proof but malicious "to" address.
-        // An entity could also just mint the proof many times for different accounts
-        if (address(uint160(publicOutputs[toAddressIndex])) != to) {
-            revert OwnerNotInProof();
-        }
-
         _ownerToMetadata[to] = ZKEmailProofMetadata({
             blueprintId: blueprintId,
             verifier: msg.sender,
@@ -99,13 +90,6 @@ contract ZKEmailProof is ERC721, Ownable {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
     }
-
-    // // Override required by Solidity for multiple inheritance
-    // function supportsInterface(
-    //     bytes4 interfaceId
-    // ) public view override(ERC721) returns (bool) {
-    //     return super.supportsInterface(interfaceId);
-    // }
 
     function tokenURI(
         uint256 tokenId

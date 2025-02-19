@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import {StringUtils} from "@zk-email/contracts/utils/StringUtils.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IExtractGoogleDomain_Groth16Verifier} from "../interfaces/IExtractGoogleDomain_Groth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
@@ -20,9 +21,11 @@ contract ExtractGoogleDomain_Verifier {
     uint256 public constant packSize = 31;
     string public constant domain = "accounts.google.com";
     uint16 public constant sender_domain_len = 3;
+    uint16 public constant address_len = 1;
 
     error InvalidDKIMPublicKeyHash();
     error InvalidProof();
+    error OwnerNotInProof();
 
     constructor(
         address _dkimRegistry,
@@ -65,7 +68,7 @@ contract ExtractGoogleDomain_Verifier {
         string[1] calldata publicOutputFieldNames,
         address to,
         uint256 blueprintId,
-        uint256 toAddressIndex
+        uint256 toAddressStartIndex
     ) external {
         bytes32 publicKeyHash = bytes32(publicOutputs[0]);
         if (
@@ -82,6 +85,8 @@ contract ExtractGoogleDomain_Verifier {
             c,
             publicOutputs
         );
+
+        validateOwner(publicOutputs, toAddressStartIndex, to);
 
         Proof memory proof = Proof(a, b, c);
 
@@ -101,8 +106,7 @@ contract ExtractGoogleDomain_Verifier {
             blueprintId,
             proof,
             dynamicSignals,
-            decodedPublicOutputs,
-            toAddressIndex
+            decodedPublicOutputs
         );
     }
 
@@ -145,5 +149,25 @@ contract ExtractGoogleDomain_Verifier {
                 publicOutputFieldValue,
                 '"'
             );
+    }
+
+    // The proof to this fork test does not include a commitment to the owner address in the public outputs, so this check is commented out
+    function validateOwner(
+        uint256[5] memory /* publicOutputs */,
+        uint256 /* toAddressStartIndex */,
+        address /* to */
+    ) internal pure {
+        // uint256[] memory packed_address = new uint256[](address_len);
+        // for (uint256 i = 0; i < address_len; i++) {
+        //     packed_address[i] = publicOutputs[toAddressStartIndex + i];
+        // }
+        // string memory toAddressString = StringUtils.convertPackedBytesToString(
+        //     packed_address,
+        //     packSize * address_len,
+        //     packSize
+        // );
+        // if (Strings.parseAddress(toAddressString) != to) {
+        //     revert OwnerNotInProof();
+        // }
     }
 }

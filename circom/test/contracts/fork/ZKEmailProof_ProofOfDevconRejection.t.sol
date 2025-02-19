@@ -25,7 +25,7 @@ contract ZKEmailProof_ProofOfDevconRejection_Verifier_Fork_Test is Test {
     string[3] publicOutputFieldNames;
     address to;
     uint256 blueprintId;
-    uint256 toAddressIndex;
+    uint256 toAddressStartIndex;
 
     string domainName;
     bytes32 publicKeyHash;
@@ -36,9 +36,7 @@ contract ZKEmailProof_ProofOfDevconRejection_Verifier_Fork_Test is Test {
         vm.rollFork(6963526);
 
         owner = address(1);
-        // We're setting alice to a value in the publicOutputs array, but this is a bit of a hack as
-        // the value is not actually an owner address according to the original proof
-        alice = address(1852337994);
+        alice = address(2);
 
         dkimRegistry = new DKIMRegistry(owner);
         groth16Verifier = IProofOfDevconRejection_Groth16Verifier(
@@ -94,7 +92,7 @@ contract ZKEmailProof_ProofOfDevconRejection_Verifier_Fork_Test is Test {
         ];
         to = alice;
         blueprintId = 1;
-        toAddressIndex = 1;
+        toAddressStartIndex = 1;
 
         domainName = "devcon.org";
         publicKeyHash = bytes32(publicOutputs[0]);
@@ -121,7 +119,7 @@ contract ZKEmailProof_ProofOfDevconRejection_Verifier_Fork_Test is Test {
             publicOutputFieldNames,
             to,
             blueprintId,
-            toAddressIndex
+            toAddressStartIndex
         );
 
         uint256 tokenId = 0;

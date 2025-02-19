@@ -19,8 +19,7 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
             blueprintId,
             proof,
             publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
+            decodedPublicOutputs
         );
     }
 
@@ -31,25 +30,7 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
             blueprintId,
             proof,
             publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
-        );
-    }
-
-    function test_ZKEmailProof_MintProof_RevertWhen_OwnerNotInPublicOutputs()
-        public
-    {
-        publicOutputs[1] = uint256(uint160(bob));
-
-        vm.prank(address(verifier));
-        vm.expectRevert(ZKEmailProof.OwnerNotInProof.selector);
-        zkEmailProof.mintProof(
-            alice,
-            blueprintId,
-            proof,
-            publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
+            decodedPublicOutputs
         );
     }
 
@@ -60,8 +41,7 @@ contract ZKEmailProof_MintProof_Test is BaseTest {
             blueprintId,
             proof,
             publicOutputs,
-            decodedPublicOutputs,
-            proverEthAddressIdx
+            decodedPublicOutputs
         );
 
         uint256 tokenId = 0;
