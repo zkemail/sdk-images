@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+
+    name: Foundry project
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: circom
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: "Install NodeJS"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install # will run `yarn install` command
+          dir: circom
+
+      - name: Copy .env
+        working-directory: circom
+        run: cp .env.example .env
+
+      - name: Show Forge version
+        run: |
+          forge --version
+
+      # TODO: configure formatting better
+      # - name: Run Forge fmt
+      #   working-directory: circom
+      #   run: |
+      #     forge fmt --check
+      #   id: fmt
+
+      - name: Run Forge build
+        working-directory: circom
+        run: |
+          forge build --sizes
+        id: build
+
+      - name: Run Forge tests
+        working-directory: circom
+        run: |
+          forge test -vvv
+        id: test
