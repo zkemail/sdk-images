@@ -172,8 +172,6 @@ contract ProofOfTwitter_Verifier {
         // Owner should be committed to in each proof. This prevents
         // frontrunning `mintProof` with a valid proof but malicious "to" address.
         // An entity could also just mint the proof many times for different accounts
-        // if (address(uint160(publicOutputs[toAddressStartIndex])) != to) {
-        // if (toAddressString.parseAddress() != to) {
         if (Strings.parseAddress(toAddressString) != to) {
             revert OwnerNotInProof();
         }

@@ -8,7 +8,7 @@ import {IGroth16Verifier} from "../interfaces/IGroth16Verifier.sol";
 import {ZKEmailProof, Proof} from "../ZKEmailProof.sol";
 
 /**
- * @title TestVerifier based on ExtractGoogleDomain_Verifier
+ * @title TestVerifier based on ProofOfDevconRejection_Verifier
  */
 contract TestVerifier {
     address public immutable dkimRegistry;
@@ -16,9 +16,12 @@ contract TestVerifier {
     address public immutable zkEmailProof;
 
     uint256 public constant packSize = 31;
-    string public constant domain = "accounts.google.com";
-    uint16 public constant sender_domain_len = 3;
-    uint16 public constant address_len = 1;
+    string public constant domain = "domain.org";
+
+    uint16 public constant recipient_name_len = 3;
+    uint16 public constant proposal_title_len = 7;
+    uint16 public constant rejection_line_len = 3;
+    uint16 public constant address_len = 2;
 
     error InvalidDKIMPublicKeyHash();
     error InvalidProof();
@@ -38,7 +41,7 @@ contract TestVerifier {
         uint256[2] calldata a,
         uint256[2][2] calldata b,
         uint256[2] calldata c,
-        uint256[5] calldata publicOutputs
+        uint256[16] calldata publicOutputs
     ) external view {
         bytes32 publicKeyHash = bytes32(publicOutputs[0]);
         if (
@@ -49,15 +52,17 @@ contract TestVerifier {
         ) {
             revert InvalidDKIMPublicKeyHash();
         }
-        IGroth16Verifier(verifier).verify(a, b, c, publicOutputs);
+        if (!IGroth16Verifier(verifier).verifyProof(a, b, c, publicOutputs)) {
+            revert InvalidProof();
+        }
     }
 
     function verifyAndMint(
         uint256[2] calldata a,
         uint256[2][2] calldata b,
         uint256[2] calldata c,
-        uint256[5] calldata publicOutputs,
-        string[2] calldata publicOutputFieldNames,
+        uint256[16] calldata publicOutputs,
+        string[3] calldata publicOutputFieldNames,
         address to,
         uint256 blueprintId,
         uint256 toAddressStartIndex
@@ -71,7 +76,9 @@ contract TestVerifier {
         ) {
             revert InvalidDKIMPublicKeyHash();
         }
-        IGroth16Verifier(verifier).verify(a, b, c, publicOutputs);
+        if (!IGroth16Verifier(verifier).verifyProof(a, b, c, publicOutputs)) {
+            revert InvalidProof();
+        }
 
         validateOwner(publicOutputs, toAddressStartIndex, to);
 
@@ -98,51 +105,73 @@ contract TestVerifier {
     }
 
     function decodePublicOutputs(
-        string[2] calldata publicOutputFieldNames,
-        uint256[5] calldata publicOutputs
+        string[3] calldata publicOutputFieldNames,
+        uint256[16] calldata publicOutputs
     ) internal pure returns (string memory) {
-        uint256[] memory packed_sender_domain = new uint256[](
-            sender_domain_len
+        uint256 startIndex = 1;
+        string memory recipient_name_string = convertPackedFieldsToPublicOutput(
+            publicOutputs,
+            startIndex,
+            publicOutputFieldNames[0],
+            recipient_name_len
         );
-        for (uint256 i = 0; i < sender_domain_len; i++) {
-            packed_sender_domain[i] = publicOutputs[1 + i];
+
+        startIndex += recipient_name_len;
+        string memory proposal_title_string = convertPackedFieldsToPublicOutput(
+            publicOutputs,
+            startIndex,
+            publicOutputFieldNames[1],
+            proposal_title_len
+        );
+
+        startIndex += proposal_title_len;
+        string memory rejection_line_string = convertPackedFieldsToPublicOutput(
+            publicOutputs,
+            startIndex,
+            publicOutputFieldNames[2],
+            rejection_line_len
+        );
+
+        return
+            string.concat(
+                "{",
+                recipient_name_string,
+                ",",
+                proposal_title_string,
+                ",",
+                rejection_line_string,
+                "}"
+            );
+    }
+
+    function convertPackedFieldsToPublicOutput(
+        uint256[16] memory publicOutputs,
+        uint256 startIndex,
+        string memory publicOutputFieldName,
+        uint256 field_len
+    ) internal pure returns (string memory) {
+        uint256[] memory packed_field = new uint256[](field_len);
+        for (uint256 i = 0; i < field_len; i++) {
+            packed_field[i] = publicOutputs[startIndex + i];
         }
-        string memory sender_domain_string = StringUtils
+        string memory publicOutputFieldValue = StringUtils
             .convertPackedBytesToString(
-                packed_sender_domain,
-                packSize * sender_domain_len,
+                packed_field,
+                packSize * field_len,
                 packSize
             );
-
-        uint256 fieldsLength = publicOutputFieldNames.length;
-        string[] memory jsonFields = new string[](fieldsLength);
-        for (uint256 i = 0; i < fieldsLength; i++) {
-            jsonFields[i] = string.concat(
+        return
+            string.concat(
                 '"',
-                publicOutputFieldNames[i],
+                publicOutputFieldName,
                 '":"',
-                sender_domain_string,
+                publicOutputFieldValue,
                 '"'
             );
-        }
-        string memory jsonFieldsString;
-        for (uint256 i = 0; i < fieldsLength; i++) {
-            if (i < fieldsLength - 1) {
-                jsonFieldsString = string.concat(
-                    jsonFieldsString,
-                    jsonFields[i],
-                    ","
-                );
-            }
-            jsonFieldsString = string.concat(jsonFieldsString, jsonFields[i]);
-        }
-
-        string memory flattenedJson = string.concat("{", jsonFieldsString, "}");
-        return flattenedJson;
     }
 
     function validateOwner(
-        uint256[5] memory publicOutputs,
+        uint256[16] memory publicOutputs,
         uint256 toAddressStartIndex,
         address to
     ) internal pure {
@@ -159,8 +188,6 @@ contract TestVerifier {
         // Owner should be committed to in each proof. This prevents
         // frontrunning `mintProof` with a valid proof but malicious "to" address.
         // An entity could also just mint the proof many times for different accounts
-        // if (address(uint160(publicOutputs[toAddressStartIndex])) != to) {
-        // if (toAddressString.parseAddress() != to) {
         if (Strings.parseAddress(toAddressString) != to) {
             revert OwnerNotInProof();
         }

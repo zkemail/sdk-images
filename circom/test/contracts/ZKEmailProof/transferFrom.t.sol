@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import {ZKEmailProof} from "../../../contracts/ZKEmailProof.sol";
 
-import {BaseTest} from "./BaseTest.t.sol";
+import {BaseTest} from "../BaseTest.t.sol";
 
 contract ZKEmailProof_SafeTransferFrom_Test is BaseTest {
     function setUp() public override {

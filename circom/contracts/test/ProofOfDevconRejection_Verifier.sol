@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/console.sol";
 import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import {StringUtils} from "@zk-email/contracts/utils/StringUtils.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -197,6 +196,9 @@ contract ProofOfDevconRejection_Verifier {
         //     packSize * address_len,
         //     packSize
         // );
+        // // Owner should be committed to in each proof. This prevents
+        // // frontrunning `mintProof` with a valid proof but malicious "to" address.
+        // // An entity could also just mint the proof many times for different accounts
         // if (Strings.parseAddress(toAddressString) != to) {
         //     revert OwnerNotInProof();
         // }

@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {TestVerifier} from "../../../contracts/test/TestVerifier.sol";
-import {BaseTest} from "./BaseTest.t.sol";
+import {BaseTest} from "../BaseTest.t.sol";
 
 contract ZKEmailProof_AddVerifier_Test is BaseTest {
     function setUp() public override {

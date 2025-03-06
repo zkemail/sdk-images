@@ -6,7 +6,7 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Proof} from "../../../contracts/ZKEmailProof.sol";
 import {NFTSVG} from "../../../contracts/NFTSVG.sol";
-import {BaseTest} from "./BaseTest.t.sol";
+import {BaseTest} from "../BaseTest.t.sol";
 
 contract ZKEmailProof_TokenURI_Test is BaseTest {
     using Strings for uint256;
@@ -42,9 +42,26 @@ contract ZKEmailProof_TokenURI_Test is BaseTest {
             '","attributes":[',
             '{"trait_type":"Blueprint ID","value":1},',
             '{"trait_type":"Proof","value":[[1,2],[[3,4],[5,6]],[7,8]]},',
-            '{"trait_type":"Public Outputs","value":[6632353713085157925504008443078919716322386156160602218536961028046468237192,2]},',
+            '{"trait_type":"Public Outputs","value":[',
+            "8011766048918436304234337347171138895102985966651471271518887910697337713809,",
+            "1852337994,",
+            "0,",
+            "0,",
+            "57377328031630107749936499991080080299453129889983133523939340367986255164,",
+            "5438187003054578043726741043588292439992695,",
+            "0,",
+            "0,",
+            "0,",
+            "0,",
+            "0,",
+            "203411379827238570491176173578436868093537450257881964775793530671143609719,",
+            "2037169922858342507125,",
+            "0,",
+            "93982438239657877452062018043752344615292808895017758601572026041563772976,",
+            "123778951240410959589749349",
+            "]},",
             '{"trait_type":"Decoded Public Outputs","value":',
-            '{"publicKeyHash":"0x0ea9c777dc7110e5a9e89b13f0cfc540e3845ba120b2b6dc24024d61488d4788","to":"0x0000000000000000000000000000000000000002"}},',
+            '{"recipient_name":"John","proposal_title":"<em>Making Smart Accounts easy with ZK Email</em>","rejection_line":"we were unable to accept this submission"}},'
             '{"trait_type":"Verifier","value":"',
             address(verifier).toHexString(),
             '"}]}'
