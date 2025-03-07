@@ -33,7 +33,6 @@ contract ZKEmailProof_ProofOfDevconRejection_Verifier_Fork_Test is Test {
     function setUp() public {
         string memory SEPOLIA_RPC_URL = vm.envString("SEPOLIA_RPC_URL");
         vm.createSelectFork(SEPOLIA_RPC_URL);
-        vm.rollFork(6963526);
 
         owner = address(1);
         alice = address(2);
