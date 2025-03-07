@@ -1,6 +1,7 @@
 // // SPDX-License-Identifier: UNLICENSED
 // pragma solidity ^0.8.13;
 
+// TODO: Update this script
 // import "forge-std/Script.sol";
 // import "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 // import "@zk-email/contracts/DKIMRegistry.sol";

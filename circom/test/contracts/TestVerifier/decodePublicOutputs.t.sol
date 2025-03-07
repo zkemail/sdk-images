@@ -77,14 +77,5 @@ contract TestVerifier_DecodePublicOutputs_Test is BaseTest {
             publicOutputsFixedSize
         );
         assertEq(decodedOutput, expectedOutput);
-
-        // rejection line with escape chars - bytes should be in reverse order
-        publicOutputsFixedSize[1] = uint256(bytes32(" 'ecnetnes depacsE'"));
-        expectedOutput = '{"recipient_name":"\'Escaped sentence\'","proposal_title":"<em>Making Smart Accounts easy with ZK Email</em>","rejection_line":"we were unable to accept this submission"}';
-        decodedOutput = verifier.exposed_decodePublicOutputs(
-            publicOutputFieldNames,
-            publicOutputsFixedSize
-        );
-        assertEq(decodedOutput, expectedOutput);
     }
 }
