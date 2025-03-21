@@ -10,6 +10,7 @@ use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ZkFramework {
+    #[serde(rename = "1")]
     Circom,
     // Add other variants as needed
 }
