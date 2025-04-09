@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build-push:
+  trigger-cloud-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,20 +30,34 @@ jobs:
           workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
           service_account: 'github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
-      # Configure Docker to use Google Artifact Registry
-      - name: Configure Docker
-        run: |
-          gcloud auth configure-docker us-east1-docker.pkg.dev
+      # Setup gcloud CLI
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
 
-      # Build Docker image
-      - name: Build Docker Image
+      # Create a Cloud Build config file
+      - name: Create Cloud Build Config
         run: |
-          docker build -f circom/Dockerfile \
-            -t us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest \
-            -t us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }} .
+          cat > cloudbuild.yaml << EOF
+          steps:
+          - name: 'gcr.io/cloud-builders/docker'
+            args: [
+              'build',
+              '-f', 'circom/Dockerfile',
+              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest',
+              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}',
+              '.'
+            ]
+            timeout: '3600s'  # Increase timeout to 1 hour
+          images:
+          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest'
+          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}'
+          options:
+            machineType: 'N1_HIGHCPU_32'  # Use a high-CPU machine for faster builds
+            diskSizeGb: '100'
+          timeout: '3600s'  # Overall build timeout
+          EOF
 
-      # Push Docker image
-      - name: Push Docker Image
+      # Submit the build to Cloud Build
+      - name: Trigger Cloud Build
         run: |
-          docker push us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest
-          docker push us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}
+          gcloud builds submit --config=cloudbuild.yaml --project ${{ secrets.GCP_PROJECT_ID }}
