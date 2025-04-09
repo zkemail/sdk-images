@@ -38,7 +38,7 @@ jobs:
       # Build Docker image
       - name: Build Docker Image
         run: |
-          docker build -f sdk-images/circom/Dockerfile \
+          docker build -f circom/Dockerfile \
             -t us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest \
             -t us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }} .
 
