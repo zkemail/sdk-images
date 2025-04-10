@@ -52,7 +52,7 @@ jobs:
           - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest'
           - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}'
           options:
-            machineType: 'N1_HIGHCPU_64'  # Use a high-CPU machine for faster builds
+            machineType: 'E2_HIGHCPU_32'  # Use a high-CPU machine for faster builds
             diskSizeGb: '100'
           timeout: '3600s'  # Overall build timeout
           EOF
@@ -61,3 +61,15 @@ jobs:
       - name: Trigger Cloud Build
         run: |
           gcloud builds submit --config=cloudbuild.yaml --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Trigger Infrastructure Deployment
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          repository: zkemail/infra
+          event-type: deploy-sdk-images
+          client-payload: |
+            {
+              "environment": "staging",
+              "image_tag": "${{ steps.sha.outputs.sha }}"
+            }
