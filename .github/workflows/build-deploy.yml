@@ -52,7 +52,7 @@ jobs:
           - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest'
           - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}'
           options:
-            machineType: 'N1_HIGHCPU_32'  # Use a high-CPU machine for faster builds
+            machineType: 'N1_HIGHCPU_64'  # Use a high-CPU machine for faster builds
             diskSizeGb: '100'
           timeout: '3600s'  # Overall build timeout
           EOF
