@@ -57,10 +57,52 @@ jobs:
           timeout: '3600s'  # Overall build timeout
           EOF
 
-      # Submit the build to Cloud Build
-      - name: Trigger Cloud Build
+      # Submit the build to Cloud Build and wait for completion
+      - name: Trigger Cloud Build and Wait for Completion
         run: |
-          gcloud builds submit --config=cloudbuild.yaml --project ${{ secrets.GCP_PROJECT_ID }}
+          # Submit the build and capture the build ID
+          BUILD_INFO=$(gcloud builds submit --config=cloudbuild.yaml --project ${{ secrets.GCP_PROJECT_ID }} 2>&1 || echo "CONTINUE")
+          echo "$BUILD_INFO"
+
+          # Extract the build ID from the output
+          BUILD_ID=$(echo "$BUILD_INFO" | grep -o "builds/[a-zA-Z0-9\-]*" | head -1 | cut -d'/' -f2)
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "Failed to extract build ID, check the output above"
+            exit 1
+          fi
+
+          echo "Build ID: $BUILD_ID"
+
+          # Poll for build status
+          STATUS="WORKING"
+          MAX_ATTEMPTS=360  # Wait up to 1 hour (10s intervals)
+          ATTEMPTS=0
+
+          echo "Polling for build status every 10 seconds..."
+
+          while [ "$STATUS" = "WORKING" ] || [ "$STATUS" = "QUEUED" ]; do
+            ATTEMPTS=$((ATTEMPTS+1))
+            if [ $ATTEMPTS -gt $MAX_ATTEMPTS ]; then
+              echo "Build timed out after 1 hour"
+              exit 1
+            fi
+
+            # Sleep between checks
+            sleep 10
+
+            # Get status
+            STATUS=$(gcloud builds describe $BUILD_ID --project ${{ secrets.GCP_PROJECT_ID }} --format="value(status)" 2>/dev/null)
+            echo "Current status: $STATUS (attempt $ATTEMPTS)"
+          done
+
+          if [ "$STATUS" = "SUCCESS" ]; then
+            echo "Build completed successfully!"
+            exit 0
+          else
+            echo "Build failed with status: $STATUS"
+            exit 1
+          fi
 
       - name: Trigger Infrastructure Deployment
         uses: peter-evans/repository-dispatch@v3
