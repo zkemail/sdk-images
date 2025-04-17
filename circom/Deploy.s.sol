@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
-import "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
-import "@zk-email/contracts/DKIMRegistry.sol";
-import "./tmp/verifier.sol";
-import "./tmp/contract.sol";
+import { console } from "forge-std/console.sol";
+import { Script } from "forge-std/Script.sol";
+import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
+import { DKIMRegistry } from "@zk-email/contracts/DKIMRegistry.sol";
+import { ClientProofVerifier } from "./tmp/ClientProofVerifier.sol";
+import { ServerProofVerifier } from "./tmp/ServerProofVerifier.sol";
+import { Contract, IVerifier } from "./tmp/Contract.sol";
 
 contract Deploy is Script {
-    IDKIMRegistry dkimRegistry;
+    IDKIMRegistry private dkimRegistry;
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -32,8 +34,9 @@ contract Deploy is Script {
 
         dkimRegistry = IDKIMRegistry(dkimRegistryAddr);
 
-        Verifier verifier = new Verifier();
-        Contract circuitContract = new Contract(dkimRegistry, verifier);
+        IVerifier cpv = new ClientProofVerifier();
+        IVerifier spv = new ServerProofVerifier();
+        Contract circuitContract = new Contract(dkimRegistry, cpv, spv);
         vm.stopBroadcast();
 
         console.log("Deployed Verifier at", address(verifier));
