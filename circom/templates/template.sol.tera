@@ -1,8 +1,19 @@
 pragma solidity >=0.8.13;
 
-import {IDKIMRegistry} from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Verifier} from "./verifier.sol";
+import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+
+interface IVerifier {
+    function verifyProof(
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c,
+        uint256[{{ signal_size }}] calldata input
+    )
+        external
+        view
+        returns (bool);
+}
 
 contract Contract is Ownable {
     // ============================
@@ -17,8 +28,8 @@ contract Contract is Ownable {
     // Dependent Contracts
     // ============================
     IDKIMRegistry public immutable dkimRegistry;
-    Verifier public immutable clientProofVerifier;
-    Verifier public immutable serverProofVerifier;
+    IVerifier public immutable clientProofVerifier;
+    IVerifier public immutable serverProofVerifier;
 
     // ============================
     // Prover Constants (Auto-generated)
@@ -34,7 +45,7 @@ contract Contract is Ownable {
     uint16 public constant {{ field.name }}_len = {{ field.pack_size }};
 {% endfor %}
 
-    constructor(IDKIMRegistry r, Verifier cpv, Verifier spv) Ownable(msg.sender) {
+    constructor(IDKIMRegistry r, IVerifier cpv, IVerifier spv) Ownable(msg.sender) {
         require(address(r) != address(0), "Invalid DKIM registry");
         require(address(cpv) != address(0), "Invalid client proof verifier");
         require(address(spv) != address(0), "Invalid server proof verifier");
@@ -54,7 +65,7 @@ contract Contract is Ownable {
         bytes32 ph = bytes32(signals[0]);
         require(dkimRegistry.isDKIMPublicKeyHashValid(domain, ph), "RSA public key incorrect");
         // select target verifier based on proof type
-        Verifier targetVerifier = (proofType == ProofType.Client) ? clientProofVerifier : serverProofVerifier;
+        IVerifier targetVerifier = (proofType == ProofType.Client) ? clientProofVerifier : serverProofVerifier;
         // verify proof
         require(targetVerifier.verifyProof(a, b, c, signals), "Invalid proof");
     }
