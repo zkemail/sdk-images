@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, path::Path};
 
 use anyhow::Result;
 use regex::Regex;
@@ -30,7 +30,7 @@ pub struct Field {
 pub fn create_contract(contract_data: &ContractData) -> Result<()> {
     // Initialize Tera
     let mut tera = Tera::default();
-    tera.add_template_file("./templates/template.sol.tera", Some("contract.sol"))?;
+    tera.add_template_file("./templates/template.sol.tera", Some("Contract.sol"))?;
 
     let mut context = Context::new();
     context.insert("sender_domain", &contract_data.sender_domain);
@@ -42,14 +42,14 @@ pub fn create_contract(contract_data: &ContractData) -> Result<()> {
         &contract_data.prover_eth_address_idx,
     );
 
-    let rendered_contract = tera.render("contract.sol", &context)?;
+    let rendered_contract = tera.render("Contract.sol", &context)?;
 
     let re = regex::Regex::new(r"\n+").unwrap();
 
     let cleaned_contract = re.replace_all(&rendered_contract, "\n").to_string();
 
     // Write the rendered template to a file
-    std::fs::write("tmp/contract.sol", cleaned_contract)?;
+    std::fs::write("tmp/Contract.sol", cleaned_contract)?;
 
     Ok(())
 }
@@ -117,7 +117,7 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     }
 }
 
-pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
+pub async fn generate_verifier_contract(tmp_dir: &str, zkey_file_name: &str, contract_name: &str) -> Result<()> {
     let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
 
     // Generate the verifier contract
@@ -128,26 +128,30 @@ pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
             "zkey",
             "export",
             "solidityverifier",
-            "circuit.zkey",
+            zkey_file_name,
             "verifier.sol",
         ],
         Some(tmp_dir),
     )
     .await?;
 
-    // Update sol version
-    let path = "tmp/verifier.sol";
+    // Path to the generated verifier
+    let verifier_path = Path::new(tmp_dir).join("verifier.sol");
+    // Path to the renamed verifier
+    let renamed_path = Path::new(tmp_dir).join(format!("{}.sol", contract_name));
+    
+    // Read, patch, and rename the contract
+    let updated_content = fs::read_to_string(&verifier_path)?
+        .replace("pragma solidity ^0.6.11;", "pragma solidity ^0.8.13;")
+        .replace("contract Verifier", &format!("contract {}", contract_name));
 
-    // Read the file content
-    let content = fs::read_to_string(path)?;
+    // Write updated content to the new file
+    fs::write(&renamed_path, updated_content)?;
 
-    // Replace the pragma line
-    let updated_content = content.replace("pragma solidity ^0.6.11;", "pragma solidity ^0.8.13;");
+    // Delete the original file
+    fs::remove_file(&verifier_path)?;
 
-    // Write back to file
-    fs::write(path, updated_content)?;
-
-    info!(LOG, "Updated verifier.sol to Solidity 0.8.13");
+    info!(LOG, "Updated verifier to Solidity 0.8.13 and renamed contract to {}", contract_name);
 
     Ok(())
 }
@@ -191,8 +195,21 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             "verify-contract",
             "--chain-id",
             payload.chain_id.to_string().as_str(),
-            contract_addresses.get("Verifier").unwrap(),
-            "tmp/verifier.sol:Verifier",
+            contract_addresses.get("ClientProofVerifier").unwrap(),
+            "tmp/ClientProofVerifier.sol:ClientProofVerifier",
+        ],
+        None,
+    )
+    .await?;
+
+    run_command(
+        "forge",
+        &[
+            "verify-contract",
+            "--chain-id",
+            payload.chain_id.to_string().as_str(),
+            contract_addresses.get("ServerProofVerifier").unwrap(),
+            "tmp/ServerProofVerifier.sol:ServerProofVerifier",
         ],
         None,
     )
@@ -207,7 +224,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             "--constructor-args",
             &constructor_args,
             contract_addresses.get("Contract").unwrap(),
-            "tmp/contract.sol:Contract",
+            "tmp/Contract.sol:Contract",
         ],
         None,
     )

@@ -9,7 +9,7 @@ use anyhow::Result;
 use contract::{
     create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
 };
-use db::{update_ptau, update_verifier_contract_address};
+use db::{update_verifier_contract_address};
 use payload::UploadUrls;
 use rand::Rng;
 use relayer_utils::LOG;
@@ -57,7 +57,8 @@ async fn main() -> Result<()> {
 
     create_contract(&contract_data)?;
 
-    generate_verifier_contract("tmp").await?;
+    generate_verifier_contract("tmp", "circuit.zkey", "ClientProofVerifier").await?;
+    generate_verifier_contract("tmp", "circuit_full.zkey", "ServerProofVerifier").await?;
 
     let contract_address = deploy_verifier_contract(payload.clone()).await?;
 
@@ -356,12 +357,13 @@ async fn cleanup() -> Result<()> {
             "circuit.zip",
             "regex",
             "circuit.circom",
-            "contract.sol",
+            "Contract.sol",
             "Deploy.s.sol",
             "foundry.toml",
             "package.json",
             "remappings.txt",
-            "verifier.sol",
+            "ClientProofVerifier.sol",
+            "ServerProofVerifier.sol",
         ],
         Some("tmp"),
     )
