@@ -117,13 +117,17 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     }
 }
 
-pub async fn generate_verifier_contract(tmp_dir: &str, zkey_file_name: &str, contract_name: &str) -> Result<()> {
+pub async fn generate_verifier_contract(
+    tmp_dir: &str,
+    zkey_file_name: &str,
+    contract_name: &str,
+) -> Result<()> {
     let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
 
     // Generate the verifier contract
     info!(LOG, "Generating verifier contract");
     run_command(
-        &chunked_snarkjs_path,
+        chunked_snarkjs_path,
         &[
             "zkey",
             "export",
@@ -139,7 +143,7 @@ pub async fn generate_verifier_contract(tmp_dir: &str, zkey_file_name: &str, con
     let verifier_path = Path::new(tmp_dir).join("verifier.sol");
     // Path to the renamed verifier
     let renamed_path = Path::new(tmp_dir).join(format!("{}.sol", contract_name));
-    
+
     // Read, patch, and rename the contract
     let updated_content = fs::read_to_string(&verifier_path)?
         .replace("pragma solidity ^0.6.11;", "pragma solidity ^0.8.13;")
@@ -151,7 +155,10 @@ pub async fn generate_verifier_contract(tmp_dir: &str, zkey_file_name: &str, con
     // Delete the original file
     fs::remove_file(&verifier_path)?;
 
-    info!(LOG, "Updated verifier to Solidity 0.8.13 and renamed contract to {}", contract_name);
+    info!(
+        LOG,
+        "Updated verifier to Solidity 0.8.13 and renamed contract to {}", contract_name
+    );
 
     Ok(())
 }

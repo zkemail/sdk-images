@@ -9,7 +9,7 @@ use anyhow::Result;
 use contract::{
     create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
 };
-use db::{update_verifier_contract_address};
+use db::update_verifier_contract_address;
 use payload::UploadUrls;
 use rand::Rng;
 use relayer_utils::LOG;
@@ -274,7 +274,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
             "--max-semi-space-size=1024",
             "--initial-heap-size=65536",
             "--expose-gc",
-            &chunked_snarkjs_path,
+            chunked_snarkjs_path,
             "groth16",
             "setup",
             "circuit.r1cs",
@@ -288,7 +288,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
     // Contribute to chunked zkey
     info!(LOG, "Contributing to chunked zkey");
     run_command(
-        &chunked_snarkjs_path,
+        chunked_snarkjs_path,
         &[
             "zkey",
             "beacon",
@@ -314,7 +314,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
     // Export verification key
     info!(LOG, "Exporting verification key");
     run_command(
-        &chunked_snarkjs_path,
+        chunked_snarkjs_path,
         &[
             "zkey",
             "export",
