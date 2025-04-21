@@ -1,0 +1,8 @@
+[package]
+name = "@zk-email/sdk-noir"
+type = "bin"
+authors = ["Aditya Bisht <adityabisht64@gmail.com>"]
+compiler_version = ">=1.0.0"
+
+[dependencies]
+zkemail = { git = "https://github.com/zkemail/zkemail.nr", tag = "v0.4.2" }
