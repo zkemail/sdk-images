@@ -1,0 +1,34 @@
+fn main(
+    emailHeader: BoundedVec<u8, {% max_header_length %}>,
+    pubkey: RSAPubkey<{% key_limbs_size %}>,
+    signature: [Field; {% key_limbs_size %}],
+    dkim_header_sequence: Sequence,
+    prover_eth_address: Field,
+    {% if not ignore_body_hash_check %}
+    body: BoundedVec<u8, {% max_body_length %}>,
+    body_hash_index: u32,
+    precomputed_sha: [Field; 32],
+    {% endif %}
+) -> pub [Field; 4] {
+    // check the body and header lengths are within bounds
+    assert(header.len() <= {% max_header_length %});
+    assert(body.len() <= {% max_body_length %});
+    
+    // DKIM Verification
+    pubkey.verify_dkim_signature(header, signature);
+
+    {% if not ignore_body_hash_check %}
+    // Body Hash Verification
+    let signed_body_hash = get_body_hash(header, dkim_header_sequence, body_hash_index);
+    let computed_body_hash: [u8; 32] = sha256_var(body.storage(), body.len() as u64);
+    assert(
+        signed_body_hash == computed_body_hash,
+        "SHA256 hash computed over body does not match body hash found in DKIM-signed header",
+    );
+    {% endif %}
+
+    // TODO: QP encoding
+
+    // Return [pubkey_hash, header_hash_hi, header_hash_lo, prover_eth_address]
+    [pubkey_hash, header_hash_hi, header_hash_lo, prover_eth_address]
+}
