@@ -24,6 +24,7 @@ pub struct Payload {
 #[serde(rename_all = "camelCase")]
 pub struct UploadUrls {
     pub circuit: String,
+    pub circuit_json: String,
     pub vk: String,
 }
 
