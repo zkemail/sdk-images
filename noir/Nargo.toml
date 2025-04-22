@@ -1,5 +1,5 @@
 [package]
-name = "@zk-email/sdk-noir"
+name = "sdk_noir"
 type = "bin"
 authors = ["Aditya Bisht <adityabisht64@gmail.com>"]
 compiler_version = ">=1.0.0"

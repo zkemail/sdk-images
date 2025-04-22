@@ -5,7 +5,11 @@ mod template;
 use std::{fs, path::Path};
 
 use anyhow::Result;
+use payload::UploadUrls;
 use relayer_utils::LOG;
+use sdk_utils::{
+    run_command, run_command_and_return_output, run_command_with_input, upload_to_url,
+};
 use slog::info;
 use sqlx::postgres::PgPoolOptions;
 use template::{CircuitTemplateInputs, generate_circuit, generate_regex_circuits};
@@ -82,6 +86,59 @@ async fn setup() -> Result<()> {
         fs::remove_dir_all(&src_path)?;
     }
     fs::create_dir_all(&src_path)?;
+
+    // Copy Nargo.toml to the tmp folder
+    let nargo_toml_path = Path::new("./Nargo.toml");
+    fs::copy(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
+
+    Ok(())
+}
+
+async fn compile_circuit() -> Result<()> {
+    // Compile the circuit
+    info!(LOG, "Compiling circuit");
+    run_command("nargo", &["build"], Some("tmp")).await?;
+
+    // Generate vk
+    info!(LOG, "Generating vk");
+    run_command(
+        "bb",
+        &["write_vk", "-b", "./target/sdk_noir.json", "-o", "./vk"],
+        Some("tmp"),
+    )
+    .await?;
+
+    Ok(())
+}
+
+async fn cleanup() -> Result<()> {
+    info!(LOG, "Cleaning up");
+
+    info!(LOG, "Zipping circuit");
+    run_command(
+        "zip",
+        &["-r", "circuit.zip", "regex", "src", "Nargo.toml"],
+        Some("tmp"),
+    )
+    .await?;
+
+    Ok(())
+}
+
+async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
+    upload_to_url(&upload_urls.circuit, "./tmp/circuit.zip", "application/zip").await?;
+    upload_to_url(
+        &upload_urls.circuit_json,
+        "./tmp/target/sdk_noir.json",
+        "application/json",
+    )
+    .await?;
+    upload_to_url(
+        &upload_urls.vk,
+        "./tmp/target/vk",
+        "application/octet-stream",
+    )
+    .await?;
 
     Ok(())
 }
