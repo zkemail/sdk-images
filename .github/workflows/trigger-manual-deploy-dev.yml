@@ -1,9 +1,6 @@
 name: Manual trigger sdk-images deploy
 
 on:
-  push:
-    branches:
-      - dev
   workflow_dispatch:
     inputs:
       image_tag:
