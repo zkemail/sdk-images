@@ -1,4 +1,4 @@
-name: Manual trigger sdk-images deploy
+name: Manual sdk-images deploy
 
 on:
   workflow_dispatch:
