@@ -309,6 +309,19 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
         if file_path.exists() {
             run_command("rm", &[&filename], Some("tmp")).await?;
         }
+
+        // Create chunks for circuit_full.zkey from circuit.zkey chunks
+        let origin_chunk_filename = format!("circuit.zkey{}", c);
+        let origin_chunk_file_path = Path::new("tmp").join(&origin_chunk_filename);
+        let full_zkey_filename = format!("circuit_full.zkey{}", c);
+        if origin_chunk_file_path.exists() {
+            run_command(
+                "cp",
+                &[&origin_chunk_filename, &full_zkey_filename],
+                Some("tmp"),
+            )
+            .await?;
+        }
     }
 
     // Export verification key
