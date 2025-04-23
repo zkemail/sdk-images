@@ -1,0 +1,37 @@
+name: Manual trigger sdk-images deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - dev
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Infrastructure Deployment
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          repository: zkemail/infra
+          event-type: deploy-sdk-images
+          client-payload: |
+            {
+              "environment": ${{ github.event.inputs.environment }},
+              "image_tag": "${{ github.event.inputs.image_tag }}"
+            }
