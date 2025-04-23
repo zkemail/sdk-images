@@ -172,7 +172,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
 
     // Parse the output to extract addresses
     let re =
-        Regex::new(r"Deployed (Verifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})").unwrap();
+        Regex::new(r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})").unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
         let contract_name = &cap[1];
@@ -187,9 +187,10 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         "cast",
         &[
             "abi-encode",
-            "constructor(address,address)",
+            "constructor(address,address,address)",
             contract_addresses.get("DKIMRegistry").unwrap(),
-            contract_addresses.get("Verifier").unwrap(),
+            contract_addresses.get("ClientProofVerifier").unwrap(),
+            contract_addresses.get("ServerProofVerifier").unwrap(),
         ],
         None,
     )

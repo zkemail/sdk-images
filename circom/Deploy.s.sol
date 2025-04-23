@@ -34,12 +34,13 @@ contract Deploy is Script {
 
         dkimRegistry = IDKIMRegistry(dkimRegistryAddr);
 
-        IVerifier cpv = new ClientProofVerifier();
-        IVerifier spv = new ServerProofVerifier();
+        IVerifier cpv = IVerifier(address(new ClientProofVerifier()));
+        IVerifier spv = IVerifier(address(new ServerProofVerifier()));
         Contract circuitContract = new Contract(dkimRegistry, cpv, spv);
         vm.stopBroadcast();
 
-        console.log("Deployed Verifier at", address(verifier));
+        console.log("Deployed ClientProofVerifier at", address(cpv));
+        console.log("Deployed ServerProofVerifier at", address(spv));
         console.log("Deployed Contract at", address(circuitContract));
         console.log("Deployed DKIMRegistry at", dkimRegistryAddr);
         return;
