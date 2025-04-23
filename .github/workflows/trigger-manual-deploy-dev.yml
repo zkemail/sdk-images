@@ -32,6 +32,6 @@ jobs:
           event-type: deploy-sdk-images
           client-payload: |
             {
-              "environment": ${{ github.event.inputs.environment }},
+              "environment": "${{ github.event.inputs.environment }}",
               "image_tag": "${{ github.event.inputs.image_tag }}"
             }
