@@ -46,15 +46,6 @@ pub async fn compile_circuit() -> Result<()> {
     info!(LOG, "Compiling circuit");
     run_command("nargo", &["build"], Some("tmp")).await?;
 
-    // Generate vk
-    info!(LOG, "Generating vk");
-    run_command(
-        "bb",
-        &["write_vk", "-b", "./target/sdk_noir.json", "-o", "./vk"],
-        Some("tmp"),
-    )
-    .await?;
-
     Ok(())
 }
 
@@ -82,7 +73,6 @@ pub async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
         "application/json",
     )
     .await?;
-    upload_to_url(&upload_urls.vk, "./tmp/vk", "application/octet-stream").await?;
 
     Ok(())
 }

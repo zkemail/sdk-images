@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
     cleanup().await?;
 
     // Upload files
-    // upload_files(payload.upload_urls).await?;
+    upload_files(payload.upload_urls).await?;
 
     Ok(())
 }

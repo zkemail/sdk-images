@@ -3,7 +3,7 @@ mod {{ regex.regex_circuit_name }};
 {% endfor %}
 
 use std::{collections::bounded_vec::BoundedVec, hash::{pedersen_hash, sha256_var}};
-use zkemail::{dkim::RSAPubkey, headers::body_hash::get_body_hash, KEY_LIMBS_2048, Sequence, utils::pack_bytes};
+use zkemail::{dkim::RSAPubkey, headers::body_hash::get_body_hash, KEY_LIMBS_2048, Sequence, utils::pack_bytes, remove_soft_line_breaks::remove_soft_line_breaks};
 
 fn main(
     header: BoundedVec<u8, {{ email_header_max_length }}>,
@@ -64,13 +64,13 @@ fn main(
 
     {% for regex in regexes %}
     {% if regex.num_public_parts > 0 %}
-    let ({{ regex.capture_string }}) = {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states, {{ regex.name }}_capture_groups_ids, {{ regex.name }}_capture_groups_starts, {{ regex.name }}_capture_groups_indices);
+    let ({{ regex.capture_string }}) = {{ regex.regex_circuit_name }}::email_subject_regex::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states, {{ regex.name }}_capture_groups_ids, {{ regex.name }}_capture_groups_starts, {{ regex.name }}_capture_groups_indices);
     {% else %}
-    regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states);
+    email_subject_regex::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states);
     {% endif %}
     {% if regex.is_hashed %}
     {% for i in range(start=0, end=regex.num_public_parts) %}
-    let {{ regex.name }}_capture_{{ i + 1 }} = pack_bytes::<{{ regex.max_length }}, 31>({{ regex.name }}_capture_{{ i + 1 }}.storage());
+    let {{ regex.name }}_capture_{{ i + 1 }}_packed = pack_bytes::<{{ regex.max_length }}, 31>({{ regex.name }}_capture_{{ i + 1 }}.storage());
     {% endfor %}
     let packed_hash = pedersen_hash([{{ regex.hash_inputs }}]);
     {% endif %}

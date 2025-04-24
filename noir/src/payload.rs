@@ -25,7 +25,6 @@ pub struct Payload {
 pub struct UploadUrls {
     pub circuit: String,
     pub circuit_json: String,
-    pub vk: String,
 }
 
 /// Function to load the payload from the PAYLOAD environment variable.
