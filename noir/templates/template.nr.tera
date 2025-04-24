@@ -72,7 +72,7 @@ fn main(
     {% for i in range(start=0, end=regex.num_public_parts) %}
     let {{ regex.name }}_capture_{{ i + 1 }}_packed = pack_bytes::<{{ regex.max_length }}, 31>({{ regex.name }}_capture_{{ i + 1 }}.storage());
     {% endfor %}
-    let packed_hash = pedersen_hash([{{ regex.hash_inputs }}]);
+    let {{ regex.name }}_packed_hash = pedersen_hash([{{ regex.hash_inputs }}]);
     {% endif %}
     {% endfor %}
 
