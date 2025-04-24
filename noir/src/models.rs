@@ -12,6 +12,7 @@ pub struct RegexEntry {
     pub max_length_of_location: usize,
     pub num_public_parts: usize,
     pub is_hashed: bool,
+    pub hash_packing_size: usize,
     pub hash_inputs: String,
     pub capture_string: String,
 }
@@ -70,12 +71,12 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 let mut hash_inputs = Vec::new();
                 let mut num_reveal_signals: i32 = -1;
                 let mut capture_string = String::new();
+                let hash_packing_size = (max_length as f64 / 31.0).ceil() as usize;
 
                 for part in &regex.parts {
                     if part.is_public {
                         num_reveal_signals += 1;
 
-                        let hash_packing_size = (max_length as f64 / 31.0).ceil() as usize;
                         for i in 0..hash_packing_size {
                             hash_inputs.push(format!(
                                 "{}_capture_{}_packed[{}]",
@@ -106,6 +107,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
                     max_length_of_location,
                     num_public_parts,
                     is_hashed: is_hashed.unwrap_or(false),
+                    hash_packing_size,
                     hash_inputs: if is_hashed.unwrap_or(false) {
                         hash_inputs.join(", ")
                     } else {
@@ -139,9 +141,18 @@ impl From<Blueprint> for CircuitTemplateInputs {
         }
         for regex in &regexes {
             if regex.num_public_parts > 0 {
-                output_signals.push_str(&format!(", {}", regex.capture_string));
+                let mut signal = regex.capture_string.clone();
+                if regex.is_hashed {
+                    signal = signal.replace(",", "_packed,");
+                    signal.push_str("_packed");
+                }
+                output_signals.push_str(&format!(", {}", signal));
                 for _ in 0..regex.num_public_parts {
-                    output_args.push_str(&format!(", BoundedVec<u8, {}>", regex.max_length));
+                    if regex.is_hashed {
+                        output_args.push_str(&format!(", [Field; {}]", regex.hash_packing_size));
+                    } else {
+                        output_args.push_str(&format!(", BoundedVec<u8, {}>", regex.max_length));
+                    }
                 }
             }
         }
