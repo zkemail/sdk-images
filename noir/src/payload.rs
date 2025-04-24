@@ -28,7 +28,7 @@ pub struct UploadUrls {
     pub vk: String,
 }
 
-// Function to load the payload
+/// Function to load the payload from the PAYLOAD environment variable.
 pub fn load_payload() -> Result<Payload> {
     dotenv().ok();
 
@@ -44,22 +44,24 @@ pub fn load_payload() -> Result<Payload> {
 
     // Setting ENV
     info!(LOG, "Setting ENV variables");
-    env::set_var("JSON_LOGGER", "true");
+    unsafe {
+        env::set_var("JSON_LOGGER", "true");
 
-    if payload.private_key != "" {
-        env::set_var("PRIVATE_KEY", &payload.private_key);
-    }
-    if payload.rpc_url != "" {
-        env::set_var("RPC_URL", &payload.rpc_url);
-    }
-    if payload.chain_id != 0 {
-        env::set_var("CHAIN_ID", &payload.chain_id.to_string());
-    }
-    if payload.etherscan_api_key != "" {
-        env::set_var("ETHERSCAN_API_KEY", &payload.etherscan_api_key);
-    }
-    if payload.dkim_registry_address != "" {
-        env::set_var("DKIM_REGISTRY", &payload.dkim_registry_address);
+        if payload.private_key != "" {
+            env::set_var("PRIVATE_KEY", &payload.private_key);
+        }
+        if payload.rpc_url != "" {
+            env::set_var("RPC_URL", &payload.rpc_url);
+        }
+        if payload.chain_id != 0 {
+            env::set_var("CHAIN_ID", &payload.chain_id.to_string());
+        }
+        if payload.etherscan_api_key != "" {
+            env::set_var("ETHERSCAN_API_KEY", &payload.etherscan_api_key);
+        }
+        if payload.dkim_registry_address != "" {
+            env::set_var("DKIM_REGISTRY", &payload.dkim_registry_address);
+        }
     }
 
     Ok(payload)
