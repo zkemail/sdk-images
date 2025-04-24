@@ -141,15 +141,15 @@ impl From<Blueprint> for CircuitTemplateInputs {
         }
         for regex in &regexes {
             if regex.num_public_parts > 0 {
-                let mut signal = regex.capture_string.clone();
                 if regex.is_hashed {
-                    signal = signal.replace(",", "_packed,");
-                    signal.push_str("_packed");
+                    output_signals.push_str(&format!(", {}_packed_hash", regex.name));
+                } else {
+                    output_signals.push_str(&format!(", {}", regex.capture_string));
                 }
-                output_signals.push_str(&format!(", {}", signal));
                 for _ in 0..regex.num_public_parts {
                     if regex.is_hashed {
-                        output_args.push_str(&format!(", [Field; {}]", regex.hash_packing_size));
+                        output_args.push_str(", Field");
+                        break;
                     } else {
                         output_args.push_str(&format!(", BoundedVec<u8, {}>", regex.max_length));
                     }
