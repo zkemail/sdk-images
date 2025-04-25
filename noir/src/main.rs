@@ -16,21 +16,21 @@ async fn main() -> Result<()> {
     let payload = load_payload()?;
     info!(LOG, "Loaded configuration: {:?}", payload);
 
-    // Connect to database
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect(&payload.database_url)
-        .await?;
-    println!("Database connection established");
+    // // Connect to database
+    // let pool = PgPoolOptions::new()
+    //     .max_connections(10)
+    //     .connect(&payload.database_url)
+    //     .await?;
+    // println!("Database connection established");
 
     // Setup filesystem
     setup().await?;
 
     // Extract blueprint
-    let blueprint = payload.clone().blueprint;
+    let blueprint = payload.blueprint;
 
     // Generate regex circuits
-    generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
+    generate_regex_circuits(&blueprint.decomposed_regexes)?;
 
     // Generate main circuit from template
     let circuit_template_inputs = CircuitTemplateInputs::from(blueprint);
