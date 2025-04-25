@@ -55,7 +55,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             for regex in decomposed_regexes {
                 let name = regex.name.clone();
                 let max_length = regex.max_length as usize;
-                let regex_circuit_name = format!("{}Regex", regex.name);
+                let regex_circuit_name = format!("{}_regex", regex.name);
 
                 // Determine location and its max length
                 let (location, max_length_of_location) = if regex.location == "header" {
@@ -69,24 +69,19 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 let mut num_public_parts = 0;
                 let is_hashed = regex.is_hashed;
                 let mut hash_inputs = Vec::new();
-                let mut num_reveal_signals: i32 = -1;
                 let mut capture_string = String::new();
                 let hash_packing_size = (max_length as f64 / 31.0).ceil() as usize;
 
                 for part in &regex.parts {
                     if part.is_public {
-                        num_reveal_signals += 1;
+                        num_public_parts += 1;
 
                         for i in 0..hash_packing_size {
                             hash_inputs.push(format!(
                                 "{}_capture_{}_packed[{}]",
-                                name,
-                                num_reveal_signals + 1,
-                                i
+                                name, num_public_parts, i
                             ));
                         }
-
-                        num_public_parts += 1;
 
                         // Create capture string (e.g., "capture_1, capture_2, ...")
                         if capture_string.is_empty() {

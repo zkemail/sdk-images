@@ -44,7 +44,7 @@ pub async fn setup() -> Result<()> {
 pub async fn compile_circuit() -> Result<()> {
     // Compile the circuit
     info!(LOG, "Compiling circuit");
-    run_command("nargo", &["build"], Some("tmp")).await?;
+    run_command("nargo", &["compile"], Some("tmp")).await?;
 
     Ok(())
 }
@@ -61,6 +61,14 @@ pub async fn cleanup() -> Result<()> {
     )
     .await?;
 
+    info!(LOG, "Zipping regex graphs");
+    run_command(
+        "zip",
+        &["-r", "regex_graphs.zip", ".", "-i", "*_regex.json"],
+        Some("tmp"),
+    )
+    .await?;
+
     Ok(())
 }
 
@@ -71,6 +79,12 @@ pub async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
         &upload_urls.circuit_json,
         "./tmp/target/sdk_noir.json",
         "application/json",
+    )
+    .await?;
+    upload_to_url(
+        &upload_urls.regex_graphs,
+        "./tmp/regex_graphs.zip",
+        "application/zip",
     )
     .await?;
 

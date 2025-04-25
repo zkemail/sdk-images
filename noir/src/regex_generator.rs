@@ -4,11 +4,11 @@ use std::fs;
 use zk_regex_compiler::{DecomposedRegexConfig, ProvingFramework, RegexPart, gen_from_decomposed};
 
 /// Generates Noir files for the provided decomposed regexes.
-pub fn generate_regex_circuits(decomposed_regexes: Option<Vec<DecomposedRegex>>) -> Result<()> {
+pub fn generate_regex_circuits(decomposed_regexes: &Option<Vec<DecomposedRegex>>) -> Result<()> {
     if let Some(decomposed_regexes) = decomposed_regexes {
         for decomposed_regex in decomposed_regexes {
             let mut decomposed_regex_config = Vec::new();
-            for part in decomposed_regex.parts {
+            for part in decomposed_regex.parts.clone() {
                 if part.is_public {
                     decomposed_regex_config.push(RegexPart::PublicPattern((
                         part.regex_def,
@@ -23,10 +23,12 @@ pub fn generate_regex_circuits(decomposed_regexes: Option<Vec<DecomposedRegex>>)
                 parts: decomposed_regex_config,
             };
 
-            let (_, code) =
+            let (graph, code) =
                 gen_from_decomposed(config, &decomposed_regex.name, ProvingFramework::Noir)?;
-            let file_path = format!("./tmp/src/{}Regex.nr", decomposed_regex.name);
+            let file_path = format!("./tmp/src/{}_regex.nr", decomposed_regex.name);
             fs::write(file_path, code)?;
+            let graph_path = format!("./tmp/{}_regex.json", decomposed_regex.name);
+            fs::write(graph_path, serde_json::to_string(&graph)?)?;
         }
     }
     Ok(())
