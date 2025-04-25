@@ -119,15 +119,14 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
 
 pub async fn generate_verifier_contract(
     tmp_dir: &str,
+    snarkjs_path: &str,
     zkey_file_name: &str,
     contract_name: &str,
 ) -> Result<()> {
-    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
-
     // Generate the verifier contract
     info!(LOG, "Generating verifier contract");
     run_command(
-        chunked_snarkjs_path,
+        snarkjs_path,
         &[
             "zkey",
             "export",
