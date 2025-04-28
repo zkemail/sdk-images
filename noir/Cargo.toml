@@ -12,7 +12,7 @@ tera = "1.20.0"
 tokio = { version = "1.44.2", features = ["full"] }
 sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "migrate", "uuid", "time", "chrono", "runtime-tokio-rustls"] }
 relayer-utils = { git = "https://github.com/zkemail/relayer-utils", commit = "728b8f643a6c9a1e5b400be6407727851cc8c92c" }
-sdk-utils = { workspace = true }
+sdk-utils = { git = "https://github.com/zkemail/sdk-images", branch = "main" }
 slog = { version = "2.7.0", features = ["max_level_trace", "release_max_level_warn"] }
 zk-regex-compiler = { package = "compiler", git = "https://github.com/zkemail/zk-regex", branch = "feat/new-compiler" }
 base64 = "0.22.1"

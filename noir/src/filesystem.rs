@@ -35,7 +35,12 @@ pub async fn setup() -> Result<()> {
 
     // Copy Nargo.toml to the tmp folder
     let nargo_toml_path = Path::new("./Nargo.toml");
-    fs::copy(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
+    // If inside docker, move Nargo.toml to the tmp folder
+    if Path::new("/.dockerenv").exists() {
+        fs::rename(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
+    } else {
+        fs::copy(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
+    }
 
     Ok(())
 }

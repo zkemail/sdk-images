@@ -5,3 +5,9 @@ cache
 logs
 .env
 tmp
+Dockerfile
+.dockerignore
+.gitignore
+.git
+.github
+.vscode
