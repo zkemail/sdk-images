@@ -1,3 +1,6 @@
 [workspace]
-members = [ "circom", "sdk-utils"]
+members = [ "circom", "noir", "sdk-utils"]
 resolver = "2"
+
+[workspace.dependencies]
+sdk-utils = { path = "sdk-utils" }
