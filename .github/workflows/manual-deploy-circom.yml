@@ -1,4 +1,4 @@
-name: Manual sdk-images deploy
+name: Manual deploy circom
 
 on:
   workflow_dispatch:
