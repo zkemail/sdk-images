@@ -121,7 +121,6 @@ pub async fn generate_verifier_contract(
     tmp_dir: &str,
     snarkjs_path: &str,
     zkey_file_name: &str,
-    old_contract_name: &str,
     contract_name: &str,
 ) -> Result<()> {
     // Generate the verifier contract
@@ -144,18 +143,29 @@ pub async fn generate_verifier_contract(
     // Path to the renamed verifier
     let renamed_path = Path::new(tmp_dir).join(format!("{}.sol", contract_name));
 
-    // Read, patch, and rename the contract
-    let updated_content = fs::read_to_string(&verifier_path)?
-        .replace("pragma solidity ^0.6.11;", "pragma solidity ^0.8.13;")
+    // Read the verifier contract
+    let content = fs::read_to_string(&verifier_path)?;
+    // Patch version and rename the contract
+    let updated_content = content
         .replace(
-            &format!("contract {}", old_contract_name),
-            &format!("contract {}", contract_name),
+            Regex::new(r"^pragma solidity.*$")
+                .unwrap()
+                .find(&content)
+                .unwrap()
+                .as_str(),
+            &format!("pragma solidity ^{};", "0.8.13"),
+        )
+        .replace(
+            Regex::new(r"^contract\s+\w+\s+\{$")
+                .unwrap()
+                .find(&content)
+                .unwrap()
+                .as_str(),
+            &format!("contract {} {{", contract_name),
         );
 
-    // Write updated content to the new file
+    // Write updated content to the new file and remove the original
     fs::write(&renamed_path, updated_content)?;
-
-    // Delete the original file
     fs::remove_file(&verifier_path)?;
 
     info!(
