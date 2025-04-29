@@ -1,14 +1,8 @@
-name: Deploy Noir to Cloud Run
+name: Deploy Noir Sdk Image
 
 on:
-  workflow_dispatch:
-    inputs:
-      sha:
-        description: 'Commit SHA to deploy (short form)'
-        required: false
   workflow_run:
-    workflows: ["Build rnd Push Noir"]
-    branches: [main]
+    workflows: ["Build and Push Noir Sdk Image"]
     types:
       - completed
 
@@ -17,31 +11,18 @@ permissions:
   contents: read
 
 jobs:
-  deploy-to-cloud-run:
+  trigger-cloud-build:
     runs-on: ubuntu-latest
-    # Only run if the triggering workflow succeeded or this is a manual dispatch
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       # Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Determine SHA to Use
+      # Get the short SHA for tagging
+      - name: Get Short SHA
         id: sha
-        run: |
-          if [ -n "${{ github.event.inputs.sha }}" ]; then
-            # Use manually provided SHA
-            COMMIT_SHA="${{ github.event.inputs.sha }}"
-          elif [ "${{ github.event_name }}" == "workflow_run" ]; then
-            # Get SHA from the triggering workflow
-            COMMIT_SHA=$(git rev-parse --short HEAD)
-          else
-            # Fallback to current commit
-            COMMIT_SHA=$(git rev-parse --short HEAD)
-          fi
-          echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
-          echo "Using SHA: $COMMIT_SHA for deployment"
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       # Authenticate with Google Cloud using Workload Identity Federation
       - name: Authenticate to Google Cloud
@@ -50,13 +31,9 @@ jobs:
           workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
           service_account: 'github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
-      # Setup gcloud CLI
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-
       - name: Deploy to Cloud Run
         run: |
-          IMAGE="us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${{ steps.sha.outputs.sha }}"
+          IMAGE="us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${{ env.sha }}"
           echo "Deploying image: $IMAGE to Cloud Run"
           gcloud run deploy noir-compile-zkemail-service \
             --image $IMAGE \
@@ -65,4 +42,3 @@ jobs:
             --allow-unauthenticated \
             --memory 4Gi \
             --update-secrets "ZKEMAIL_API_KEY=ZKEMAIL_API_KEY:latest"
-

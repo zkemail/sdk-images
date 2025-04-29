@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - staging
+    paths:
+      - 'circom/**'
+      - 'sdk-utils/**'
+      - 'Cargo.toml'
 
 permissions:
   id-token: write
