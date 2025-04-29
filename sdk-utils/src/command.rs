@@ -7,6 +7,10 @@ use std::{
 };
 
 pub async fn run_command(command: &str, args: &[&str], dir: Option<&str>) -> Result<()> {
+    println!("command: {:?}", command);
+    println!("args: {:?}", args);
+    println!("dir: {:?}", dir);
+
     let mut cmd = Command::new(command);
     cmd.stdin(Stdio::piped()).stdout(Stdio::piped());
 
@@ -20,16 +24,22 @@ pub async fn run_command(command: &str, args: &[&str], dir: Option<&str>) -> Res
         cmd.current_dir(directory);
     }
 
+    println!("actually executing command");
     let mut child = cmd.spawn().expect("failed to execute process");
+    println!("command done");
 
     if let Some(stdout) = child.stdout.take() {
         let reader = BufReader::new(stdout);
         let mut lines = reader.lines();
+        println!("lines: {:?}", lines);
 
         while let Some(line) = lines.next().transpose()? {
+            println!("line: {:?}", line);
             info!(LOG, "Command output"; "line" => line);
         }
     }
+
+    println!("reading output done");
 
     let status = child.wait()?;
     if !status.success() {
@@ -39,6 +49,8 @@ pub async fn run_command(command: &str, args: &[&str], dir: Option<&str>) -> Res
             status
         ));
     }
+
+    println!("status is success");
 
     Ok(())
 }

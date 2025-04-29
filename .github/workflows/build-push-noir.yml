@@ -1,9 +1,14 @@
-name: Build and Push Sdk Image
+name: Build and Push Noir Sdk Image
 
 on:
   push:
     branches:
       - staging
+      - dev
+    paths:
+      - 'noir/**'
+      - 'sdk-utils/**'
+      - 'Cargo.toml'
 
 permissions:
   id-token: write
@@ -42,15 +47,15 @@ jobs:
           - name: 'gcr.io/cloud-builders/docker'
             args: [
               'build',
-              '-f', 'circom/Dockerfile',
-              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest',
-              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}',
+              '-f', 'noir/Dockerfile',
+              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/noir:latest',
+              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/noir:${{ steps.sha.outputs.sha }}',
               '.'
             ]
             timeout: '3600s'  # Increase timeout to 1 hour
           images:
-          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest'
-          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}'
+          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/noir:latest'
+          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/noir:${{ steps.sha.outputs.sha }}'
           options:
             machineType: 'E2_HIGHCPU_32'  # Use a high-CPU machine for faster builds
             diskSizeGb: '100'
@@ -103,15 +108,3 @@ jobs:
             echo "Build failed with status: $STATUS"
             exit 1
           fi
-
-      - name: Trigger Infrastructure Deployment
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.INFRA_REPO_TOKEN }}
-          repository: zkemail/infra
-          event-type: deploy-sdk-images
-          client-payload: |
-            {
-              "environment": "staging",
-              "image_tag": "${{ steps.sha.outputs.sha }}"
-            }
