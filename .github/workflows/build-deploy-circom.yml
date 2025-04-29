@@ -1,9 +1,13 @@
-name: Build and Push Sdk Image
+name: Build and Push Circom Sdk Image
 
 on:
   push:
     branches:
       - staging
+    paths:
+      - 'circom/**'
+      - 'sdk-utils/**'
+      - 'Cargo.toml'
 
 permissions:
   id-token: write
