@@ -1,6 +1,13 @@
 name: Deploy Noir Sdk Image
 
 on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Image SHA tag to deploy (optional, defaults to latest commit SHA)'
+        required: false
+        type: string
+
   workflow_run:
     workflows: ["Build and Push Noir Sdk Image"]
     types:
@@ -11,20 +18,25 @@ permissions:
   contents: read
 
 jobs:
-  trigger-cloud-build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
-      - name: Checkout Code
+      - name: Checkout correct commit
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      # Get the short SHA for tagging
-      - name: Get Short SHA
-        id: sha
-        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Set SHA
+        id: set-sha
+        run: |
+          if [ -z "${{ github.event.inputs.sha }}" ]; then
+            SHA=$(git rev-parse --short HEAD)
+          else
+            SHA="${{ github.event.inputs.sha }}"
+          fi
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
 
-      # Authenticate with Google Cloud using Workload Identity Federation
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -33,7 +45,7 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-          IMAGE="us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${{ env.sha }}"
+          IMAGE="us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${{ steps.set-sha.outputs.sha }}"
           echo "Deploying image: $IMAGE to Cloud Run"
           gcloud run deploy noir-compile-zkemail-service \
             --image $IMAGE \
