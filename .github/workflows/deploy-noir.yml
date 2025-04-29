@@ -23,8 +23,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
-      # Checkout the repository
-      - name: Checkout Code
+      - name: Checkout correct commit
         uses: actions/checkout@v3
 
       - name: Determine SHA to Use
