@@ -1,0 +1,61 @@
+{ "blueprint": {
+    "id": "85255ee2-acfe-49ca-959c-edd009b53bb5",
+    "title": "Kraken KYC (Intermediate)",
+    "description": "Proof of Kraken Intermediate Account",
+    "slug": "Bisht13/krakenintermediate",
+    "email_query": "from:kraken.com",
+    "circuit_name": "krakenintermediate",
+    "ignore_body_hash_check": true,
+    "email_body_max_length": 4096,
+    "sender_domain": "kraken.com",
+    "verifier_contract_chain": 84532,
+    "created_at": {
+      "seconds": 1736325873,
+      "nanos": 967251000
+    },
+    "updated_at": {
+      "seconds": 1736326473,
+      "nanos": 627382000
+    },
+    "decomposed_regexes": [
+      {
+        "name": "email_subject",
+        "max_length": 64,
+        "location": "header",
+        "is_hashed": true,
+        "parts": [
+          {
+            "is_public": true,
+            "regex_def": "subject:"
+          },
+          {
+            "is_public": true,
+            "regex_def": "Good news: your account is now Intermediate!"
+          }
+        ]
+      }
+    ],
+    "external_inputs": [
+      {
+        "name": "test",
+        "max_length": 4096
+      }
+    ],
+    "status": 2,
+    "version": 1,
+    "github_username": "Bisht13",
+    "email_header_max_length": 1088
+  },
+  "uploadUrls": {
+    "circuit": "https://storage.googleapis.com/zkemail_blueprints/21f2c4bd-4fee-4b3c-9cf7-95904458835d/circuit.zkeyk.gz?Expires=1744873994&GoogleAccessId=blueprints-access-staging%40zkairdrop.iam.gserviceaccount.com&Signature=J3WQPIRNNjTzJj%2FJOkfTQBAELlCXC13OowleHY0kH6Ozg7fQWkkaqEN74MkBguRAFQwSPmhMX0NB9H%2FN%2FSEvwSPVyqur2xmlAoWMFIatyx4epe7HDeNlHmIcc%2B4mpgJ6wWdWpeMo%2B4XV7uLL0K0DI%2BO7DRCNyxghmIVkaQzgrNyilxMTvdK3Jhfy0kEF5gPBkGXpfobSAPHZwb1sfPxFqoy4FU2rkMWVahXd5st4woLvngfK5FxibuwLnRPaFMYFe1QFUwxtem6y2BiNDUjaVTjdPCCIwEO7OIIYlmMMse1E33Ui54751cUuS3BIMKJFw%2BbGPu5jdDj0bn0IPXbs5Q%3D%3D",
+    "circuitJson": "https://storage.googleapis.com/zkemail_blueprints/21f2c4bd-4fee-4b3c-9cf7-95904458835d/circuit.zkeyk.gz?Expires=1744873994&GoogleAccessId=blueprints-access-staging%40zkairdrop.iam.gserviceaccount.com&Signature=J3WQPIRNNjTzJj%2FJOkfTQBAELlCXC13OowleHY0kH6Ozg7fQWkkaqEN74MkBguRAFQwSPmhMX0NB9H%2FN%2FSEvwSPVyqur2xmlAoWMFIatyx4epe7HDeNlHmIcc%2B4mpgJ6wWdWpeMo%2B4XV7uLL0K0DI%2BO7DRCNyxghmIVkaQzgrNyilxMTvdK3Jhfy0kEF5gPBkGXpfobSAPHZwb1sfPxFqoy4FU2rkMWVahXd5st4woLvngfK5FxibuwLnRPaFMYFe1QFUwxtem6y2BiNDUjaVTjdPCCIwEO7OIIYlmMMse1E33Ui54751cUuS3BIMKJFw%2BbGPu5jdDj0bn0IPXbs5Q%3D%3D",
+    "vk": "https://storage.googleapis.com/zkemail_blueprints/21f2c4bd-4fee-4b3c-9cf7-95904458835d/circuit.zkeyk.gz?Expires=1744873994&GoogleAccessId=blueprints-access-staging%40zkairdrop.iam.gserviceaccount.com&Signature=J3WQPIRNNjTzJj%2FJOkfTQBAELlCXC13OowleHY0kH6Ozg7fQWkkaqEN74MkBguRAFQwSPmhMX0NB9H%2FN%2FSEvwSPVyqur2xmlAoWMFIatyx4epe7HDeNlHmIcc%2B4mpgJ6wWdWpeMo%2B4XV7uLL0K0DI%2BO7DRCNyxghmIVkaQzgrNyilxMTvdK3Jhfy0kEF5gPBkGXpfobSAPHZwb1sfPxFqoy4FU2rkMWVahXd5st4woLvngfK5FxibuwLnRPaFMYFe1QFUwxtem6y2BiNDUjaVTjdPCCIwEO7OIIYlmMMse1E33Ui54751cUuS3BIMKJFw%2BbGPu5jdDj0bn0IPXbs5Q%3D%3D",
+    "regexGraphs": "https://storage.googleapis.com/zkemail_blueprints/21f2c4bd-4fee-4b3c-9cf7-95904458835d/circuit.zkeyk.gz?Expires=1744873994&GoogleAccessId=blueprints-access-staging%40zkairdrop.iam.gserviceaccount.com&Signature=J3WQPIRNNjTzJj%2FJOkfTQBAELlCXC13OowleHY0kH6Ozg7fQWkkaqEN74MkBguRAFQwSPmhMX0NB9H%2FN%2FSEvwSPVyqur2xmlAoWMFIatyx4epe7HDeNlHmIcc%2B4mpgJ6wWdWpeMo%2B4XV7uLL0K0DI%2BO7DRCNyxghmIVkaQzgrNyilxMTvdK3Jhfy0kEF5gPBkGXpfobSAPHZwb1sfPxFqoy4FU2rkMWVahXd5st4woLvngfK5FxibuwLnRPaFMYFe1QFUwxtem6y2BiNDUjaVTjdPCCIwEO7OIIYlmMMse1E33Ui54751cUuS3BIMKJFw%2BbGPu5jdDj0bn0IPXbs5Q%3D%3D"
+  },
+  "databaseUrl": "postgresql://sdk_staging:92WFhClvXu9C22RpJS9u@34.172.161.65:5432/sdk-staging?sslmode=require",
+  "privateKey": "0xe5cf79f5e73d06c189f6e24fd08cd293de9aa65c32cbfaab2206b0e22a1036ad",
+  "rpcUrl": "https://sepolia.base.org",
+  "chainId": 84532,
+  "etherscanApiKey": "6EDGJD2UYCKC8254VC8FDDHQE78U26PJJ9",
+  "dkimRegistryAddress": "0x2971369F8681aF91F434D6F0f599C07842F3A17e"
+}
