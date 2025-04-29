@@ -148,7 +148,7 @@ pub async fn generate_verifier_contract(
     // Patch version and rename the contract
     let updated_content = content
         .replace(
-            Regex::new(r"^pragma solidity.*$")
+            Regex::new(r"pragma solidity .*;")
                 .unwrap()
                 .find(&content)
                 .unwrap()
@@ -156,7 +156,7 @@ pub async fn generate_verifier_contract(
             &format!("pragma solidity ^{};", "0.8.13"),
         )
         .replace(
-            Regex::new(r"^contract\s+\w+\s+\{$")
+            Regex::new(r"contract .*\{")
                 .unwrap()
                 .find(&content)
                 .unwrap()
