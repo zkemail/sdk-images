@@ -571,7 +571,7 @@ dependencies = [
  "dotenv",
  "rand",
  "regex",
- "relayer-utils",
+ "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c)",
  "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=main)",
  "serde",
  "serde_json",
@@ -2952,7 +2952,7 @@ dependencies = [
  "compiler",
  "dotenv",
  "regex",
- "relayer-utils",
+ "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c)",
  "sdk-utils 0.1.0",
  "serde",
  "serde_json",
@@ -3839,6 +3839,49 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "relayer-utils"
 version = "0.4.62-12"
+source = "git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c#728b8f643a6c9a1e5b400be6407727851cc8c92c"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "cfdkim",
+ "console_error_panic_hook",
+ "digest",
+ "ed25519-dalek",
+ "ethers",
+ "file-rotate",
+ "halo2curves",
+ "hex",
+ "hmac-sha256",
+ "itertools 0.10.5",
+ "js-sys",
+ "lazy_static",
+ "mailparse",
+ "num-bigint",
+ "poseidon-rs",
+ "rand",
+ "rand_core",
+ "regex",
+ "reqwest 0.11.27",
+ "rsa",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "sha1",
+ "sha2",
+ "slog",
+ "slog-async",
+ "slog-json",
+ "slog-term",
+ "sp1-verifier",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "zk-regex-apis",
+ "zk-regex-compiler 2.3.2 (git+https://github.com/zkemail/zk-regex.git)",
+]
+
+[[package]]
+name = "relayer-utils"
+version = "0.4.62-12"
 source = "git+https://github.com/zkemail/relayer-utils#728b8f643a6c9a1e5b400be6407727851cc8c92c"
 dependencies = [
  "anyhow",
@@ -4269,7 +4312,7 @@ name = "sdk-utils"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "relayer-utils",
+ "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c)",
  "reqwest 0.12.15",
  "serde",
  "slog",
@@ -4282,7 +4325,7 @@ version = "0.1.0"
 source = "git+https://github.com/zkemail/sdk-images?branch=main#e7491d31b4491818f91ed550017a20d142891f17"
 dependencies = [
  "anyhow",
- "relayer-utils",
+ "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils)",
  "reqwest 0.12.15",
  "serde",
  "slog",
