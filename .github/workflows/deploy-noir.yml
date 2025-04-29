@@ -1,4 +1,4 @@
-name: Deploy Noir Sdk Image
+name: Deploy Noir
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
   workflow_run:
-    workflows: ["Build and Push Noir Sdk Image"]
+    workflows: ["Build and Push Noir"]
     types:
       - completed
 

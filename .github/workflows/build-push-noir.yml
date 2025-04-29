@@ -1,4 +1,4 @@
-name: Build and Push Noir Sdk Image
+name: Build and Push Noir
 
 on:
   push:
@@ -9,6 +9,11 @@ on:
       - 'noir/**'
       - 'sdk-utils/**'
       - 'Cargo.toml'
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Optional commit SHA to tag the image'
+        required: false
 
 permissions:
   id-token: write
@@ -23,10 +28,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Get the short SHA for tagging
-      - name: Get Short SHA
+      - name: Determine SHA to Use
         id: sha
-        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: |
+          if [ -z "${{ github.event.inputs.sha }}" ]; then
+            COMMIT_SHA=$(git rev-parse --short HEAD)
+          else
+            COMMIT_SHA=$(echo "${{ github.event.inputs.sha }}" | cut -c1-7)
+          fi
+          echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
 
       # Authenticate with Google Cloud using Workload Identity Federation
       - name: Authenticate to Google Cloud
