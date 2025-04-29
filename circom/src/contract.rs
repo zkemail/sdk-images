@@ -121,6 +121,7 @@ pub async fn generate_verifier_contract(
     tmp_dir: &str,
     snarkjs_path: &str,
     zkey_file_name: &str,
+    old_contract_name: &str,
     contract_name: &str,
 ) -> Result<()> {
     // Generate the verifier contract
@@ -146,7 +147,10 @@ pub async fn generate_verifier_contract(
     // Read, patch, and rename the contract
     let updated_content = fs::read_to_string(&verifier_path)?
         .replace("pragma solidity ^0.6.11;", "pragma solidity ^0.8.13;")
-        .replace("contract Verifier", &format!("contract {}", contract_name));
+        .replace(
+            &format!("contract {}", old_contract_name),
+            &format!("contract {}", contract_name),
+        );
 
     // Write updated content to the new file
     fs::write(&renamed_path, updated_content)?;

@@ -67,6 +67,7 @@ async fn main() -> Result<()> {
         "tmp",
         chunked_snarkjs_path,
         "circuit.zkey",
+        "Verifier",
         "ClientProofVerifier",
     )
     .await?;
@@ -74,6 +75,7 @@ async fn main() -> Result<()> {
         "tmp",
         &snarkjs_path,
         "circuit_full.zkey",
+        "Groth16Verifier",
         "ServerProofVerifier",
     )
     .await?;
