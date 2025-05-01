@@ -14,7 +14,9 @@ RUN apt update && \
     gzip \
     pkg-config \
     libssl-dev \
-    zip && \
+    zip \
+    protobuf-compiler \
+    && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Noir
@@ -44,6 +46,9 @@ RUN foundryup
 WORKDIR /app
 
 COPY . .
+
+# Verify protoc is installed
+RUN protoc --version
 
 # Build the project
 RUN cargo build --bin noir --release
