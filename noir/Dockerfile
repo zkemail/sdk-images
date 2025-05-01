@@ -16,6 +16,7 @@ RUN apt update && \
     libssl-dev \
     zip \
     protobuf-compiler \
+    libprotobuf-dev \
     && \
     rm -rf /var/lib/apt/lists/*
 
