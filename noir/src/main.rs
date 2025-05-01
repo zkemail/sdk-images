@@ -14,7 +14,6 @@ struct AppState {
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    println!("Starting server");
 
     let state = AppState {
         api_key: std::env::var("ZKEMAIL_API_KEY").expect("ZKEMAIL_API_KEY must be set"),

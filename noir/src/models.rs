@@ -1,4 +1,5 @@
-use sdk_utils::{Blueprint, compute_signal_length};
+use sdk_utils::compute_signal_length;
+use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Serialize;
 
 /// Represents a single decomposed regex, along with computed fields
@@ -41,80 +42,75 @@ pub struct CircuitTemplateInputs {
 
 impl From<Blueprint> for CircuitTemplateInputs {
     fn from(value: Blueprint) -> Self {
-        let circuit_name = value.circuit_name.unwrap_or_else(|| "circuit".to_string());
-        let email_header_max_length = value.email_header_max_length.unwrap_or(1024) as usize;
-        let email_body_max_length = value.email_body_max_length.unwrap_or(2048) as usize;
-        let ignore_body_hash_check = value.ignore_body_hash_check.unwrap_or(true);
-        let remove_soft_line_breaks = value
-            .remove_soft_line_breaks
-            .unwrap_or(!ignore_body_hash_check);
+        let circuit_name = value.circuit_name;
+        let email_header_max_length = value.email_header_max_length as usize;
+        let email_body_max_length = value.email_body_max_length as usize;
+        let ignore_body_hash_check = value.ignore_body_hash_check;
+        let remove_soft_line_breaks = value.remove_soft_linebreaks;
 
         // Process regexes
         let mut regexes = Vec::new();
-        if let Some(decomposed_regexes) = value.decomposed_regexes {
-            for regex in decomposed_regexes {
-                let name = regex.name.clone();
-                let max_length = regex.max_length as usize;
-                let regex_circuit_name = format!("{}_regex", regex.name);
+        for regex in value.decomposed_regexes {
+            let name = regex.name.clone();
+            let max_length = regex.max_length as usize;
+            let regex_circuit_name = format!("{}_regex", regex.name);
 
-                // Determine location and its max length
-                let (location, max_length_of_location) = if regex.location == "header" {
-                    ("header".to_string(), email_header_max_length)
-                } else if remove_soft_line_breaks {
-                    ("decoded_body".to_string(), email_body_max_length)
-                } else {
-                    ("body".to_string(), email_body_max_length)
-                };
+            // Determine location and its max length
+            let (location, max_length_of_location) = if regex.location == "header" {
+                ("header".to_string(), email_header_max_length)
+            } else if remove_soft_line_breaks {
+                ("decoded_body".to_string(), email_body_max_length)
+            } else {
+                ("body".to_string(), email_body_max_length)
+            };
 
-                let mut num_public_parts = 0;
-                let is_hashed = regex.is_hashed;
-                let mut hash_inputs = Vec::new();
-                let mut capture_string = String::new();
-                let hash_packing_size = (max_length as f64 / 31.0).ceil() as usize;
+            let mut num_public_parts = 0;
+            let is_hashed = regex.is_hashed;
+            let mut hash_inputs = Vec::new();
+            let mut capture_string = String::new();
+            let hash_packing_size = (max_length as f64 / 31.0).ceil() as usize;
 
-                for part in &regex.parts {
-                    if part.is_public {
-                        num_public_parts += 1;
+            for part in &regex.parts {
+                if part.is_public == Some(true) {
+                    num_public_parts += 1;
 
-                        for i in 0..hash_packing_size {
-                            hash_inputs.push(format!(
-                                "{}_capture_{}_packed[{}]",
-                                name, num_public_parts, i
-                            ));
-                        }
+                    for i in 0..hash_packing_size {
+                        hash_inputs.push(format!(
+                            "{}_capture_{}_packed[{}]",
+                            name, num_public_parts, i
+                        ));
+                    }
 
-                        // Create capture string (e.g., "capture_1, capture_2, ...")
-                        if capture_string.is_empty() {
-                            capture_string
-                                .push_str(&format!("{}_capture_{}", name, num_public_parts));
-                        } else {
-                            capture_string
-                                .push_str(&format!(", {}_capture_{}", name, num_public_parts));
-                        }
+                    // Create capture string (e.g., "capture_1, capture_2, ...")
+                    if capture_string.is_empty() {
+                        capture_string.push_str(&format!("{}_capture_{}", name, num_public_parts));
+                    } else {
+                        capture_string
+                            .push_str(&format!(", {}_capture_{}", name, num_public_parts));
                     }
                 }
-
-                regexes.push(RegexEntry {
-                    name,
-                    max_length,
-                    regex_circuit_name,
-                    location,
-                    max_length_of_location,
-                    num_public_parts,
-                    is_hashed: is_hashed.unwrap_or(false),
-                    hash_packing_size,
-                    hash_inputs: if is_hashed.unwrap_or(false) {
-                        hash_inputs.join(", ")
-                    } else {
-                        String::new()
-                    },
-                    capture_string,
-                });
             }
+
+            regexes.push(RegexEntry {
+                name,
+                max_length,
+                regex_circuit_name,
+                location,
+                max_length_of_location,
+                num_public_parts,
+                is_hashed,
+                hash_packing_size,
+                hash_inputs: if is_hashed {
+                    hash_inputs.join(", ")
+                } else {
+                    String::new()
+                },
+                capture_string,
+            });
         }
 
         // Process external inputs
-        let external_inputs_data = value.external_inputs.unwrap_or_default();
+        let external_inputs_data = value.external_inputs;
         let external_inputs: Vec<ExternalInputEntry> = external_inputs_data
             .iter()
             .map(|input| {
