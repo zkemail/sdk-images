@@ -15,6 +15,7 @@ fn main() {
         .extern_path(".google.protobuf.Timestamp", "::prost_wkt_types::Timestamp")
         .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
         .file_descriptor_set_path(&descriptor_file)
+        .protoc_arg("--experimental_allow_proto3_optional")
         .compile_protos(&["proto/blueprint.proto"], &["proto/"])
         .unwrap();
 
