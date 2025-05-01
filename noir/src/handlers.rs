@@ -1,7 +1,8 @@
 use anyhow::Result;
 use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use relayer_utils::LOG;
-use sdk_utils::Blueprint;
+// use sdk_utils::Blueprint;
+use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Deserialize;
 use slog::info;
 
@@ -36,7 +37,6 @@ pub async fn compile_circuit_handler(
     Json(payload): Json<Payload>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     info!(LOG, "Received payload: {:?}", payload);
-    println!("payload: {:?}", payload);
 
     // Process the request
     match process_circuit(payload).await {
@@ -47,13 +47,11 @@ pub async fn compile_circuit_handler(
 
 async fn process_circuit(payload: Payload) -> Result<()> {
     // Setup filesystem
-    println!("setting up");
     setup().await?;
 
     // Extract blueprint
     let blueprint = payload.blueprint;
 
-    println!("generate_regex_circuits");
     // Generate regex circuits
     generate_regex_circuits(&blueprint.decomposed_regexes)?;
 
@@ -61,18 +59,15 @@ async fn process_circuit(payload: Payload) -> Result<()> {
     let circuit_template_inputs = CircuitTemplateInputs::from(blueprint);
 
     let circuit = generate_circuit(circuit_template_inputs)?;
-    println!("circuit: {:?}", circuit);
 
     // Write the circuit to a file
     let circuit_path = "./tmp/src/main.nr";
     std::fs::write(circuit_path, circuit)?;
-    println!("wrote circuit_path");
 
     // Compile and clean up
     compile_circuit().await?;
-    println!("compiling done");
+
     cleanup().await?;
-    println!("cleanup done");
 
     // Upload files
     upload_files(payload.upload_urls).await?;

@@ -1,10 +1,11 @@
-name: Build Push Deploy Noir
+name: Build rnd Push Noir
 
 on:
   push:
     branches:
       - staging
       - dev
+      - main
     paths:
       - 'noir/**'
       - 'sdk-utils/**'
@@ -118,15 +119,3 @@ jobs:
             echo "Build failed with status: $STATUS"
             exit 1
           fi
-
-      - name: Deploy to Cloud Run
-        run: |
-          IMAGE="us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${{ steps.set-sha.outputs.sha }}"
-          echo "Deploying image: $IMAGE to Cloud Run"
-          gcloud run deploy noir-compile-zkemail-service \
-            --image $IMAGE \
-            --region us-east1 \
-            --platform managed \
-            --allow-unauthenticated \
-            --memory 4Gi \
-            --update-secrets "ZKEMAIL_API_KEY=ZKEMAIL_API_KEY:latest"
