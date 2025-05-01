@@ -10,11 +10,9 @@ use crate::handlers::UploadUrls;
 pub async fn setup() -> Result<()> {
     // Define the tmp path
     let tmp_path = Path::new("./tmp");
-    println!("tmp_path: {:?}", tmp_path);
 
     // If tmp exists, remove its contents
     if tmp_path.exists() {
-        println!("tmp_path does not exist");
         for entry in fs::read_dir(tmp_path)? {
             let entry = entry?;
             let path = entry.path();
@@ -25,29 +23,22 @@ pub async fn setup() -> Result<()> {
             }
         }
     } else {
-        println!("creating tmp dir");
         // If tmp doesn't exist, create it
         fs::create_dir_all(tmp_path)?;
     }
 
-    println!("created all temp dir stuff");
-
     // Ensure src directory exists inside tmp
     let src_path = tmp_path.join("src");
-    println!("src_path: {:?}", src_path);
 
     if src_path.exists() {
         fs::remove_dir_all(&src_path)?;
     }
     fs::create_dir_all(&src_path)?;
-    println!("create_dir_all after create_dir_all");
 
     // Copy Nargo.toml to the tmp folder
     let nargo_toml_path = Path::new("./Nargo.toml");
-    println!("nargo_toml_path: {:?}", nargo_toml_path);
 
     fs::copy(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
-    println!("copied nargo");
 
     Ok(())
 }
