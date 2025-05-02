@@ -1,6 +1,7 @@
 use std::env;
 
 use anyhow::Result;
+use base64::Engine;
 use dotenv::dotenv;
 use relayer_utils::LOG;
 use sdk_utils::Blueprint;
@@ -48,8 +49,8 @@ pub fn load_payload() -> Result<Payload> {
     dotenv().ok();
 
     // Decode the base64-encoded PAYLOAD environment variable
-    let decoded_payload =
-        base64::decode(std::env::var("PAYLOAD").expect("PAYLOAD environment variable not set"))?;
+    let decoded_payload = base64::engine::general_purpose::STANDARD
+        .decode(std::env::var("PAYLOAD").expect("PAYLOAD environment variable not set"))?;
 
     // Convert the decoded bytes to a string
     let payload_str = String::from_utf8(decoded_payload)?;
