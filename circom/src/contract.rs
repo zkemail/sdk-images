@@ -123,7 +123,7 @@ pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
     // Generate the verifier contract
     info!(LOG, "Generating verifier contract");
     run_command(
-        &chunked_snarkjs_path,
+        chunked_snarkjs_path,
         &[
             "zkey",
             "export",
