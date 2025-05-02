@@ -12,16 +12,23 @@ RUN apt update && \
     git \
     build-essential \
     gzip \
-    zip && \
+    pkg-config \
+    libssl-dev \
+    zip \
+    protobuf-compiler \
+    libprotobuf-dev \
+    && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Noir
 RUN curl -L https://raw.githubusercontent.com/noir-lang/noirup/refs/heads/main/install | bash
-RUN noirup
+ENV PATH="/root/.nargo/bin:$PATH"
+RUN noirup --version 1.0.0-beta.2
 
 # Install Barrentenberg
 RUN curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/master/barretenberg/bbup/install | bash
-RUN bbup
+ENV PATH="/root/.bb:$PATH"
+RUN bbup --version 0.82.2
 
 # Install Rust
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
@@ -37,5 +44,20 @@ RUN curl -L https://foundry.paradigm.xyz | bash
 ENV PATH="/root/.foundry/bin:$PATH"
 RUN foundryup
 
+WORKDIR /app
+
+COPY . .
+
+# Verify protoc is installed
+RUN protoc --version
+
+# Build the project
+RUN cargo build --bin noir --release
+
+# Expose the port that the application listens on
+EXPOSE 8082
+
+WORKDIR /app/noir
+
 # Final command
-CMD ["cargo", "run"]
+CMD ["../target/release/noir"]

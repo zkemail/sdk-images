@@ -1,10 +1,11 @@
-name: Build and Push Noir
+name: Build rnd Push Noir
 
 on:
   push:
     branches:
       - staging
       - dev
+      - main
     paths:
       - 'noir/**'
       - 'sdk-utils/**'

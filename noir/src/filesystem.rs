@@ -1,9 +1,10 @@
-use crate::payload::UploadUrls;
 use anyhow::Result;
 use relayer_utils::LOG;
 use sdk_utils::{run_command, upload_to_url};
 use slog::info;
 use std::{fs, path::Path};
+
+use crate::handlers::UploadUrls;
 
 /// Sets up the temporary directory structure for circuit compilation
 pub async fn setup() -> Result<()> {
@@ -28,6 +29,7 @@ pub async fn setup() -> Result<()> {
 
     // Ensure src directory exists inside tmp
     let src_path = tmp_path.join("src");
+
     if src_path.exists() {
         fs::remove_dir_all(&src_path)?;
     }
@@ -35,6 +37,7 @@ pub async fn setup() -> Result<()> {
 
     // Copy Nargo.toml to the tmp folder
     let nargo_toml_path = Path::new("./Nargo.toml");
+
     fs::copy(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
 
     Ok(())
