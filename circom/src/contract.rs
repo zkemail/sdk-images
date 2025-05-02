@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, env, fs, path::Path};
 
 use anyhow::Result;
 use regex::Regex;
@@ -30,7 +30,7 @@ pub struct Field {
 pub fn create_contract(contract_data: &ContractData) -> Result<()> {
     // Initialize Tera
     let mut tera = Tera::default();
-    tera.add_template_file("./templates/template.sol.tera", Some("contract.sol"))?;
+    tera.add_template_file("./templates/template.sol.tera", Some("Contract.sol"))?;
 
     let mut context = Context::new();
     context.insert("sender_domain", &contract_data.sender_domain);
@@ -42,14 +42,14 @@ pub fn create_contract(contract_data: &ContractData) -> Result<()> {
         &contract_data.prover_eth_address_idx,
     );
 
-    let rendered_contract = tera.render("contract.sol", &context)?;
+    let rendered_contract = tera.render("Contract.sol", &context)?;
 
     let re = regex::Regex::new(r"\n+").unwrap();
 
     let cleaned_contract = re.replace_all(&rendered_contract, "\n").to_string();
 
     // Write the rendered template to a file
-    std::fs::write("tmp/contract.sol", cleaned_contract)?;
+    std::fs::write("tmp/Contract.sol", cleaned_contract)?;
 
     Ok(())
 }
@@ -117,37 +117,61 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     }
 }
 
-pub async fn generate_verifier_contract(tmp_dir: &str) -> Result<()> {
-    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
-
+pub async fn generate_verifier_contract(
+    tmp_dir: &str,
+    snarkjs_path: &str,
+    zkey_file_name: &str,
+    contract_name: &str,
+) -> Result<()> {
     // Generate the verifier contract
     info!(LOG, "Generating verifier contract");
     run_command(
-        chunked_snarkjs_path,
+        snarkjs_path,
         &[
             "zkey",
             "export",
             "solidityverifier",
-            "circuit.zkey",
+            zkey_file_name,
             "verifier.sol",
         ],
         Some(tmp_dir),
     )
     .await?;
 
-    // Update sol version
-    let path = "tmp/verifier.sol";
+    // Path to the generated verifier
+    let verifier_path = Path::new(tmp_dir).join("verifier.sol");
+    // Path to the renamed verifier
+    let renamed_path = Path::new(tmp_dir).join(format!("{}.sol", contract_name));
 
-    // Read the file content
-    let content = fs::read_to_string(path)?;
+    // Read the verifier contract
+    let content = fs::read_to_string(&verifier_path)?;
+    // Patch version and rename the contract
+    let updated_content = content
+        .replace(
+            Regex::new(r"pragma solidity .*;")
+                .unwrap()
+                .find(&content)
+                .unwrap()
+                .as_str(),
+            &format!("pragma solidity ^{};", "0.8.13"),
+        )
+        .replace(
+            Regex::new(r"contract .*\{")
+                .unwrap()
+                .find(&content)
+                .unwrap()
+                .as_str(),
+            &format!("contract {} {{", contract_name),
+        );
 
-    // Replace the pragma line
-    let updated_content = content.replace("pragma solidity ^0.6.11;", "pragma solidity ^0.8.13;");
+    // Write updated content to the new file and remove the original
+    fs::write(&renamed_path, updated_content)?;
+    fs::remove_file(&verifier_path)?;
 
-    // Write back to file
-    fs::write(path, updated_content)?;
-
-    info!(LOG, "Updated verifier.sol to Solidity 0.8.13");
+    info!(
+        LOG,
+        "Updated verifier to Solidity 0.8.13 and renamed contract to {}", contract_name
+    );
 
     Ok(())
 }
@@ -161,7 +185,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
 
     // Parse the output to extract addresses
     let re =
-        Regex::new(r"Deployed (Verifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})").unwrap();
+        Regex::new(r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})").unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
         let contract_name = &cap[1];
@@ -176,42 +200,58 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         "cast",
         &[
             "abi-encode",
-            "constructor(address,address)",
+            "constructor(address,address,address)",
             contract_addresses.get("DKIMRegistry").unwrap(),
-            contract_addresses.get("Verifier").unwrap(),
+            contract_addresses.get("ClientProofVerifier").unwrap(),
+            contract_addresses.get("ServerProofVerifier").unwrap(),
         ],
         None,
     )
     .await?;
 
-    info!(LOG, "Verify contracts");
-    run_command(
-        "forge",
-        &[
-            "verify-contract",
-            "--chain-id",
-            payload.chain_id.to_string().as_str(),
-            contract_addresses.get("Verifier").unwrap(),
-            "tmp/verifier.sol:Verifier",
-        ],
-        None,
-    )
-    .await?;
+    if env::var("ETHERSCAN_API_KEY").is_ok() {
+        info!(LOG, "Verify contracts");
+        run_command(
+            "forge",
+            &[
+                "verify-contract",
+                "--chain-id",
+                payload.chain_id.to_string().as_str(),
+                contract_addresses.get("ClientProofVerifier").unwrap(),
+                "tmp/ClientProofVerifier.sol:ClientProofVerifier",
+            ],
+            None,
+        )
+        .await?;
 
-    run_command(
-        "forge",
-        &[
-            "verify-contract",
-            "--chain-id",
-            payload.chain_id.to_string().as_str(),
-            "--constructor-args",
-            &constructor_args,
-            contract_addresses.get("Contract").unwrap(),
-            "tmp/contract.sol:Contract",
-        ],
-        None,
-    )
-    .await?;
+        run_command(
+            "forge",
+            &[
+                "verify-contract",
+                "--chain-id",
+                payload.chain_id.to_string().as_str(),
+                contract_addresses.get("ServerProofVerifier").unwrap(),
+                "tmp/ServerProofVerifier.sol:ServerProofVerifier",
+            ],
+            None,
+        )
+        .await?;
+
+        run_command(
+            "forge",
+            &[
+                "verify-contract",
+                "--chain-id",
+                payload.chain_id.to_string().as_str(),
+                "--constructor-args",
+                &constructor_args,
+                contract_addresses.get("Contract").unwrap(),
+                "tmp/Contract.sol:Contract",
+            ],
+            None,
+        )
+        .await?;
+    }
 
     Ok(contract_addresses.get("Contract").unwrap().to_string())
 }
