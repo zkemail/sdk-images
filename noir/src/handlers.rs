@@ -8,7 +8,7 @@ use slog::info;
 
 // Import from the crate root
 use crate::circuit_generator::generate_circuit;
-use crate::filesystem::{cleanup, compile_circuit, setup, upload_files};
+use crate::filesystem::{FileUploader, ProductionFileUploader, cleanup, compile_circuit, setup};
 use crate::models::CircuitTemplateInputs;
 use crate::regex_generator::generate_regex_circuits;
 
@@ -39,13 +39,16 @@ pub async fn compile_circuit_handler(
     info!(LOG, "Received payload: {:?}", payload);
 
     // Process the request
-    match process_circuit(payload).await {
+    match process_circuit(payload, ProductionFileUploader).await {
         Ok(_) => Ok(StatusCode::OK),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Err(e) => {
+            println!("e while compiling: {:?}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }
 
-async fn process_circuit(payload: Payload) -> Result<()> {
+async fn process_circuit(payload: Payload, uploader: impl FileUploader) -> Result<()> {
     // Setup filesystem
     setup().await?;
 
@@ -70,7 +73,314 @@ async fn process_circuit(payload: Payload) -> Result<()> {
     cleanup().await?;
 
     // Upload files
-    upload_files(payload.upload_urls).await?;
+    uploader.upload_files(payload.upload_urls).await?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::filesystem::MockFileUploader;
+    // use dotenv::dotenv;
+    use prost_wkt_types::Timestamp;
+    use sdk_utils::proto_types::proto_blueprint::{
+        Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
+    };
+    // use std::env;
+
+    #[tokio::test]
+    async fn test_compile_circuit_apple() {
+        // Set up test environment
+        // dotenv().ok();
+        // let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let database_url = "".to_string();
+
+        // Set up mock uploader
+        let mut mock_uploader = MockFileUploader::new();
+        mock_uploader
+            .expect_upload_files()
+            .times(1)
+            .returning(|_| Ok(()));
+
+        let blueprint = Blueprint {
+            id: "88802381-0501-4c4a-bcb5-03fdeacf453e".to_string(),
+            title: "AppleKYC".to_string(),
+            description: "Prove you have a valid Apple account".to_string(),
+            slug: "DimiDumo/AppleKYC".to_string(),
+            tags: vec![],
+            email_query: "from:email.apple.com".to_string(),
+            use_new_sdk: false,
+            circuit_name: "AppleKYC".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "email.apple.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            zk_framework: 0, // Noir
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "0x1E8AbE8B8551E73d25239004EffccA2d077eF146".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746538605,
+                nanos: 86528000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746538605,
+                nanos: 86528000,
+            }),
+            external_inputs: vec![ExternalInput {
+                name: "address".to_string(),
+                max_length: 44,
+            }],
+            decomposed_regexes: vec![
+                DecomposedRegex {
+                    name: "subject".to_string(),
+                    max_length: 256,
+                    location: "header".to_string(),
+                    is_hashed: false,
+                    parts: vec![
+                        DecomposedRegexPart {
+                            is_public: Some(false),
+                            regex_def: "(\r\n|^)subject:".to_string(),
+                        },
+                        DecomposedRegexPart {
+                            is_public: Some(true),
+                            regex_def: "[^\r\n]+".to_string(),
+                        },
+                        DecomposedRegexPart {
+                            is_public: Some(false),
+                            regex_def: "\r\n".to_string(),
+                        },
+                    ],
+                },
+                // Other DecomposedRegex objects omitted for brevity - add them if needed
+            ],
+            status: 1, // InProgress
+            version: 6,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 2048,
+            remove_soft_linebreaks: true,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let upload_urls = UploadUrls {
+            circuit: "".to_string(),
+            circuit_json: "".to_string(),
+            regex_graphs: "".to_string(),
+        };
+
+        let payload = Payload {
+            blueprint,
+            upload_urls,
+            database_url,
+            private_key: "".to_string(),
+            rpc_url: "".to_string(),
+            chain_id: 84532,
+            etherscan_api_key: "".to_string(),
+            dkim_registry_address: "".to_string(),
+        };
+
+        println!("calling process_circuit");
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(payload, mock_uploader).await;
+
+        println!("Got a result");
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_registry() {
+        // Set up mock uploader
+        let mut mock_uploader = MockFileUploader::new();
+        mock_uploader
+            .expect_upload_files()
+            .times(1)
+            .returning(|_| Ok(()));
+
+        let blueprint = Blueprint {
+            id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
+            title: "Sp1Residency".to_string(),
+            description: "Sp1Residency".to_string(),
+            slug: "DimiDumo/sp1_residency".to_string(),
+            tags: vec![],
+            email_query: "".to_string(),
+            use_new_sdk: false,
+            circuit_name: "sp1_residency".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "succinct.xyz".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            zk_framework: 0, // Noir
+            verifier_contract_chain: 0,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "subject".to_string(),
+                max_length: 50,
+                location: "header".to_string(),
+                is_hashed: false,
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "Welcome ".to_string(),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "to the Succinct ZK Residency!".to_string(),
+                    },
+                ],
+            }],
+            status: 1, // InProgress
+            version: 31,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 896,
+            remove_soft_linebreaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let upload_urls = UploadUrls {
+            circuit: "".to_string(),
+            circuit_json: "".to_string(),
+            regex_graphs: "".to_string(),
+        };
+
+        let payload = Payload {
+            blueprint,
+            upload_urls,
+            database_url: "".to_string(),
+            private_key: "".to_string(),
+            rpc_url: "".to_string(),
+            chain_id: 0,
+            etherscan_api_key: "".to_string(),
+            dkim_registry_address: "".to_string(),
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(payload, mock_uploader).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_registry_kraken() {
+        // Set up mock uploader
+        let mut mock_uploader = MockFileUploader::new();
+        mock_uploader
+            .expect_upload_files()
+            .times(1)
+            .returning(|_| Ok(()));
+
+        let blueprint = Blueprint {
+            id: "85255ee2-acfe-49ca-959c-edd009b53bb5".to_string(),
+            title: "Kraken KYC (Intermediate)".to_string(),
+            description: "Proof of Kraken Intermediate Account".to_string(),
+            slug: "Bisht13/krakenintermediate".to_string(),
+            tags: vec![],
+            email_query: "from:kraken.com".to_string(),
+            use_new_sdk: false,
+            circuit_name: "krakenintermediate".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 4096,
+            sender_domain: "kraken.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            zk_framework: 0, // Noir
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1736325873,
+                nanos: 967251000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1736326473,
+                nanos: 627382000,
+            }),
+            external_inputs: vec![ExternalInput {
+                name: "test".to_string(),
+                max_length: 4096,
+            }],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "email_subject".to_string(),
+                max_length: 64,
+                location: "header".to_string(),
+                is_hashed: true,
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "subject:".to_string(),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "Good news: your account is now Intermediate!".to_string(),
+                    },
+                ],
+            }],
+            status: 2,
+            version: 1,
+            github_username: "Bisht13".to_string(),
+            email_header_max_length: 1088,
+            remove_soft_linebreaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let upload_urls = UploadUrls {
+            circuit: "".to_string(),
+            circuit_json: "".to_string(),
+            regex_graphs: "".to_string(),
+        };
+
+        let payload = Payload {
+            blueprint,
+            upload_urls,
+            database_url: "".to_string(),
+            private_key: "".to_string(),
+            rpc_url: "https://sepolia.base.org".to_string(),
+            chain_id: 84532,
+            etherscan_api_key: "".to_string(),
+            dkim_registry_address: "0x2971369F8681aF91F434D6F0f599C07842F3A17e".to_string(),
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(payload, mock_uploader).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
 }
