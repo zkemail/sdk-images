@@ -81,7 +81,7 @@ WORKDIR /root/circom
 
 # Copy project files and build Tachyon
 COPY . .
-RUN cargo build --bin circom --release
+RUN cargo build
 
 # Set Node.js memory limits
 ENV NODE_OPTIONS=--max_old_space_size=65536
@@ -89,4 +89,4 @@ ENV NODE_OPTIONS=--max_old_space_size=65536
 RUN sysctl -w vm.max_map_count=262144
 
 # Final command
-CMD ["./target/release/circom"]
+CMD ["cargo", "run"]
