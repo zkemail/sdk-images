@@ -385,7 +385,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_compile_circuit_registry_kraken() {
+    async fn test_compile_circuit_kraken() {
         // Set up mock uploader
         let mut mock_uploader = MockFileUploader::new();
         mock_uploader
@@ -465,6 +465,101 @@ mod tests {
             chain_id: 84532,
             etherscan_api_key: "".to_string(),
             dkim_registry_address: "0x2971369F8681aF91F434D6F0f599C07842F3A17e".to_string(),
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(payload, mock_uploader).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_subject_extract() {
+        // Set up mock uploader
+        let mut mock_uploader = MockFileUploader::new();
+        mock_uploader
+            .expect_upload_files()
+            .times(1)
+            .returning(|_| Ok(()));
+
+        let blueprint = Blueprint {
+            id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
+            title: "Sp1Residency".to_string(),
+            description: "Sp1Residency".to_string(),
+            slug: "DimiDumo/sp1_residency".to_string(),
+            tags: vec![],
+            email_query: "".to_string(),
+            use_new_sdk: false,
+            circuit_name: "sp1_residency".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "succinct.xyz".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            zk_framework: 0, // Noir
+            verifier_contract_chain: 0,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "subject".to_string(),
+                max_length: 64,
+                location: "header".to_string(),
+                is_hashed: false,
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "(?:\r\n|^)subject:".to_string(),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "[a-z]+".to_string(),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "\r\n".to_string(),
+                    },
+                ],
+            }],
+            status: 1, // InProgress
+            version: 31,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 896,
+            remove_soft_linebreaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let upload_urls = UploadUrls {
+            circuit: "".to_string(),
+            circuit_json: "".to_string(),
+            regex_graphs: "".to_string(),
+        };
+
+        let payload = Payload {
+            blueprint,
+            upload_urls,
+            database_url: "".to_string(),
+            private_key: "".to_string(),
+            rpc_url: "".to_string(),
+            chain_id: 0,
+            etherscan_api_key: "".to_string(),
+            dkim_registry_address: "".to_string(),
         };
 
         // Call the handler with the mock uploader
