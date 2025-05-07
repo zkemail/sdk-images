@@ -89,4 +89,4 @@ ENV NODE_OPTIONS=--max_old_space_size=65536
 RUN sysctl -w vm.max_map_count=262144
 
 # Final command
-CMD ["cargo", "run"]
+CMD ["cargo", "run", "--bin", "noir"]
