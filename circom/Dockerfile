@@ -92,4 +92,4 @@ RUN sysctl -w vm.max_map_count=262144
 WORKDIR /root/circom/circom
 
 # Final command
-CMD ["../target/release/noir"]
+CMD ["../target/release/circom"]
