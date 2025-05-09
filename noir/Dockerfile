@@ -59,5 +59,7 @@ EXPOSE 8082
 
 WORKDIR /app/noir
 
+ENV LOG_LEVEL=info
+
 # Final command
 CMD ["../target/release/noir"]
