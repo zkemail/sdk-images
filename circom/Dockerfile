@@ -89,7 +89,7 @@ ENV NODE_OPTIONS=--max_old_space_size=65536
 RUN sysctl -w vm.max_map_count=262144
 
 # Copy the circom binary to the working directory
-RUN cp ../target/release/circom .
+RUN cp /circom/target/release/circom /root/circom/circom/
 
 # Final command
 CMD ["./circom"]
