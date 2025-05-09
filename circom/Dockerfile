@@ -88,8 +88,8 @@ ENV NODE_OPTIONS=--max_old_space_size=65536
 
 RUN sysctl -w vm.max_map_count=262144
 
-# blueprint-84b655e0-2812-428a-9e33-130ac4bc19d3-t27wq
-WORKDIR /root/circom/circom
+# Copy the circom binary to the working directory
+RUN cp ../target/release/circom .
 
 # Final command
-CMD ["../target/release/circom"]
+CMD ["./circom"]
