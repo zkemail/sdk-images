@@ -29,9 +29,11 @@ fn main(
     {{ regex.name }}_current_states: [Field; {{ regex.max_length }}],
     {{ regex.name }}_next_states: [Field; {{ regex.max_length }}],
     {% if regex.num_public_parts > 0 %}
-    {{ regex.name }}_capture_groups_ids: [Field; {{ regex.max_length }}],
-    {{ regex.name }}_capture_groups_starts: [Field; {{ regex.max_length }}],
-    {{ regex.name }}_capture_groups_indices: [Field; {{ regex.num_public_parts }}],
+    {% for i in range(start=1, end=regex.num_public_parts + 1) %}
+    {{ regex.name }}_capture_group_{{ i }}_id: [Field; {{ regex.max_length }}],
+    {{ regex.name }}_capture_group_{{ i }}_start: [Field; {{ regex.max_length }}],
+    {% endfor %}
+    {{ regex.name }}_capture_group_start_indices: [Field; {{ regex.num_public_parts }}],
     {% endif %}
     {% endfor %}
 ) -> pub (Field, Field, Field, [Field; 1] {{ output_args }}) {
@@ -65,7 +67,18 @@ fn main(
 
     {% for regex in regexes %}
     {% if regex.num_public_parts > 0 %}
-    let ({{ regex.capture_string }}) = {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states, {{ regex.name }}_capture_groups_ids, {{ regex.name }}_capture_groups_starts, {{ regex.name }}_capture_groups_indices);
+    let {% if regex.num_public_parts > 1 %}({% endif %}{{ regex.capture_string }}{% if regex.num_public_parts > 1 %}){% endif %} = {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>(
+        {{ regex.location }}.storage(), 
+        {{ regex.name }}_match_start, 
+        {{ regex.name }}_match_length, 
+        {{ regex.name }}_current_states, 
+        {{ regex.name }}_next_states
+        {%- for j in range(start=1, end=regex.num_public_parts + 1) -%}
+        , {{ regex.name }}_capture_group_{{ j }}_id
+        , {{ regex.name }}_capture_group_{{ j }}_start
+        {%- endfor -%}
+        , {{ regex.name }}_capture_group_start_indices
+    );
     {% else %}
     regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states);
     {% endif %}
