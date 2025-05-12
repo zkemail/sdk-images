@@ -30,8 +30,8 @@ fn main(
     {{ regex.name }}_next_states: [Field; {{ regex.max_length }}],
     {% if regex.num_public_parts > 0 %}
     {% for i in range(start=1, end=regex.num_public_parts + 1) %}
-    {{ regex.name }}_capture_group_{{ i }}_id: Field,
-    {{ regex.name }}_capture_group_{{ i }}_start: Field,
+    {{ regex.name }}_capture_group_{{ i }}_id: [Field; {{ regex.max_length }}],
+    {{ regex.name }}_capture_group_{{ i }}_start: [Field; {{ regex.max_length }}],
     {% endfor %}
     {{ regex.name }}_capture_group_start_indices: [Field; {{ regex.num_public_parts }}],
     {% endif %}
