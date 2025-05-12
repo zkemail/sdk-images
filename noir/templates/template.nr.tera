@@ -67,7 +67,7 @@ fn main(
 
     {% for regex in regexes %}
     {% if regex.num_public_parts > 0 %}
-    let ({{ regex.capture_string }}) = {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>(
+    let {% if regex.num_public_parts > 1 %}({% endif %}{{ regex.capture_string }}{% if regex.num_public_parts > 1 %}){% endif %} = {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_length }}>(
         {{ regex.location }}.storage(), 
         {{ regex.name }}_match_start, 
         {{ regex.name }}_match_length, 
