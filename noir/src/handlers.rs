@@ -337,12 +337,16 @@ mod tests {
                 is_hashed: false,
                 parts: vec![
                     DecomposedRegexPart {
-                        is_public: Some(true),
+                        is_public: Some(false),
                         regex_def: "Welcome ".to_string(),
                     },
                     DecomposedRegexPart {
                         is_public: Some(true),
-                        regex_def: "to the Succinct ZK Residency!".to_string(),
+                        regex_def: "to the ".to_string(),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "Succinct ZK Residency!".to_string(),
                     },
                 ],
             }],
