@@ -237,7 +237,7 @@ mod tests {
                     parts: vec![
                         DecomposedRegexPart {
                             is_public: Some(false),
-                            regex_def: "(\r\n|^)subject:".to_string(),
+                            regex_def: "(?:\r\n|^)subject:".to_string(),
                         },
                         DecomposedRegexPart {
                             is_public: Some(true),

@@ -63,7 +63,7 @@ pub async fn setup() -> Result<()> {
     fs::create_dir_all(&src_path)?;
 
     // Copy Nargo.toml to the tmp folder
-    let nargo_toml_path = Path::new("./Nargo.toml");
+    let nargo_toml_path = Path::new("./Nargo.toml.txt");
 
     fs::copy(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
 

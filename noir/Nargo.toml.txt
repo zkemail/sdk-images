@@ -1,9 +1,9 @@
 [package]
 name = "sdk_noir"
 type = "bin"
-authors = ["Aditya Bisht <adityabisht64@gmail.com>"]
+authors = []
 compiler_version = ">=1.0.0"
 
 [dependencies]
 zkemail = { tag = "v0.4.3", git = "https://github.com/zkemail/zkemail.nr", directory = "lib" }
-zkregex = { tag = "2.1.4", git = "https://github.com/zkemail/zk-regex", directory = "noir" }
+zkregex = { tag = "2.1.7", git = "https://github.com/zkemail/zk-regex", directory = "noir" }
