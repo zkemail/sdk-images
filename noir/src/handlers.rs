@@ -154,17 +154,15 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "https://storage.googleapis.com/zkemail_blueprints/4478f3bc-9ba8-4906-ba87-09fc049cef46/noirCircuit.zip?Expires=1747178989&GoogleAccessId=397234807794-compute%40developer.gserviceaccount.com&Signature=EiXK0nchLtwrpDCD0s9YLOWWCGRHJtkiyvBGUCpEWrAXm%2FlQavHpwN2%2BWlGRaS%2F6%2B4%2FIrqDjVvNnTQVfkz769M6B50%2B71JTmabTpbDgQDYUwLDWRA4Izwy6AV1t%2FbvO9X065YBYqQt2Szia1P2rraGS9lDjGtJWBgF9K%2BziPjcjGJ%2FQAW7fMkkF26hxyn3QhvMcCu7Qp7x3C0AtBh2G4nLj1k4B5sIgY0vzWT6w2mm8ygPAjuxFwPaAh3pSqYatetjgSfxpVq3Z%2BGNgv5yq5NJLoNHnsdDx7AZFPFLoM7BADoVYJN0BuwbJLvG0fkerwErM88RT8ybiGQkkEoUPnmw%3D%3D".to_string(),
-            circuit_json: "https://storage.googleapis.com/zkemail_blueprints/4478f3bc-9ba8-4906-ba87-09fc049cef46/noirCircuitJson.json?Expires=1747178989&GoogleAccessId=397234807794-compute%40developer.gserviceaccount.com&Signature=f7dW%2FalmQJjj%2BkPxNVbrW2DdSKPBJPlFDAb6T7o8JhexTutB9pfJy9SsDZib7%2F%2Btq0DctKn%2F0lfcvIsr2bKlKiO7iynmAFlE2LaMMM3Guay8i9z8JXdfneCf1ug8oWmqeOstANGOOgqAApN%2FEdCXx9WveByq0Buy6azlidD%2FGT6M%2Fu61uLEGFqHq8ztqmh7jXpfq9tWBFtgfIi1D6goooU3encfA0VZWZqhA3yvUmmXp%2ByOb%2FS4E%2B13Did1Y0jO6ZA%2BYORSWQBVxzocSULAu52Kx5kN5nC%2FSBnnbaPP2x5AzAcODW1St%2Fy%2FECXUvAYiX76O2q20EdnZnCTQMhI8vLg%3D%3D".to_string(),
-            regex_graphs: "https://storage.googleapis.com/zkemail_blueprints/4478f3bc-9ba8-4906-ba87-09fc049cef46/noirRegexGraphs.zip?Expires=1747178989&GoogleAccessId=397234807794-compute%40developer.gserviceaccount.com&Signature=PytJqkUbyxV8t27wuHU%2BSxHcIkr%2BQF6e%2FUJKXI%2FMm3GQkSDJveX3QpVG78T8TcT67qZzPXaRK1lNDzjFAl5A%2Bk1ycK6RUwpsauSVjC8raJj4GWwIgQwqVmVuGdOyQ6Di8OpvIsTKmdPD%2BSy%2B7cRK8E%2BXPZGYRIGgvidheul%2BIougRzHT6j5sg2b7lWD6xYBGXWi9bHFn3OewSemFkVzCvbUdfbM5iCP9FITwBRPUzh3eYVvbfCMEWa6imczg5%2BwdaWquTj9gJDd7gexXtT1P4Ijy75172Ug8B4nt7J9SMKAZ%2BxFWMKAaxdOKDjDFOjt%2Bm4a3VhJ6Wzxnv7GWyvd%2Bwg%3D%3D".to_string(),
+            circuit: "".to_string(),
+            circuit_json: "".to_string(),
+            regex_graphs: "".to_string(),
         };
 
         let payload = Payload {
             blueprint,
             upload_urls,
-            database_url:
-                "postgresql://paradox:Password123@34.172.161.65:5432/sdk-dev?sslmode=disable"
-                    .to_string(),
+            database_url: "".to_string(),
             private_key: "".to_string(),
             rpc_url: "".to_string(),
             chain_id: 84532,
