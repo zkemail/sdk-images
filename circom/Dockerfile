@@ -88,6 +88,8 @@ ENV NODE_OPTIONS=--max_old_space_size=65536
 
 RUN sysctl -w vm.max_map_count=262144
 
+WORKDIR /root/circom/circom
+
 ENV LOG_LEVEL=info
 
-CMD ["/root/circom/target/release/circom"]
+CMD ["../target/release/circom"]
