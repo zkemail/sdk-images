@@ -1,4 +1,4 @@
-name: Build rnd Push Noir
+name: Build and Push Noir
 
 on:
   push:
