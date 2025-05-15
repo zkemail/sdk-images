@@ -57,7 +57,26 @@ async fn main() -> Result<()> {
 
     create_contract(&contract_data)?;
 
-    generate_verifier_contract("tmp").await?;
+    let snarkjs_path = run_command_and_return_output("which", &["snarkjs"], None)
+        .await?
+        .trim()
+        .to_string();
+    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+
+    generate_verifier_contract(
+        "tmp",
+        chunked_snarkjs_path,
+        "circuit.zkey",
+        "ClientProofVerifier",
+    )
+    .await?;
+    generate_verifier_contract(
+        "tmp",
+        &snarkjs_path,
+        "circuit_full.zkey",
+        "ServerProofVerifier",
+    )
+    .await?;
 
     let contract_address = deploy_verifier_contract(payload.clone()).await?;
 
@@ -356,12 +375,13 @@ async fn cleanup() -> Result<()> {
             "circuit.zip",
             "regex",
             "circuit.circom",
-            "contract.sol",
+            "Contract.sol",
             "Deploy.s.sol",
             "foundry.toml",
             "package.json",
             "remappings.txt",
-            "verifier.sol",
+            "ClientProofVerifier.sol",
+            "ServerProofVerifier.sol",
         ],
         Some("tmp"),
     )
