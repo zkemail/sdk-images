@@ -52,8 +52,8 @@ pub struct CircuitTemplateInputs {
 impl From<Blueprint> for CircuitTemplateInputs {
     fn from(value: Blueprint) -> Self {
         let circuit_name = value.circuit_name.unwrap_or_else(|| "circuit".to_string());
-        let email_header_max_length = value.email_header_max_length.unwrap_or(1024) as usize;
-        let email_body_max_length = value.email_body_max_length.unwrap_or(2048) as usize;
+        let email_header_max_length = value.email_header_max_length.unwrap_or(1024);
+        let email_body_max_length = value.email_body_max_length.unwrap_or(2048);
         let ignore_body_hash_check = value.ignore_body_hash_check.unwrap_or(false);
         let enable_header_masking = value.enable_header_masking.unwrap_or(false);
         let enable_body_masking = value.enable_body_masking.unwrap_or(false);
@@ -67,7 +67,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             for regex in decomposed_regexes {
                 let name = regex.name.clone();
                 let uppercased_name = name.to_uppercase();
-                let max_length = regex.max_length as usize;
+                let max_length = regex.max_length;
                 let regex_circuit_name = format!("{}Regex", regex.name);
 
                 // Determine location and its max length
@@ -157,10 +157,10 @@ impl From<Blueprint> for CircuitTemplateInputs {
         let external_inputs: Vec<ExternalInputEntry> = external_inputs_data
             .iter()
             .map(|input| {
-                let signal_length = compute_signal_length(input.max_length as usize);
+                let signal_length = compute_signal_length(input.max_length);
                 ExternalInputEntry {
                     name: input.name.clone(),
-                    max_length: input.max_length as usize,
+                    max_length: input.max_length,
                     signal_length,
                 }
             })

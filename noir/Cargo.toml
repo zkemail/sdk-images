@@ -17,3 +17,4 @@ slog = { version = "2.7.0", features = ["max_level_trace", "release_max_level_wa
 zk-regex-compiler = { package = "compiler", git = "https://github.com/zkemail/zk-regex", branch = "feat/new-compiler" }
 base64 = "0.22.1"
 dotenv = "0.15.0"
+axum = "0.8.3"

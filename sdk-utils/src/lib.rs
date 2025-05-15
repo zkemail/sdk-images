@@ -1,5 +1,6 @@
 mod blueprint;
 mod command;
+pub mod proto_types;
 mod storage;
 
 pub use blueprint::*;
