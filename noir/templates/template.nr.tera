@@ -31,6 +31,8 @@ fn main(
     {% if regex.num_public_parts > 0 %}
     {% for i in range(start=1, end=regex.num_public_parts + 1) %}
     {{ regex.name }}_capture_group_{{ i }}_id: [Field; {{ regex.max_length }}],
+    {% endfor %}
+    {% for i in range(start=1, end=regex.num_public_parts + 1) %}
     {{ regex.name }}_capture_group_{{ i }}_start: [Field; {{ regex.max_length }}],
     {% endfor %}
     {{ regex.name }}_capture_group_start_indices: [Field; {{ regex.num_public_parts }}],
@@ -75,6 +77,8 @@ fn main(
         {{ regex.name }}_next_states
         {%- for j in range(start=1, end=regex.num_public_parts + 1) -%}
         , {{ regex.name }}_capture_group_{{ j }}_id
+        {%- endfor -%}
+        {%- for j in range(start=1, end=regex.num_public_parts + 1) -%}
         , {{ regex.name }}_capture_group_{{ j }}_start
         {%- endfor -%}
         , {{ regex.name }}_capture_group_start_indices
