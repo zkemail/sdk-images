@@ -31,6 +31,8 @@ RUN apt update && \
     nasm \
     nlohmann-json3-dev \
     gzip \
+    protobuf-compiler \
+    libprotobuf-dev \
     zip && \
     rm -rf /var/lib/apt/lists/*
 
@@ -79,12 +81,15 @@ WORKDIR /root/circom
 
 # Copy project files and build Tachyon
 COPY . .
-RUN cargo build
+RUN cargo build --bin circom --release
 
 # Set Node.js memory limits
 ENV NODE_OPTIONS=--max_old_space_size=65536
 
 RUN sysctl -w vm.max_map_count=262144
 
-# Final command
-CMD ["cargo", "run"]
+WORKDIR /root/circom/circom
+
+ENV LOG_LEVEL=info
+
+CMD ["../target/release/circom"]
