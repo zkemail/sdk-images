@@ -42,7 +42,7 @@ fn main(
     {% if not ignore_body_hash_check %}
     assert(body.len() <= {{ email_body_max_length }});
     {% endif %}
-    
+
     // DKIM Verification
     let header_hash: [u8; 32] = pubkey.verify_dkim_signature(header, signature);
     let header_hash: [Field; 2] = pack_bytes::<32, 16>(header_hash);
