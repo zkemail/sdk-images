@@ -151,7 +151,11 @@ pub async fn generate_verifier_contract(
             Regex::new(r"pragma solidity .*;")
                 .unwrap()
                 .find(&content)
-                .unwrap()
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "Could not find pragma solidity declaration in verifier contract"
+                    )
+                })?
                 .as_str(),
             &format!("pragma solidity ^{};", "0.8.13"),
         )
@@ -159,7 +163,9 @@ pub async fn generate_verifier_contract(
             Regex::new(r"contract .*\{")
                 .unwrap()
                 .find(&content)
-                .unwrap()
+                .ok_or_else(|| {
+                    anyhow::anyhow!("Could not find contract declaration in verifier contract")
+                })?
                 .as_str(),
             &format!("contract {} {{", contract_name),
         );
