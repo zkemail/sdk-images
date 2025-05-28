@@ -57,6 +57,9 @@ async fn main() -> Result<()> {
 
     create_contract(&contract_data)?;
 
+    // We use two different snarkjs paths:
+    // 1. snarkjs_path: The global snarkjs installation for server-side proofs (full zkey)
+    // 2. chunked_snarkjs_path: The local node_modules installation for client-side proofs (chunked zkey)
     let snarkjs_path = run_command_and_return_output("which", &["snarkjs"], None)
         .await?
         .trim()
