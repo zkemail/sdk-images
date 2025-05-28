@@ -63,6 +63,7 @@ async fn main() -> Result<()> {
         .to_string();
     let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
 
+    // Generate verifier contract for client-side proofs using chunked zkey
     generate_verifier_contract(
         "tmp",
         chunked_snarkjs_path,
@@ -70,6 +71,8 @@ async fn main() -> Result<()> {
         "ClientProofVerifier",
     )
     .await?;
+
+    // Generate verifier contract for server-side proofs using full zkey
     generate_verifier_contract(
         "tmp",
         &snarkjs_path,
