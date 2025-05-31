@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.90"
-relayer-utils = { git = "https://github.com/zkemail/relayer-utils", commit = "728b8f643a6c9a1e5b400be6407727851cc8c92c" }
+relayer-utils = { git = "https://github.com/zkemail/relayer-utils", rev = "728b8f643a6c9a1e5b400be6407727851cc8c92c" }
 slog = { version = "2.7.0", features = ["max_level_trace", "release_max_level_warn"] }
 reqwest = { version = "0.12.8", features = ["json"] }
 serde = "1.0.214"

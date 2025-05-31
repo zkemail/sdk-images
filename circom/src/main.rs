@@ -9,7 +9,7 @@ use anyhow::Result;
 use contract::{
     create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
 };
-use db::{update_ptau, update_verifier_contract_address};
+use db::update_verifier_contract_address;
 use payload::UploadUrls;
 use rand::Rng;
 use relayer_utils::LOG;
@@ -57,7 +57,32 @@ async fn main() -> Result<()> {
 
     create_contract(&contract_data)?;
 
-    generate_verifier_contract("tmp").await?;
+    // We use two different snarkjs paths:
+    // 1. snarkjs_path: The global snarkjs installation for server-side proofs (full zkey)
+    // 2. chunked_snarkjs_path: The local node_modules installation for client-side proofs (chunked zkey)
+    let snarkjs_path = run_command_and_return_output("which", &["snarkjs"], None)
+        .await?
+        .trim()
+        .to_string();
+    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+
+    // Generate verifier contract for client-side proofs using chunked zkey
+    generate_verifier_contract(
+        "tmp",
+        chunked_snarkjs_path,
+        "circuit.zkey",
+        "ClientProofVerifier",
+    )
+    .await?;
+
+    // Generate verifier contract for server-side proofs using full zkey
+    generate_verifier_contract(
+        "tmp",
+        &snarkjs_path,
+        "circuit_full.zkey",
+        "ServerProofVerifier",
+    )
+    .await?;
 
     let contract_address = deploy_verifier_contract(payload.clone()).await?;
 
@@ -273,7 +298,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
             "--max-semi-space-size=1024",
             "--initial-heap-size=65536",
             "--expose-gc",
-            &chunked_snarkjs_path,
+            chunked_snarkjs_path,
             "groth16",
             "setup",
             "circuit.r1cs",
@@ -287,7 +312,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
     // Contribute to chunked zkey
     info!(LOG, "Contributing to chunked zkey");
     run_command(
-        &chunked_snarkjs_path,
+        chunked_snarkjs_path,
         &[
             "zkey",
             "beacon",
@@ -313,7 +338,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
     // Export verification key
     info!(LOG, "Exporting verification key");
     run_command(
-        &chunked_snarkjs_path,
+        chunked_snarkjs_path,
         &[
             "zkey",
             "export",
@@ -356,12 +381,13 @@ async fn cleanup() -> Result<()> {
             "circuit.zip",
             "regex",
             "circuit.circom",
-            "contract.sol",
+            "Contract.sol",
             "Deploy.s.sol",
             "foundry.toml",
             "package.json",
             "remappings.txt",
-            "verifier.sol",
+            "ClientProofVerifier.sol",
+            "ServerProofVerifier.sol",
         ],
         Some("tmp"),
     )
