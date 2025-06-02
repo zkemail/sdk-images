@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use relayer_utils::LOG;
 use reqwest::header::CONTENT_TYPE;
 use serde::Deserialize;
@@ -42,6 +42,11 @@ pub async fn upload_to_url(upload_url: &str, file_path: &str, file_type: &str) -
         info!(LOG, "File uploaded successfully");
     } else {
         info!(LOG, "Failed to upload file");
+        return Err(anyhow!(
+            "Failed to upload file {} to {}",
+            file_path,
+            upload_url
+        ));
     }
 
     Ok(())
