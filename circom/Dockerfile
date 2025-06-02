@@ -31,6 +31,8 @@ RUN apt update && \
     nasm \
     nlohmann-json3-dev \
     gzip \
+    protobuf-compiler \
+    libprotobuf-dev \
     zip && \
     rm -rf /var/lib/apt/lists/*
 

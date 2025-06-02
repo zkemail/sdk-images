@@ -5,6 +5,7 @@ on:
     branches:
       - staging
       - dev
+      - main
     paths:
       - 'noir/**'
       - 'sdk-utils/**'
