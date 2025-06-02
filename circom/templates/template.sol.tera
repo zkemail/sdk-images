@@ -47,16 +47,19 @@ contract Contract is Ownable {
     uint16 public constant {{ field.name }}_len = {{ field.pack_size }};
 {% endfor %}
 
-    constructor(IDKIMRegistry _dkimRegistry, IVerifier _clientProofVerifier, IVerifier _serverProofVerifier, ZKEmailProof p)
-        Ownable(msg.sender)
-    {
+    constructor(
+        IDKIMRegistry _dkimRegistry,
+        IVerifier _clientProofVerifier,
+        IVerifier _serverProofVerifier,
+        ZKEmailProof _proofMinter
+    ) Ownable(msg.sender) {
         require(address(_dkimRegistry) != address(0), "Invalid DKIM registry");
         require(address(_clientProofVerifier) != address(0), "Invalid client proof verifier");
         require(address(_serverProofVerifier) != address(0), "Invalid server proof verifier");
         dkimRegistry = _dkimRegistry;
         clientProofVerifier = _clientProofVerifier;
         serverProofVerifier = _serverProofVerifier;
-        proofMinter = p;
+        proofMinter = _proofMinter;
     }
 
     function verify(
