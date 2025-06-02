@@ -4586,7 +4586,7 @@ dependencies = [
  "prost-wkt",
  "prost-wkt-build",
  "prost-wkt-types",
- "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils)",
+ "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c)",
  "reqwest 0.12.15",
  "serde",
  "slog",
