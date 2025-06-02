@@ -2,15 +2,16 @@
 // pragma solidity ^0.8.13;
 
 // TODO: Update this script
-// import "forge-std/Script.sol";
-// import "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
-// import "@zk-email/contracts/DKIMRegistry.sol";
-// import {IGroth16Verifier} from "../contracts/IGroth16Verifier.sol";
-// // import "./tmp/verifier.sol";
-// // import "./tmp/contract.sol";
+// import { console } from "forge-std/console.sol";
+// import { Script } from "forge-std/Script.sol";
+// import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
+// import { DKIMRegistry } from "@zk-email/contracts/DKIMRegistry.sol";
+// import { ClientProofVerifier } from "./tmp/ClientProofVerifier.sol";
+// import { ServerProofVerifier } from "./tmp/ServerProofVerifier.sol";
+// import { Contract, IVerifier } from "./tmp/Contract.sol";
 
 // contract Deploy is Script {
-//     IDKIMRegistry dkimRegistry;
+//     IDKIMRegistry private dkimRegistry;
 
 //     function run() external {
 //         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -34,11 +35,13 @@
 
 //         dkimRegistry = IDKIMRegistry(dkimRegistryAddr);
 
-//         Groth16Verifier verifier = new Groth16Verifier();
-//         Contract circuitContract = new Contract(dkimRegistry, verifier);
+//         IVerifier clientProofVerifier = IVerifier(address(new ClientProofVerifier()));
+//         IVerifier serverProofVerifier = IVerifier(address(new ServerProofVerifier()));
+//         Contract circuitContract = new Contract(dkimRegistry, clientProofVerifier, serverProofVerifier);
 //         vm.stopBroadcast();
 
-//         console.log("Deployed Groth16Verifier at", address(verifier));
+//         console.log("Deployed ClientProofVerifier at", address(cpv));
+//         console.log("Deployed ServerProofVerifier at", address(spv));
 //         console.log("Deployed Contract at", address(circuitContract));
 //         console.log("Deployed DKIMRegistry at", dkimRegistryAddr);
 //         return;

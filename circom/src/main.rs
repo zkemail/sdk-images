@@ -3,13 +3,13 @@ mod db;
 mod payload;
 mod template;
 
-use std::cmp::max;
+use std::{cmp::max, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
     create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
 };
-use db::update_db;
+use db::update_verifier_contract_address;
 use payload::UploadUrls;
 use rand::Rng;
 use relayer_utils::LOG;
@@ -47,6 +47,8 @@ async fn main() -> Result<()> {
 
     let ptau: usize = compile_circuit().await?;
 
+    // update_ptau(&pool, blueprint.id.expect("No ID found"), ptau).await?;
+
     println!("ptau: {}", ptau);
 
     generate_keys("tmp", ptau).await?;
@@ -55,7 +57,32 @@ async fn main() -> Result<()> {
 
     create_contract(&contract_data)?;
 
-    generate_verifier_contract("tmp").await?;
+    // We use two different snarkjs paths:
+    // 1. snarkjs_path: The global snarkjs installation for server-side proofs (full zkey)
+    // 2. chunked_snarkjs_path: The local node_modules installation for client-side proofs (chunked zkey)
+    let snarkjs_path = run_command_and_return_output("which", &["snarkjs"], None)
+        .await?
+        .trim()
+        .to_string();
+    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+
+    // Generate verifier contract for client-side proofs using chunked zkey
+    generate_verifier_contract(
+        "tmp",
+        chunked_snarkjs_path,
+        "circuit.zkey",
+        "ClientProofVerifier",
+    )
+    .await?;
+
+    // Generate verifier contract for server-side proofs using full zkey
+    generate_verifier_contract(
+        "tmp",
+        &snarkjs_path,
+        "circuit_full.zkey",
+        "ServerProofVerifier",
+    )
+    .await?;
 
     let contract_address = deploy_verifier_contract(payload.clone()).await?;
 
@@ -63,7 +90,8 @@ async fn main() -> Result<()> {
 
     cleanup().await?;
 
-    update_db(&pool, blueprint.id.expect("No ID found"), &contract_address).await?;
+    update_verifier_contract_address(&pool, blueprint.id.expect("No ID found"), &contract_address)
+        .await?;
 
     upload_files(payload.upload_urls).await?;
 
@@ -71,17 +99,31 @@ async fn main() -> Result<()> {
 }
 
 async fn setup() -> Result<()> {
-    // Remove and recreate tmp and regex directories
-    if std::path::Path::new("./tmp").exists() {
-        std::fs::remove_dir_all("./tmp")?;
-    }
-    std::fs::create_dir_all("./tmp")?;
+    // Define the tmp path
+    let tmp_path = Path::new("./tmp");
 
-    // Create regex directory inside tmp
-    if std::path::Path::new("./tmp/regex").exists() {
-        std::fs::remove_dir_all("./tmp/regex")?;
+    // If tmp exists, remove its contents
+    if tmp_path.exists() {
+        for entry in fs::read_dir(tmp_path)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                fs::remove_dir_all(&path)?;
+            } else {
+                fs::remove_file(&path)?;
+            }
+        }
+    } else {
+        // If tmp doesn't exist, create it
+        fs::create_dir_all(tmp_path)?;
     }
-    std::fs::create_dir_all("./tmp/regex")?;
+
+    // Ensure the regex directory exists inside tmp
+    let regex_path = tmp_path.join("regex");
+    if regex_path.exists() {
+        fs::remove_dir_all(&regex_path)?;
+    }
+    fs::create_dir_all(&regex_path)?;
 
     Ok(())
 }
@@ -97,6 +139,7 @@ async fn compile_circuit() -> Result<usize> {
         "circom",
         &[
             "circuit.circom",
+            // "--O2",
             "--sym",
             "--r1cs",
             "--c",
@@ -192,11 +235,30 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
     )
     .await?;
 
+    let node_path = run_command_and_return_output("which", &["node"], None)
+        .await?
+        .trim()
+        .to_string();
+    let snarkjs_path = run_command_and_return_output("which", &["snarkjs"], None)
+        .await?
+        .trim()
+        .to_string();
+    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+
+    println!("node_path: {}", node_path);
+    println!("snarkjs_path: {}", snarkjs_path);
+
     // Generate zkey
     info!(LOG, "Generating zkey");
     run_command(
-        "snarkjs",
+        &node_path,
         &[
+            "--max-old-space-size=65536",
+            "--initial-old-space-size=65536",
+            "--max-semi-space-size=1024",
+            "--initial-heap-size=65536",
+            "--expose-gc",
+            &snarkjs_path,
             "groth16",
             "setup",
             "circuit.r1cs",
@@ -215,20 +277,68 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
         "snarkjs",
         &[
             "zkey",
-            "contribute",
+            "beacon",
             "circuit_0000.zkey",
-            "circuit.zkey",
-            "-v",
+            "circuit_full.zkey",
+            "0102030405060708090a0b0c0d0e0f101112231415161718221a1b1c1d1e1f",
+            "10",
         ],
         Some(tmp_dir),
         &random_input_str,
     )
     .await?;
 
+    // Generate chunked zkey
+    info!(LOG, "Generating chunked zkey");
+    run_command(
+        &node_path,
+        &[
+            "--max-old-space-size=65536",
+            "--initial-old-space-size=65536",
+            "--max-semi-space-size=1024",
+            "--initial-heap-size=65536",
+            "--expose-gc",
+            chunked_snarkjs_path,
+            "groth16",
+            "setup",
+            "circuit.r1cs",
+            "pot_final.ptau",
+            "circuit_0000.zkey",
+        ],
+        Some(tmp_dir),
+    )
+    .await?;
+
+    // Contribute to chunked zkey
+    info!(LOG, "Contributing to chunked zkey");
+    run_command(
+        chunked_snarkjs_path,
+        &[
+            "zkey",
+            "beacon",
+            "circuit_0000.zkey",
+            "circuit.zkey",
+            "0102030405060708090a0b0c0d0e0f101112231415161718221a1b1c1d1e1f",
+            "10",
+        ],
+        Some(tmp_dir),
+    )
+    .await?;
+
+    run_command("rm", &["pot_final.ptau"], Some(tmp_dir)).await?;
+    run_command("rm", &["circuit_0000.zkey"], Some(tmp_dir)).await?;
+    for c in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'] {
+        let filename = format!("circuit_0000.zkey{}", c);
+        let file_path = Path::new("tmp").join(&filename);
+        if file_path.exists() {
+            run_command("rm", &[&filename], Some("tmp")).await?;
+        }
+    }
+
     // Export verification key
     info!(LOG, "Exporting verification key");
     run_command(
-        "snarkjs",
+        chunked_snarkjs_path,
         &[
             "zkey",
             "export",
@@ -245,13 +355,23 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
 
 async fn cleanup() -> Result<()> {
     info!(LOG, "Cleaning up");
-    // std::fs::remove_file("./tmp/circuit_0000.zkey")?;
-    // std::fs::remove_file("./tmp/pot_final.ptau")?;
 
     run_command("cp", &["remappings.txt", "./tmp"], None).await?;
     run_command("cp", &["package.json", "./tmp"], None).await?;
     run_command("cp", &["foundry.toml", "./tmp"], None).await?;
     run_command("cp", &["Deploy.s.sol", "./tmp"], None).await?;
+
+    // After generating the chunked zkey, add compression steps
+    info!(LOG, "Compressing zkey chunks");
+    for c in ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'] {
+        let filename = format!("circuit.zkey{}", c);
+        if Path::new(&format!("{}/{}", "tmp", filename)).exists() {
+            run_command("gzip", &[&filename], Some("tmp")).await?;
+        }
+    }
+
+    info!(LOG, "Zipping full zkey");
+    run_command("gzip", &["circuit.zkey"], Some("tmp")).await?;
 
     info!(LOG, "Zipping files");
     run_command(
@@ -261,12 +381,13 @@ async fn cleanup() -> Result<()> {
             "circuit.zip",
             "regex",
             "circuit.circom",
-            "contract.sol",
+            "Contract.sol",
             "Deploy.s.sol",
             "foundry.toml",
             "package.json",
             "remappings.txt",
-            "verifier.sol",
+            "ClientProofVerifier.sol",
+            "ServerProofVerifier.sol",
         ],
         Some("tmp"),
     )
@@ -279,9 +400,11 @@ async fn cleanup() -> Result<()> {
     )
     .await?;
 
+    run_command("mv", &["circuit_full.zkey", "circuit.zkey"], Some("tmp")).await?;
+
     run_command(
         "zip",
-        &["-r", "circuit_zkey.zip", "circuit.zkey"],
+        &["-r", "circuit_full_zkey.zip", "circuit.zkey"],
         Some("tmp"),
     )
     .await?;
@@ -294,32 +417,73 @@ async fn cleanup() -> Result<()> {
 async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
     info!(LOG, "Uploading files");
 
-    upload_to_url(&upload_urls.circuit, "./tmp/circuit.zip", "application/zip").await?;
-    upload_to_url(
-        &upload_urls.circuit_cpp,
-        "./tmp/circuit_cpp/circuit_cpp.zip",
-        "application/zip",
-    )
-    .await?;
-    upload_to_url(
-        &upload_urls.circuit_zkey,
-        "./tmp/circuit_zkey.zip",
-        "application/zip",
-    )
-    .await?;
-    upload_to_url(&upload_urls.vk, "./tmp/vk.json", "application/json").await?;
-    upload_to_url(
-        &upload_urls.witness_calculator,
-        "./tmp/circuit_js/witness_calculator.js",
-        "application/octet-stream",
-    )
-    .await?;
-    upload_to_url(
-        &upload_urls.circuit_wasm,
-        "./tmp/circuit_js/circuit.wasm",
-        "application/wasm",
-    )
-    .await?;
+    // Define required uploads with their paths and content types
+    let required_uploads = [
+        (&upload_urls.circuit, "./tmp/circuit.zip", "application/zip"),
+        (
+            &upload_urls.circuit_cpp,
+            "./tmp/circuit_cpp/circuit_cpp.zip",
+            "application/zip",
+        ),
+        (
+            &upload_urls.circuit_full_zkey,
+            "./tmp/circuit_full_zkey.zip",
+            "application/zip",
+        ),
+        (&upload_urls.vk, "./tmp/vk.json", "application/json"),
+        (
+            &upload_urls.witness_calculator,
+            "./tmp/circuit_js/witness_calculator.js",
+            "application/octet-stream",
+        ),
+        (
+            &upload_urls.generate_witness,
+            "./tmp/circuit_js/generate_witness.js",
+            "application/octet-stream",
+        ),
+        (
+            &upload_urls.circuit_wasm,
+            "./tmp/circuit_js/circuit.wasm",
+            "application/wasm",
+        ),
+        (
+            &upload_urls.circuit_zkey,
+            "./tmp/circuit.zkey.gz",
+            "application/octet-stream",
+        ),
+    ];
+
+    // Upload required files if they exist
+    for (url, path, content_type) in required_uploads {
+        if Path::new(path).exists() {
+            upload_to_url(url, path, content_type).await?;
+        } else {
+            info!(LOG, "Skipping upload for missing file: {}", path);
+        }
+    }
+
+    // Handle chunked zkey files (b through k)
+    let chunked_urls = [
+        (&upload_urls.zkey_b, 'b'),
+        (&upload_urls.zkey_c, 'c'),
+        (&upload_urls.zkey_d, 'd'),
+        (&upload_urls.zkey_e, 'e'),
+        (&upload_urls.zkey_f, 'f'),
+        (&upload_urls.zkey_g, 'g'),
+        (&upload_urls.zkey_h, 'h'),
+        (&upload_urls.zkey_i, 'i'),
+        (&upload_urls.zkey_j, 'j'),
+        (&upload_urls.zkey_k, 'k'),
+    ];
+
+    for (url, chunk) in chunked_urls {
+        let path = format!("./tmp/circuit.zkey{}.gz", chunk);
+        if Path::new(&path).exists() {
+            upload_to_url(url, &path, "application/octet-stream").await?;
+        } else {
+            info!(LOG, "Skipping upload for missing chunk: {}", path);
+        }
+    }
 
     Ok(())
 }

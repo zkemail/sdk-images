@@ -1,18 +1,37 @@
 pragma solidity >=0.8.13;
 
-import "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
-import "@zk-email/contracts/utils/StringUtils.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./verifier.sol";
+import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import {ZKEmailProof, Proof} from "../contracts/src/ZKEmailProof.sol";
+
+interface IVerifier {
+    function verifyProof(
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c,
+        uint256[{{ signal_size }}] calldata input
+    )
+        external
+        view
+        returns (bool);
+}
 
 contract Contract is Ownable {
     // ============================
+    // Type Definitions
+    // ============================
+    enum ProofType {
+        Client,
+        Server
+    }
+
+    // ============================
     // Dependent Contracts
     // ============================
-    IDKIMRegistry public dkimRegistry;
-    Groth16Verifier public verifier;
-    ZKEmailProof public proofMinter;
+    IDKIMRegistry public immutable dkimRegistry;
+    IVerifier public immutable clientProofVerifier;
+    IVerifier public immutable serverProofVerifier;
+    ZKEmailProof public immutable proofMinter;
 
     // ============================
     // Prover Constants (Auto-generated)
@@ -28,19 +47,32 @@ contract Contract is Ownable {
     uint16 public constant {{ field.name }}_len = {{ field.pack_size }};
 {% endfor %}
 
-    constructor (IDKIMRegistry r, Groth16Verifier v, ZKEmailProof p) Ownable(msg.sender) {
-        dkimRegistry = r;
-        verifier = v;
+    constructor(IDKIMRegistry _dkimRegistry, IVerifier _clientProofVerifier, IVerifier _serverProofVerifier, ZKEmailProof p)
+        Ownable(msg.sender)
+    {
+        require(address(_dkimRegistry) != address(0), "Invalid DKIM registry");
+        require(address(_clientProofVerifier) != address(0), "Invalid client proof verifier");
+        require(address(_serverProofVerifier) != address(0), "Invalid server proof verifier");
+        dkimRegistry = _dkimRegistry;
+        clientProofVerifier = _clientProofVerifier;
+        serverProofVerifier = _serverProofVerifier;
         proofMinter = p;
     }
 
-    function verify(uint[2] calldata a, uint[2][2] calldata b, uint[2] calldata c, uint[{{ signal_size }}] calldata signals) external view {
+    function verify(
+        ProofType proofType,
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c,
+        uint256[{{ signal_size }}] calldata signals
+    ) external view {
         // verify RSA
         bytes32 ph = bytes32(signals[0]);
         require(dkimRegistry.isDKIMPublicKeyHashValid(domain, ph), "RSA public key incorrect");
-
+        // select target verifier based on proof type
+        IVerifier targetVerifier = (proofType == ProofType.Client) ? clientProofVerifier : serverProofVerifier;
         // verify proof
-        require(verifier.verifyProof(a,b,c,signals), "Invalid proof");
+        require(targetVerifier.verifyProof(a, b, c, signals), "Invalid proof");
     }
 
     function verifyAndMint(uint[2] calldata a, uint[2][2] calldata b, uint[2] calldata c, uint[{{ signal_size }}] calldata signals, address to, string memory blueprintId) external {

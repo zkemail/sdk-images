@@ -76,6 +76,7 @@ pub struct DecomposedRegex {
     pub name: String,
     pub max_length: usize,
     pub location: String,
+    pub is_hashed: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -107,7 +108,7 @@ pub struct Blueprint {
     pub created_at: Option<Timestamp>,
     pub updated_at: Option<Timestamp>,
     pub external_inputs: Option<Vec<ExternalInput>>,
-    pub decomposed_regexes: Vec<DecomposedRegex>,
+    pub decomposed_regexes: Option<Vec<DecomposedRegex>>,
     pub status: Option<Status>,
     pub verifier_contract_chain: Option<usize>,
     pub verifier_contract_address: Option<String>,
