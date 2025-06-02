@@ -1,5 +1,4 @@
 use anyhow::Result;
-// use sdk_utils::DecomposedRegex;
 use sdk_utils::proto_types::proto_blueprint::DecomposedRegex;
 use std::fs;
 use zk_regex_compiler::{DecomposedRegexConfig, ProvingFramework, RegexPart, gen_from_decomposed};
