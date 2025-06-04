@@ -121,7 +121,55 @@ contract Contract is Ownable {
         // verify proof
         _verify(proofType, a, b, c, signals);
 
-        Proof memory proof = Proof(a, b, c);
+        // mint NFT
+        _mint(a, b, c, signals, to, blueprintId);
+    }
+
+    /**
+     * @notice External function that verifies a proof
+     * @param proofType Type of proof to verify (Client or Server)
+     * @param a First part of the proof
+     * @param b Second part of the proof
+     * @param c Third part of the proof
+     * @param signals Array of public signals used in the proof
+     * @dev This is a view function that only performs verification
+     */
+    function verify(
+        ProofType proofType,
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c,
+        uint256[{{ signal_size }}] calldata signals
+    )
+        external
+        view
+    {
+        _verify(proofType, a, b, c, signals);
+    }
+
+   /**
+     * @notice Private function to mint a proof NFT
+     * @param a First part of the proof
+     * @param b Second part of the proof
+     * @param c Third part of the proof
+     * @param signals Array of public signals used in the proof
+     * @param to Address to mint the proof NFT to
+     * @param blueprintId Identifier for the proof blueprint
+     * @dev This function:
+     *      1. Converts signals to uint256[]
+     *      2. Unpacks email_subject
+     *      3. Mints the proof
+     */
+    function _mint(
+        uint256[2] calldata a,
+        uint256[2][2] calldata b,
+        uint256[2] calldata c,
+        uint256[10] calldata signals,
+        address to,
+        uint256 blueprintId
+    )
+        private
+    {
         // Convert signals to uint256[]
         uint256[] memory signals256 = new uint256[](signals.length);
         for (uint256 i = 0; i < signals.length; i++) {
@@ -149,29 +197,8 @@ contract Contract is Ownable {
     {% endfor %}
 
         // mint proof
+        Proof memory proof = Proof(a, b, c);
         proofMinter.mintProof(to, blueprintId, proof, signals256);
-    }
-
-    /**
-     * @notice External function that verifies a proof
-     * @param proofType Type of proof to verify (Client or Server)
-     * @param a First part of the proof
-     * @param b Second part of the proof
-     * @param c Third part of the proof
-     * @param signals Array of public signals used in the proof
-     * @dev This is a view function that only performs verification
-     */
-    function verify(
-        ProofType proofType,
-        uint256[2] calldata a,
-        uint256[2][2] calldata b,
-        uint256[2] calldata c,
-        uint256[{{ signal_size }}] calldata signals
-    )
-        external
-        view
-    {
-        _verify(proofType, a, b, c, signals);
     }
 
     /**
