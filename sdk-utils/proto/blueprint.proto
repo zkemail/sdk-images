@@ -55,23 +55,23 @@ message Blueprint {
     int32 stars = 30;
     int32 ptau = 31;
     int32 num_local_proofs = 32;
+    string internal_version = 33;
 }
 
-
 message ExternalInput {
-    string name = 3;
-    int32 max_length = 4;
+    string name = 1;
+    int32 max_length = 2;
 }
 
 message DecomposedRegex {
-    string name = 3;
-    int32 max_length = 4;
-    string location = 5;
-    bool is_hashed = 6;
-    repeated DecomposedRegexPart parts = 7;
+    string name = 1;
+    string location = 2;
+    bool is_hashed = 3;
+    repeated DecomposedRegexPart parts = 4;
 }
 
 message DecomposedRegexPart {
-    optional bool is_public = 3;
-    string regex_def = 4;
+    optional bool is_public = 1;
+    string regex_def = 2;
+    optional int32 max_length = 3;
 }
