@@ -7,11 +7,12 @@ use serde::Serialize;
 #[derive(Serialize)]
 pub struct RegexEntry {
     pub name: String,
-    pub max_length: usize,
+    pub max_match_length: usize,
     pub regex_circuit_name: String,
     pub location: String,
     pub max_length_of_location: usize,
     pub num_public_parts: usize,
+    pub public_parts_max_length: Vec<usize>,
     pub is_hashed: bool,
     pub hash_packing_size: usize,
     pub hash_inputs: String,
@@ -52,7 +53,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
         let mut regexes = Vec::new();
         for regex in value.decomposed_regexes {
             let name = regex.name.clone();
-            let max_length = regex.max_length as usize;
+            let max_match_length = regex.max_match_length as usize;
             let regex_circuit_name = format!("{}_regex", regex.name);
 
             // Determine location and its max length
@@ -65,14 +66,16 @@ impl From<Blueprint> for CircuitTemplateInputs {
             };
 
             let mut num_public_parts = 0;
+            let mut public_parts_max_length = Vec::<usize>::with_capacity(num_public_parts);
             let is_hashed = regex.is_hashed;
             let mut hash_inputs = Vec::new();
             let mut capture_string = String::new();
-            let hash_packing_size = (max_length as f64 / 31.0).ceil() as usize;
+            let hash_packing_size = ((max_match_length as f64) / 31.0).ceil() as usize;
 
             for part in &regex.parts {
                 if part.is_public == Some(true) {
                     num_public_parts += 1;
+                    public_parts_max_length.push(part.max_length() as usize);
 
                     for i in 0..hash_packing_size {
                         hash_inputs.push(format!(
@@ -93,11 +96,12 @@ impl From<Blueprint> for CircuitTemplateInputs {
 
             regexes.push(RegexEntry {
                 name,
-                max_length,
+                max_match_length,
                 regex_circuit_name,
                 location,
                 max_length_of_location,
                 num_public_parts,
+                public_parts_max_length,
                 is_hashed,
                 hash_packing_size,
                 hash_inputs: if is_hashed {
@@ -137,12 +141,15 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 } else {
                     output_signals.push_str(&format!(", {}", regex.capture_string));
                 }
-                for _ in 0..regex.num_public_parts {
+                for i in 0..regex.num_public_parts {
                     if regex.is_hashed {
                         output_args.push_str(", Field");
                         break;
                     } else {
-                        output_args.push_str(&format!(", BoundedVec<u8, {}>", regex.max_length));
+                        output_args.push_str(&format!(
+                            ", BoundedVec<u8, {}>",
+                            regex.public_parts_max_length[i]
+                        ));
                     }
                 }
             }
