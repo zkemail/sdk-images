@@ -11,7 +11,7 @@ pub fn generate_regex_circuits(decomposed_regexes: &Vec<DecomposedRegex>) -> Res
             if part.is_public == Some(true) {
                 decomposed_regex_config.push(RegexPart::PublicPattern((
                     part.regex_def,
-                    decomposed_regex.max_length.try_into().unwrap(),
+                    part.max_length.unwrap() as usize,
                 )));
             } else {
                 decomposed_regex_config.push(RegexPart::Pattern(part.regex_def));
