@@ -632,15 +632,15 @@ dependencies = [
  "dotenv",
  "rand",
  "regex",
- "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c)",
- "sdk-utils 0.1.0 (git+https://github.com/zkemail/sdk-images?branch=main)",
+ "relayer-utils",
+ "sdk-utils",
  "serde",
  "serde_json",
  "slog",
  "sqlx",
  "tera",
  "tokio",
- "zk-regex-compiler 2.3.2 (git+https://github.com/zkemail/zk-regex?branch=main)",
+ "zk-regex-compiler 2.0.0-alpha.2",
 ]
 
 [[package]]
@@ -3044,8 +3044,8 @@ dependencies = [
  "prost-wkt-build",
  "prost-wkt-types",
  "regex",
- "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c)",
- "sdk-utils 0.1.0",
+ "relayer-utils",
+ "sdk-utils",
  "serde",
  "serde_json",
  "slog",
@@ -4144,50 +4144,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "zk-regex-apis",
- "zk-regex-compiler 2.3.2 (git+https://github.com/zkemail/zk-regex.git)",
-]
-
-[[package]]
-name = "relayer-utils"
-version = "0.4.62-12"
-source = "git+https://github.com/zkemail/relayer-utils#728b8f643a6c9a1e5b400be6407727851cc8c92c"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "cfdkim",
- "console_error_panic_hook",
- "digest",
- "ed25519-dalek",
- "ethers",
- "file-rotate",
- "halo2curves",
- "hex",
- "hmac-sha256",
- "itertools 0.10.5",
- "js-sys",
- "lazy_static",
- "mailparse",
- "num-bigint",
- "poseidon-rs",
- "rand",
- "rand_core",
- "regex",
- "reqwest 0.11.27",
- "rsa",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "sha1",
- "sha2",
- "slog",
- "slog-async",
- "slog-json",
- "slog-term",
- "sp1-verifier",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "zk-regex-apis",
- "zk-regex-compiler 2.3.2 (git+https://github.com/zkemail/zk-regex.git)",
+ "zk-regex-compiler 2.3.2",
 ]
 
 [[package]]
@@ -4586,20 +4543,7 @@ dependencies = [
  "prost-wkt",
  "prost-wkt-build",
  "prost-wkt-types",
- "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c)",
- "reqwest 0.12.15",
- "serde",
- "slog",
- "uuid 1.16.0",
-]
-
-[[package]]
-name = "sdk-utils"
-version = "0.1.0"
-source = "git+https://github.com/zkemail/sdk-images?branch=main#fe1376de867474d1ad9185ab871ac2b04fed3de7"
-dependencies = [
- "anyhow",
- "relayer-utils 0.4.62-12 (git+https://github.com/zkemail/relayer-utils)",
+ "relayer-utils",
  "reqwest 0.12.15",
  "serde",
  "slog",
@@ -6891,28 +6835,6 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "thiserror 2.0.12",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "zk-regex-compiler"
-version = "2.3.2"
-source = "git+https://github.com/zkemail/zk-regex?branch=main#f2a19e4c2e726822ebb7381353b6213ca5b4f4ad"
-dependencies = [
- "ahash",
- "clap",
- "console_error_panic_hook",
- "fancy-regex",
- "getrandom 0.2.16",
- "graph-cycles",
- "itertools 0.13.0",
- "petgraph 0.6.5",
- "regex",
- "regex-automata",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "thiserror 1.0.69",
  "wasm-bindgen",
 ]
 
