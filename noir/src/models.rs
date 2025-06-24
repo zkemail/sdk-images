@@ -47,7 +47,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
         let email_header_max_length = value.email_header_max_length as usize;
         let email_body_max_length = value.email_body_max_length as usize;
         let ignore_body_hash_check = value.ignore_body_hash_check;
-        let remove_soft_line_breaks = value.remove_soft_linebreaks;
+        let remove_soft_line_breaks = value.remove_soft_line_breaks;
 
         // Process regexes
         let mut regexes = Vec::new();

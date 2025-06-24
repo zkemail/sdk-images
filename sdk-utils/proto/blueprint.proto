@@ -51,7 +51,7 @@ message Blueprint {
     int32 version = 26;
     string github_username = 27;
     int32 email_header_max_length = 28;
-    bool remove_soft_linebreaks = 29;
+    bool remove_soft_line_breaks = 29;
     int32 stars = 30;
     int32 ptau = 31;
     int32 num_local_proofs = 32;
