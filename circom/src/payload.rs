@@ -4,7 +4,7 @@ use anyhow::Result;
 use base64::Engine;
 use dotenv::dotenv;
 use relayer_utils::LOG;
-use sdk_utils::Blueprint;
+use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Deserialize;
 use slog::info;
 

@@ -90,8 +90,7 @@ async fn main() -> Result<()> {
 
     cleanup().await?;
 
-    update_verifier_contract_address(&pool, blueprint.id.expect("No ID found"), &contract_address)
-        .await?;
+    update_verifier_contract_address(&pool, &blueprint.id, &contract_address).await?;
 
     upload_files(payload.upload_urls).await?;
 
@@ -176,7 +175,7 @@ async fn compile_circuit() -> Result<usize> {
 
     // Compute the minimal power k such that 2^k > max_value
     let mut k = 0u32;
-    while (1u64 << k) <= max_value {
+    while 1u64 << k <= max_value {
         k += 1;
     }
 
