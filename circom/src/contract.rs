@@ -59,57 +59,47 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     let mut current_idx = 1;
 
     let mut values = Vec::new();
-    if let Some(decomposed_regexes) = &payload.blueprint.decomposed_regexes {
-        for regex in decomposed_regexes {
-            let pack_size = ((regex.max_length as f64) / 31.0).ceil() as usize;
-            let field = Field {
-                name: regex.name.clone(),
-                max_length: regex.max_length,
-                pack_size,
-                start_idx: current_idx,
-            };
-            for part in regex.parts.iter() {
-                if part.is_public {
-                    if regex.is_hashed.unwrap_or(false) {
-                        signal_size += 1;
-                        current_idx += 1;
-                    } else {
-                        signal_size += pack_size;
-                        current_idx += pack_size;
-                    }
+    for regex in &payload.blueprint.decomposed_regexes {
+        let pack_size = ((regex.max_match_length as f64) / 31.0).ceil() as usize;
+        let field = Field {
+            name: regex.name.clone(),
+            max_length: regex.max_match_length as usize,
+            pack_size,
+            start_idx: current_idx,
+        };
+        for part in regex.parts.iter() {
+            if part.is_public == Some(true) {
+                if regex.is_hashed {
+                    signal_size += 1;
+                    current_idx += 1;
+                } else {
+                    signal_size += pack_size;
+                    current_idx += pack_size;
                 }
             }
-            values.push(field);
         }
+        values.push(field);
     }
 
     let prover_eth_address_idx = current_idx;
     current_idx += 1; // Add 1 prover ETH address
 
     let mut external_inputs = Vec::new();
-    if let Some(inputs) = &payload.blueprint.external_inputs {
-        for input in inputs.iter() {
-            let pack_size = ((input.max_length as f64) / 31.0).ceil() as usize;
-            let field = Field {
-                name: input.name.clone(),
-                max_length: input.max_length,
-                pack_size,
-                start_idx: current_idx,
-            };
-            signal_size += pack_size;
-            current_idx += pack_size;
-            external_inputs.push(field);
-        }
+    for input in &payload.blueprint.external_inputs {
+        let pack_size = ((input.max_length as f64) / 31.0).ceil() as usize;
+        let field = Field {
+            name: input.name.clone(),
+            max_length: input.max_length as usize,
+            pack_size,
+            start_idx: current_idx,
+        };
+        signal_size += pack_size;
+        current_idx += pack_size;
+        external_inputs.push(field);
     }
 
-    let sender_domain = payload
-        .blueprint
-        .sender_domain
-        .clone()
-        .expect("Sender domain not found");
-
     ContractData {
-        sender_domain,
+        sender_domain: payload.blueprint.sender_domain.clone(),
         values,
         external_inputs,
         signal_size,
@@ -190,8 +180,9 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
 
     // Parse the output to extract addresses
-    let re =
-        Regex::new(r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})").unwrap();
+    let re = Regex::new(
+        r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})"
+    ).unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
         let contract_name = &cap[1];

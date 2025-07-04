@@ -1,9 +1,9 @@
 use anyhow::Result;
-use sqlx::{types::Uuid, Pool, Postgres};
+use sqlx::{Pool, Postgres};
 
 pub async fn update_verifier_contract_address(
     pool: &Pool<Postgres>,
-    id: Uuid,
+    id: &str,
     address: &str,
 ) -> Result<()> {
     let query = r#"

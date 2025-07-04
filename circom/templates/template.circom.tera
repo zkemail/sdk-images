@@ -6,7 +6,7 @@ include "@zk-email/circuits/utils/hash.circom";
 {% endif %}
 
 {% for regex in regexes %}
-include "./regex/{{ regex.regex_circuit_name }}.circom";
+include "./regex/{{ regex.regex_circuit_name }}.circom";payload.blueprint.sender_domain
 {% endfor %}
 
 template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
@@ -75,15 +75,25 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     // Used for nullifier later
     signal output headerHashHi <== EV.shaHi;
     signal output headerHashLo <== EV.shaLo;
+
     {% for regex in regexes %}
     // {{ regex.uppercased_name }} Extraction
-    {% if regex.has_public_parts %}
-    var {{ regex.name }}MaxLength = {{ regex.max_length }};
-    signal input {{ regex.regex_idx_name }};
+    signal input {{ regex.name }}MatchStart;
+    signal input {{ regex.name }}MatchLength;
+    signal input {{ regex.name }}CurrentStates[{{ regex.max_match_length }}];
+    signal input {{ regex.name }}NextStates[{{ regex.max_match_length }}];
+    {% if regex.num_public_parts > 0 %}
+    {% for i in range(end=regex.num_public_parts) %}
+    signal input {{ regex.name }}CaptureGroup{{ i }}Id[{{ regex.max_match_length }}];
+    signal input {{ regex.name }}CaptureGroup{{ i }}Start[{{ regex.max_match_length }}];
+    {% endfor %}
+    signal input {{ regex.name }}CaptureGroupStartIndices[{{ regex.num_public_parts }}];
     {% endif %}
+
     signal {{ regex.name }}RegexOut{{ regex.signal_regex_out_string }};
-    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }})({{ regex.location }});
+    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }}, {{ regex.max_match_length}})({{ regex.location }});
     {{ regex.name }}RegexOut === 1;
+    
     {% if regex.has_public_parts %}
     {% if regex.is_hashed %}
     var {{ regex.name }}TotalPackedLength = computeIntChunkLength({{ regex.name }}MaxLength) * {{ regex.num_reveal_signals }};
@@ -92,7 +102,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% for i in range(end=regex.num_reveal_signals) %}
     {% if i == 0 %}
     signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
-    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
+    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
     {% if regex.is_hashed %}
     for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
         {{ regex.name }}AllPackedOut[j] <== {{ regex.name }}PackedOut[j];
