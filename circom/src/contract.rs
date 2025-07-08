@@ -1,12 +1,13 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, env, fs};
 
 use anyhow::Result;
 use regex::Regex;
 use relayer_utils::LOG;
 use sdk_utils::{run_command, run_command_and_return_output};
 use serde::Serialize;
-use slog::info;
+use slog::{info, warn};
 use tera::{Context, Tera};
+use tokio::time::{sleep, Duration};
 
 use crate::payload::Payload;
 
@@ -184,34 +185,94 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     )
     .await?;
 
-    info!(LOG, "Verify contracts");
-    run_command(
-        "forge",
-        &[
-            "verify-contract",
-            "--chain-id",
-            payload.chain_id.to_string().as_str(),
+    if env::var("ETHERSCAN_API_KEY").is_ok() {
+        info!(LOG, "Verify contracts with retry logic and rate limiting");
+        
+        let chain_id_str = payload.chain_id.to_string();
+        let max_retries = 3;
+        let delay_seconds = 3; // Wait 3 seconds between retries (well above 2/sec rate limit)
+        
+        // Verify Verifier contract
+        verify_contract_with_retry(
+            &chain_id_str,
             contract_addresses.get("Verifier").unwrap(),
             "tmp/verifier.sol:Verifier",
-        ],
-        None,
-    )
-    .await?;
+            None,
+            max_retries,
+            delay_seconds,
+        )
+        .await?;
 
-    run_command(
-        "forge",
-        &[
-            "verify-contract",
-            "--chain-id",
-            payload.chain_id.to_string().as_str(),
-            "--constructor-args",
-            &constructor_args,
+        // Wait before next verification to respect rate limit
+        sleep(Duration::from_secs(delay_seconds)).await;
+
+        // Verify main Contract with constructor args
+        verify_contract_with_retry(
+            &chain_id_str,
             contract_addresses.get("Contract").unwrap(),
             "tmp/contract.sol:Contract",
-        ],
-        None,
-    )
-    .await?;
+            Some(&constructor_args),
+            max_retries,
+            delay_seconds,
+        )
+        .await?;
+    }
 
     Ok(contract_addresses.get("Contract").unwrap().to_string())
+}
+
+async fn verify_contract_with_retry(
+    chain_id: &str,
+    contract_address: &str,
+    contract_path: &str,
+    constructor_args: Option<&str>,
+    max_retries: u32,
+    delay_seconds: u64,
+) -> Result<()> {
+    let mut args = vec![
+        "verify-contract",
+        "--chain-id",
+        chain_id,
+    ];
+    
+    if let Some(constructor_args) = constructor_args {
+        args.push("--constructor-args");
+        args.push(constructor_args);
+    }
+    
+    args.push(contract_address);
+    args.push(contract_path);
+
+    for attempt in 0..max_retries {
+        info!(LOG, "Verifying contract {} (attempt {}/{})", contract_path, attempt + 1, max_retries);
+        
+        match run_command("forge", &args, None).await {
+            Ok(_) => {
+                info!(LOG, "Successfully verified contract {}", contract_path);
+                return Ok(());
+            }
+            Err(e) => {
+                let error_msg = format!("{:?}", e);
+                
+                // Check if it's a rate limit error
+                if error_msg.contains("rate limit") || error_msg.contains("Max calls per sec") {
+                    warn!(LOG, "Rate limit hit for contract {}, attempt {}/{}: {}", 
+                          contract_path, attempt + 1, max_retries, error_msg);
+                    
+                    if attempt < max_retries - 1 {
+                        info!(LOG, "Waiting {} seconds before retry...", delay_seconds);
+                        sleep(Duration::from_secs(delay_seconds)).await;
+                        continue;
+                    }
+                }
+                
+                // If it's not a rate limit error or we've exhausted retries, return the error
+                warn!(LOG, "Failed to verify contract {} after {} attempts: {}", 
+                      contract_path, attempt + 1, error_msg);
+                return Err(e);
+            }
+        }
+    }
+    
+    Ok(())
 }
