@@ -1,0 +1,126 @@
+name: Build Push Deploy Circom
+
+on:
+  push:
+    branches:
+      - staging
+      - dev
+    paths:
+      - 'circom/**'
+      - 'sdk-utils/**'
+      - 'Cargo.toml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  trigger-cloud-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Get the short SHA for tagging
+      - name: Get Short SHA
+        id: sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      # Authenticate with Google Cloud using Workload Identity Federation
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      # Setup gcloud CLI
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      # Create a Cloud Build config file
+      - name: Create Cloud Build Config
+        run: |
+          cat > cloudbuild.yaml << EOF
+          steps:
+          - name: 'gcr.io/cloud-builders/docker'
+            args: [
+              'build',
+              '-f', 'circom/Dockerfile',
+              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest',
+              '-t', 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}',
+              '.'
+            ]
+            timeout: '3600s'  # Increase timeout to 1 hour
+          images:
+          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:latest'
+          - 'us-east1-docker.pkg.dev/zkairdrop/circom-sdk-image/circom:${{ steps.sha.outputs.sha }}'
+          options:
+            machineType: 'E2_HIGHCPU_32'  # Use a high-CPU machine for faster builds
+            diskSizeGb: '100'
+          timeout: '3600s'  # Overall build timeout
+          EOF
+
+      # Submit the build to Cloud Build and wait for completion
+      - name: Trigger Cloud Build and Wait for Completion
+        run: |
+          # Submit the build and capture the build ID
+          BUILD_INFO=$(gcloud builds submit --config=cloudbuild.yaml --project ${{ secrets.GCP_PROJECT_ID }} 2>&1 || echo "CONTINUE")
+          echo "$BUILD_INFO"
+
+          # Extract the build ID from the output
+          BUILD_ID=$(echo "$BUILD_INFO" | grep -o "builds/[a-zA-Z0-9\-]*" | head -1 | cut -d'/' -f2)
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "Failed to extract build ID, check the output above"
+            exit 1
+          fi
+
+          echo "Build ID: $BUILD_ID"
+
+          # Poll for build status
+          STATUS="WORKING"
+          MAX_ATTEMPTS=360  # Wait up to 1 hour (10s intervals)
+          ATTEMPTS=0
+
+          echo "Polling for build status every 10 seconds..."
+
+          while [ "$STATUS" = "WORKING" ] || [ "$STATUS" = "QUEUED" ]; do
+            ATTEMPTS=$((ATTEMPTS+1))
+            if [ $ATTEMPTS -gt $MAX_ATTEMPTS ]; then
+              echo "Build timed out after 1 hour"
+              exit 1
+            fi
+
+            # Sleep between checks
+            sleep 10
+
+            # Get status
+            STATUS=$(gcloud builds describe $BUILD_ID --project ${{ secrets.GCP_PROJECT_ID }} --format="value(status)" 2>/dev/null)
+            echo "Current status: $STATUS (attempt $ATTEMPTS)"
+          done
+
+          if [ "$STATUS" = "SUCCESS" ]; then
+            echo "Build completed successfully!"
+            exit 0
+          else
+            echo "Build failed with status: $STATUS"
+            exit 1
+          fi
+
+      - name: Get Branch Name
+        id: branch
+        run: echo "branch=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+
+      - name: Trigger Infrastructure Deployment
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          repository: zkemail/infra
+          event-type: deploy-sdk-images
+          client-payload: |
+            {
+              "environment": "${{ steps.branch.outputs.branch }}",
+              "image_tag": "${{ steps.sha.outputs.sha }}"
+            }
