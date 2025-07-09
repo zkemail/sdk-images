@@ -185,38 +185,38 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     )
     .await?;
 
-    if env::var("ETHERSCAN_API_KEY").is_ok() {
-        info!(LOG, "Verify contracts with retry logic and rate limiting");
+    // if env::var("ETHERSCAN_API_KEY").is_ok() {
+    //     info!(LOG, "Verify contracts with retry logic and rate limiting");
         
-        let chain_id_str = payload.chain_id.to_string();
-        let max_retries = 3;
-        let delay_seconds = 3; // Wait 3 seconds between retries (well above 2/sec rate limit)
+    //     let chain_id_str = payload.chain_id.to_string();
+    //     let max_retries = 3;
+    //     let delay_seconds = 3; // Wait 3 seconds between retries (well above 2/sec rate limit)
         
-        // Verify Verifier contract
-        verify_contract_with_retry(
-            &chain_id_str,
-            contract_addresses.get("Verifier").unwrap(),
-            "tmp/verifier.sol:Verifier",
-            None,
-            max_retries,
-            delay_seconds,
-        )
-        .await?;
+    //     // Verify Verifier contract
+    //     verify_contract_with_retry(
+    //         &chain_id_str,
+    //         contract_addresses.get("Verifier").unwrap(),
+    //         "tmp/verifier.sol:Verifier",
+    //         None,
+    //         max_retries,
+    //         delay_seconds,
+    //     )
+    //     .await?;
 
-        // Wait before next verification to respect rate limit
-        sleep(Duration::from_secs(delay_seconds)).await;
+    //     // Wait before next verification to respect rate limit
+    //     sleep(Duration::from_secs(delay_seconds)).await;
 
-        // Verify main Contract with constructor args
-        verify_contract_with_retry(
-            &chain_id_str,
-            contract_addresses.get("Contract").unwrap(),
-            "tmp/contract.sol:Contract",
-            Some(&constructor_args),
-            max_retries,
-            delay_seconds,
-        )
-        .await?;
-    }
+    //     // Verify main Contract with constructor args
+    //     verify_contract_with_retry(
+    //         &chain_id_str,
+    //         contract_addresses.get("Contract").unwrap(),
+    //         "tmp/contract.sol:Contract",
+    //         Some(&constructor_args),
+    //         max_retries,
+    //         delay_seconds,
+    //     )
+    //     .await?;
+    // }
 
     Ok(contract_addresses.get("Contract").unwrap().to_string())
 }
