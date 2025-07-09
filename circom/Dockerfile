@@ -76,7 +76,9 @@ RUN git checkout tags/v2.1.9 -b v2.1.9
 RUN cargo build --release && cargo install --path circom
 
 # Copy project files to /app/circom
-COPY . /app/circom
+COPY circom/ /app/circom
+COPY sdk-utils/ /app/sdk-utils
+COPY Cargo.toml /app/Cargo.toml
 WORKDIR /app/circom
 
 # Build the project
