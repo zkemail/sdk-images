@@ -75,10 +75,11 @@ WORKDIR /circom
 RUN git checkout tags/v2.1.9 -b v2.1.9
 RUN cargo build --release && cargo install --path circom
 
-WORKDIR /root/circom
+# Copy project files to /app/circom
+COPY . /app/circom
+WORKDIR /app/circom
 
-# Copy project files and build Tachyon
-COPY . .
+# Build the project
 RUN cargo build
 
 # Set Node.js memory limits
