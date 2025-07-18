@@ -6,7 +6,7 @@ include "@zk-email/circuits/utils/hash.circom";
 {% endif %}
 
 {% for regex in regexes %}
-include "./regex/{{ regex.regex_circuit_name }}.circom";payload.blueprint.sender_domain
+include "./regex/{{ regex.regex_circuit_name }}.circom";
 {% endfor %}
 
 template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
