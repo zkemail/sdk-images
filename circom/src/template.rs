@@ -69,7 +69,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             let name = regex.name.clone();
             let uppercased_name = name.to_uppercase();
             let max_match_length = regex.max_match_length as usize;
-            let regex_circuit_name = format!("{}Regex", regex.name);
+            let regex_circuit_name = format!("{}_regex", regex.name);
 
             // Determine location and its max length
             let (location, max_length_of_location, max_length_of_location_name) =
