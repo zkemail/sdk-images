@@ -24,7 +24,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% endfor %}
 
     // DKIM Verification
-    component EV = EmailVerifier(maxHeaderLength, maxBodyLength, n, k, {% if ignore_body_hash_check %}1{% else %}0{% endif %}, {% if enable_header_masking %}1{% else %}0{% endif %}, {% if enable_body_masking %}1{% else %}0{% endif %}, {% if remove_soft_line_breaks %}1{% else %}0{% endif %});
+    component EV = EmailVerifier(maxHeaderLength, maxBodyLength, n, k, {% if ignore_body_hash_check %}1{% else %}0{% endif %}, {% if enable_header_masking %}1{% else %}0{% endif %}, {% if enable_body_masking %}1{% else %}0{% endif %}, {% if remove_soft_linebreaks %}1{% else %}0{% endif %});
     EV.emailHeader <== emailHeader;
     EV.emailHeaderLength <== emailHeaderLength;
     EV.pubkey <== pubkey;
@@ -55,7 +55,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     EV.emailBody <== emailBody;
     EV.emailBodyLength <== emailBodyLength;
 
-    {% if remove_soft_line_breaks %}
+    {% if remove_soft_linebreaks %}
     signal input decodedEmailBodyIn[maxBodyLength];
 
     EV.decodedEmailBodyIn <== decodedEmailBodyIn;

@@ -46,7 +46,7 @@ pub struct CircuitTemplateInputs {
     ignore_body_hash_check: bool,
     enable_header_masking: bool,
     enable_body_masking: bool,
-    remove_soft_line_breaks: bool,
+    remove_soft_linebreaks: bool,
     regexes: Vec<RegexEntry>,
     external_inputs: Vec<ExternalInputEntry>,
     public_args_string: String,
@@ -60,7 +60,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
         let ignore_body_hash_check = value.ignore_body_hash_check;
         let enable_header_masking = value.enable_header_masking;
         let enable_body_masking = value.enable_body_masking;
-        let remove_soft_line_breaks = value.remove_soft_line_breaks;
+        let remove_soft_linebreaks = value.remove_soft_linebreaks;
 
         // Process regexes
         let mut regexes = Vec::new();
@@ -79,7 +79,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
                         email_header_max_length as usize,
                         "maxHeaderLength".to_string(),
                     )
-                } else if remove_soft_line_breaks {
+                } else if remove_soft_linebreaks {
                     (
                         "decodedEmailBodyIn".to_string(),
                         email_body_max_length as usize,
@@ -188,7 +188,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             ignore_body_hash_check,
             enable_header_masking,
             enable_body_masking,
-            remove_soft_line_breaks,
+            remove_soft_linebreaks,
             regexes,
             external_inputs,
             public_args_string,
@@ -225,8 +225,8 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
         &circuit_template_input.enable_body_masking,
     );
     context.insert(
-        "remove_soft_line_breaks",
-        &circuit_template_input.remove_soft_line_breaks,
+        "remove_soft_linebreaks",
+        &circuit_template_input.remove_soft_linebreaks,
     );
     context.insert("regexes", &circuit_template_input.regexes);
     context.insert("external_inputs", &circuit_template_input.external_inputs);

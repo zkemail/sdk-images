@@ -24,8 +24,8 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
         &circuit_template_input.ignore_body_hash_check,
     );
     context.insert(
-        "remove_soft_line_breaks",
-        &circuit_template_input.remove_soft_line_breaks,
+        "remove_soft_linebreaks",
+        &circuit_template_input.remove_soft_linebreaks,
     );
     context.insert("regexes", &circuit_template_input.regexes);
     context.insert("external_inputs", &circuit_template_input.external_inputs);
