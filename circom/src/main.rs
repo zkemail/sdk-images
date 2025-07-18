@@ -500,3 +500,395 @@ pub async fn process_circuit(blueprint: Blueprint) -> Result<usize> {
     Ok(ptau)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use prost_wkt_types::Timestamp;
+    use sdk_utils::proto_types::proto_blueprint::{
+        Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
+    };
+
+    #[tokio::test]
+    async fn test_compile_circuit_x_export_data() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "4478f3bc-9ba8-4906-ba87-09fc049cef46".to_string(),
+            title: "XAccountExportData".to_string(),
+            description:
+                "Prove you've asked to export your twitter/X data and reveal only the download link"
+                    .to_string(),
+            slug: "DimiDumo/XAccountExportData".to_string(),
+            tags: vec![],
+            email_query: "from:x.com".to_string(),
+            use_new_sdk: false,
+            circuit_name: "XAccountExportData".to_string(),
+            ignore_body_hash_check: false,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 6208,
+            sender_domain: "x.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "0x6679b65c5CFCba507Bf105491A3b5B68764B1464".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746574183,
+                nanos: 310124000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746574183,
+                nanos: 310124000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "DownloadDataLink".to_string(),
+                max_match_length: 128,
+                location: "body".to_string(),
+                is_hashed: false,
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "ready for you to download ".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "[^ ]*".to_string(),
+                        max_length: Some(20),
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 1,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 1024,
+            remove_soft_line_breaks: true,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_apple() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "88802381-0501-4c4a-bcb5-03fdeacf453e".to_string(),
+            title: "AppleKYC".to_string(),
+            description: "Prove you have a valid Apple account".to_string(),
+            slug: "DimiDumo/AppleKYC".to_string(),
+            tags: vec![],
+            email_query: "from:email.apple.com".to_string(),
+            use_new_sdk: false,
+            circuit_name: "AppleKYC".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "email.apple.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "0x1E8AbE8B8551E73d25239004EffccA2d077eF146".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746538605,
+                nanos: 86528000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746538605,
+                nanos: 86528000,
+            }),
+            external_inputs: vec![ExternalInput {
+                name: "address".to_string(),
+                max_length: 44,
+            }],
+            decomposed_regexes: vec![
+                DecomposedRegex {
+                    name: "Subject".to_string(),
+                    max_match_length: 256,
+                    location: "header".to_string(),
+                    is_hashed: false,
+                    parts: vec![
+                        DecomposedRegexPart {
+                            is_public: Some(false),
+                            regex_def: "(?:\r\n|^)subject:".to_string(),
+                            max_length: None,
+                        },
+                        DecomposedRegexPart {
+                            is_public: Some(true),
+                            regex_def: "[^\r\n]+".to_string(),
+                            max_length: Some(20),
+                        },
+                        DecomposedRegexPart {
+                            is_public: Some(false),
+                            regex_def: "\r\n".to_string(),
+                            max_length: None,
+                        },
+                    ],
+                }, // Other DecomposedRegex objects omitted for brevity - add them if needed
+            ],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 6,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 2048,
+            remove_soft_line_breaks: true,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_registry() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
+            title: "Sp1Residency".to_string(),
+            description: "Sp1Residency".to_string(),
+            slug: "DimiDumo/sp1_residency".to_string(),
+            tags: vec![],
+            email_query: "".to_string(),
+            use_new_sdk: false,
+            circuit_name: "sp1_residency".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "succinct.xyz".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 0,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "Subject".to_string(),
+                max_match_length: 50,
+                location: "header".to_string(),
+                is_hashed: false,
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "Welcome ".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "to the ".to_string(),
+                        max_length: Some(20),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "Succinct ZK Residency!".to_string(),
+                        max_length: None,
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 31,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 896,
+            remove_soft_line_breaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_kraken() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "85255ee2-acfe-49ca-959c-edd009b53bb5".to_string(),
+            title: "Kraken KYC (Intermediate)".to_string(),
+            description: "Proof of Kraken Intermediate Account".to_string(),
+            slug: "Bisht13/krakenintermediate".to_string(),
+            tags: vec![],
+            email_query: "from:kraken.com".to_string(),
+            use_new_sdk: false,
+            circuit_name: "krakenintermediate".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 4096,
+            sender_domain: "kraken.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1736325873,
+                nanos: 967251000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1736326473,
+                nanos: 627382000,
+            }),
+            external_inputs: vec![ExternalInput {
+                name: "test".to_string(),
+                max_length: 4096,
+            }],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "EmailSubject".to_string(),
+                max_match_length: 64,
+                location: "header".to_string(),
+                is_hashed: true,
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "subject:".to_string(),
+                        max_length: Some(20),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "Good news: your account is now Intermediate!".to_string(),
+                        max_length: Some(20),
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 1,
+            github_username: "Bisht13".to_string(),
+            email_header_max_length: 1088,
+            remove_soft_line_breaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_subject_extract() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
+            title: "Sp1Residency".to_string(),
+            description: "Sp1Residency".to_string(),
+            slug: "DimiDumo/sp1_residency".to_string(),
+            tags: vec![],
+            email_query: "".to_string(),
+            use_new_sdk: false,
+            circuit_name: "sp1_residency".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "succinct.xyz".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 0,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "Subject".to_string(),
+                max_match_length: 64,
+                location: "header".to_string(),
+                is_hashed: false,
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "(?:\r\n|^)subject:".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "[a-z]+".to_string(),
+                        max_length: Some(20),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "\r\n".to_string(),
+                        max_length: None,
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 31,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 896,
+            remove_soft_line_breaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+}
