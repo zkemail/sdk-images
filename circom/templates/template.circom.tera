@@ -32,11 +32,25 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
 
     {% if not ignore_body_hash_check %}
     signal input bodyHashIndex;
+    signal input bodyHashMatchStart;
+    signal input bodyHashMatchLength;
+    signal input bodyHashCurrStates[maxHeaderLength-1];
+    signal input bodyHashNextStates[maxHeaderLength-1];
+    signal input bodyHashCaptureGroup1Id[maxHeaderLength-1];
+    signal input bodyHashCaptureGroup1Start[maxHeaderLength-1];
+    signal input bodyHashCaptureGroupStartIndices[1];
     signal input precomputedSHA[32];
     signal input emailBody[maxBodyLength];
     signal input emailBodyLength;
 
     EV.bodyHashIndex <== bodyHashIndex;
+    EV.bodyHashMatchStart <== bodyHashMatchStart;
+    EV.bodyHashMatchLength <== bodyHashMatchLength;
+    EV.bodyHashCurrStates <== bodyHashCurrStates;
+    EV.bodyHashNextStates <== bodyHashNextStates;
+    EV.bodyHashCaptureGroup1Id <== bodyHashCaptureGroup1Id;
+    EV.bodyHashCaptureGroup1Start <== bodyHashCaptureGroup1Start;
+    EV.bodyHashCaptureGroupStartIndices <== bodyHashCaptureGroupStartIndices;
     EV.precomputedSHA <== precomputedSHA;
     EV.emailBody <== emailBody;
     EV.emailBodyLength <== emailBodyLength;
@@ -91,7 +105,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% endif %}
 
     signal {{ regex.name }}RegexOut{{ regex.signal_regex_out_string }};
-    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }}, {{ regex.max_match_length}})({{ regex.location }});
+    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.name }}Regex({{ regex.max_length_of_location_name }}, {{ regex.max_match_length}})({{ regex.location }}, {{ regex.name }}MatchStart, {{ regex.name }}MatchLength, {{ regex.name }}CurrentStates, {{ regex.name }}NextStates{% if regex.num_public_parts > 0 %}, {{ regex.name }}CaptureGroup0Id, {{ regex.name }}CaptureGroup0Start, {{ regex.name }}CaptureGroupStartIndices{% endif %});
     {{ regex.name }}RegexOut === 1;
     
     {% if regex.has_public_parts %}
