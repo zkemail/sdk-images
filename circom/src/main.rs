@@ -14,7 +14,8 @@ use payload::UploadUrls;
 use rand::Rng;
 use relayer_utils::LOG;
 use sdk_utils::{
-    run_command, run_command_and_return_output, run_command_with_input, upload_to_url,
+    proto_types::proto_blueprint::Blueprint, run_command, run_command_and_return_output,
+    run_command_with_input, upload_to_url,
 };
 use slog::info;
 use sqlx::postgres::PgPoolOptions;
@@ -33,21 +34,7 @@ async fn main() -> Result<()> {
 
     let blueprint = payload.clone().blueprint;
 
-    setup().await?;
-
-    generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
-
-    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint.clone());
-
-    let circuit = generate_circuit(circuit_template_inputs)?;
-
-    // Write the circuit to a file
-    let circuit_path = "./tmp/circuit.circom";
-    std::fs::write(circuit_path, circuit)?;
-
-    let ptau: usize = compile_circuit().await?;
-
-    // update_ptau(&pool, blueprint.id.expect("No ID found"), ptau).await?;
+    let ptau: usize = process_circuit(blueprint.clone()).await?;
 
     println!("ptau: {}", ptau);
 
@@ -124,6 +111,7 @@ async fn setup() -> Result<()> {
     }
     fs::create_dir_all(&regex_path)?;
 
+    run_command("cp", &["package.json", "./tmp"], None).await?;
     Ok(())
 }
 
@@ -144,7 +132,7 @@ async fn compile_circuit() -> Result<usize> {
             "--c",
             "--wasm",
             "-l",
-            "../node_modules",
+            "./node_modules",
         ],
         Some("tmp"),
     )
@@ -185,33 +173,36 @@ async fn compile_circuit() -> Result<usize> {
     let current_dir = std::env::current_dir()?;
     let current_dir_str = current_dir.to_str().unwrap_or("");
 
-    // Get Home directory
-    let tachyon_dir = std::env::var("TACHYON_DIR")?;
-    let tachyon_dir_str = tachyon_dir.as_str();
+    // Get Home directory - skip binary compilation if TACHYON_DIR is not set (e.g., in tests)
+    if let Ok(tachyon_dir) = std::env::var("TACHYON_DIR") {
+        let tachyon_dir_str = tachyon_dir.as_str();
 
-    // Run make in the circuit_cpp folder
-    info!(LOG, "Compiling circuit binary");
-    run_command(
-        "bazel-bin/circomlib/build/compile_witness_generator",
-        &[
-            "--cpp",
-            &format!("{}/tmp/circuit_cpp/circuit.cpp", current_dir_str),
-        ],
-        Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
-    )
-    .await?;
+        // Run make in the circuit_cpp folder
+        info!(LOG, "Compiling circuit binary");
+        run_command(
+            "bazel-bin/circomlib/build/compile_witness_generator",
+            &[
+                "--cpp",
+                &format!("{}/tmp/circuit_cpp/circuit.cpp", current_dir_str),
+            ],
+            Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
+        )
+        .await?;
 
-    // Move the binary
-    info!(LOG, "Copying binary");
-    run_command(
-        "mv",
-        &[
-            "witness_generator",
-            &format!("{}/tmp/circuit_cpp/circuit", current_dir_str),
-        ],
-        Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
-    )
-    .await?;
+        // Move the binary
+        info!(LOG, "Copying binary");
+        run_command(
+            "mv",
+            &[
+                "witness_generator",
+                &format!("{}/tmp/circuit_cpp/circuit", current_dir_str),
+            ],
+            Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
+        )
+        .await?;
+    } else {
+        info!(LOG, "Skipping binary compilation - TACHYON_DIR not set");
+    }
 
     Ok(k as usize)
 }
@@ -486,3 +477,26 @@ async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
 
     Ok(())
 }
+
+pub async fn process_circuit(blueprint: Blueprint) -> Result<usize> {
+    setup().await?;
+
+    generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
+
+    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint.clone());
+
+    let circuit = generate_circuit(circuit_template_inputs)?;
+
+    // Write the circuit to a file
+    let circuit_path = "./tmp/circuit.circom";
+    std::fs::write(circuit_path, circuit)?;
+
+    // Run npm install in the tmp directory to ensure dependencies are available
+    info!(LOG, "Installing npm dependencies");
+    run_command("npm", &["install"], Some("tmp")).await?;
+
+    let ptau: usize = compile_circuit().await?;
+
+    Ok(ptau)
+}
+
