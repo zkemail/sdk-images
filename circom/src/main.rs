@@ -547,7 +547,7 @@ mod tests {
                 name: "DownloadDataLink".to_string(),
                 max_match_length: 128,
                 location: "body".to_string(),
-                is_hashed: false,
+                is_hashed: Some(false),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(false),
@@ -623,7 +623,7 @@ mod tests {
                     name: "Subject".to_string(),
                     max_match_length: 256,
                     location: "header".to_string(),
-                    is_hashed: false,
+                    is_hashed: Some(false),
                     parts: vec![
                         DecomposedRegexPart {
                             is_public: Some(false),
@@ -700,7 +700,7 @@ mod tests {
                 name: "Subject".to_string(),
                 max_match_length: 50,
                 location: "header".to_string(),
-                is_hashed: false,
+                is_hashed: Some(false),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(false),
@@ -779,7 +779,7 @@ mod tests {
                 name: "EmailSubject".to_string(),
                 max_match_length: 64,
                 location: "header".to_string(),
-                is_hashed: true,
+                is_hashed: Some(true),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(true),
@@ -851,7 +851,7 @@ mod tests {
                 name: "Subject".to_string(),
                 max_match_length: 64,
                 location: "header".to_string(),
-                is_hashed: false,
+                is_hashed: Some(false),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(false),

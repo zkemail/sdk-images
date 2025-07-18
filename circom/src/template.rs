@@ -97,7 +97,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             let mut reveal_string = String::new();
             let mut num_public_parts = 0;
             let mut public_parts_max_length = Vec::new();
-            let is_hashed = regex.is_hashed;
+            let is_hashed = regex.is_hashed.unwrap_or(false);
             let mut regex_idx_name = String::new();
             let mut num_reveal_signals: i32 = -1;
             let mut signal_regex_out_string = String::new();

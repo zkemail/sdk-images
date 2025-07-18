@@ -67,7 +67,7 @@ message DecomposedRegex {
     string name = 1;
     string location = 2;
     int32 max_match_length = 3;
-    bool is_hashed = 4;
+    optional bool is_hashed = 4;
     repeated DecomposedRegexPart parts = 5;
 }
 

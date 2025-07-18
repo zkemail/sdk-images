@@ -69,7 +69,7 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
         };
         for part in regex.parts.iter() {
             if part.is_public == Some(true) {
-                if regex.is_hashed {
+                if regex.is_hashed.unwrap_or(false) {
                     signal_size += 1;
                     current_idx += 1;
                 } else {

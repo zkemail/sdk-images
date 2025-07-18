@@ -67,7 +67,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
 
             let mut num_public_parts = 0;
             let mut public_parts_max_length = Vec::<usize>::with_capacity(num_public_parts);
-            let is_hashed = regex.is_hashed;
+            let is_hashed = regex.is_hashed.unwrap_or(false);
             let mut hash_inputs = Vec::new();
             let mut capture_string = String::new();
             let hash_packing_size = ((max_match_length as f64) / 31.0).ceil() as usize;
