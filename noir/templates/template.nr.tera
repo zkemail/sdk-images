@@ -16,7 +16,7 @@ fn main(
     body_hash_index: u32,
     partial_body_hash: [u32; 8],
     partial_body_real_length: u64,
-    {% if remove_soft_line_breaks %}
+    {% if remove_soft_linebreaks %}
     decoded_body: BoundedVec<u8, {{ email_body_max_length }}>,
     {% endif %}
     {% endif %}
@@ -57,7 +57,7 @@ fn main(
         signed_body_hash == computed_body_hash,
         "SHA256 hash computed over body does not match body hash found in DKIM-signed header",
     );
-    {% if remove_soft_line_breaks %}
+    {% if remove_soft_linebreaks %}
     assert(
         remove_soft_line_breaks(body.storage(), decoded_body.storage()),
         "Decoded body does not properly remove soft line breaks",

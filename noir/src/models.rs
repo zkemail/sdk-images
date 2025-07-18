@@ -34,7 +34,7 @@ pub struct CircuitTemplateInputs {
     pub email_header_max_length: usize,
     pub email_body_max_length: usize,
     pub ignore_body_hash_check: bool,
-    pub remove_soft_line_breaks: bool,
+    pub remove_soft_linebreaks: bool,
     pub regexes: Vec<RegexEntry>,
     pub external_inputs: Vec<ExternalInputEntry>,
     pub output_args: String,
@@ -47,7 +47,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
         let email_header_max_length = value.email_header_max_length as usize;
         let email_body_max_length = value.email_body_max_length as usize;
         let ignore_body_hash_check = value.ignore_body_hash_check;
-        let remove_soft_line_breaks = value.remove_soft_line_breaks;
+        let remove_soft_linebreaks = value.remove_soft_linebreaks;
 
         // Process regexes
         let mut regexes = Vec::new();
@@ -59,7 +59,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             // Determine location and its max length
             let (location, max_length_of_location) = if regex.location == "header" {
                 ("header".to_string(), email_header_max_length)
-            } else if remove_soft_line_breaks {
+            } else if remove_soft_linebreaks {
                 ("decoded_body".to_string(), email_body_max_length)
             } else {
                 ("body".to_string(), email_body_max_length)
@@ -160,7 +160,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             email_header_max_length,
             email_body_max_length,
             ignore_body_hash_check,
-            remove_soft_line_breaks,
+            remove_soft_linebreaks,
             regexes,
             external_inputs,
             output_args,
