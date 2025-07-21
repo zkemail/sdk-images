@@ -543,7 +543,7 @@ mod tests {
             }),
             external_inputs: vec![],
             decomposed_regexes: vec![DecomposedRegex {
-                name: "DownloadDataLink".to_string(),
+                name: "downloadDataLink".to_string(),
                 max_match_length: 128,
                 location: "body".to_string(),
                 is_hashed: Some(false),
