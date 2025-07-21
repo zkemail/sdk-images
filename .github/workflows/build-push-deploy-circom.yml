@@ -9,6 +9,16 @@ on:
       - 'circom/**'
       - 'sdk-utils/**'
       - 'Cargo.toml'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build from'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
 
 permissions:
   id-token: write
