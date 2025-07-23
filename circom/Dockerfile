@@ -33,7 +33,8 @@ RUN apt update && \
     gzip \
     protobuf-compiler \
     libprotobuf-dev \
-    zip && \
+    zip \
+    unzip && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python version using pyenv
