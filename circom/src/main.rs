@@ -25,6 +25,7 @@ use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs}
 async fn main() -> Result<()> {
     let payload = payload::load_payload()?;
     info!(LOG, "Loaded configuration: {:?}", payload);
+    println!("payload: {:?}", payload);
 
     let pool = PgPoolOptions::new()
         .max_connections(10)
