@@ -77,7 +77,7 @@ RUN foundryup
 # Clone and build Circom
 RUN git clone https://github.com/iden3/circom.git /circom
 WORKDIR /circom
-RUN git checkout tags/v2.2.2 -b v2.2.2
+RUN git checkout tags/v2.1.9 -b v2.1.9
 RUN cargo build --release && cargo install --path circom
 
 WORKDIR /root/circom
