@@ -206,49 +206,49 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     )
     .await?;
 
-    if env::var("ETHERSCAN_API_KEY").is_ok() {
-        info!(LOG, "Verify contracts");
-        run_command(
-            "forge",
-            &[
-                "verify-contract",
-                "--chain-id",
-                payload.chain_id.to_string().as_str(),
-                contract_addresses.get("ClientProofVerifier").unwrap(),
-                "tmp/ClientProofVerifier.sol:ClientProofVerifier",
-            ],
-            None,
-        )
-        .await?;
+    // if env::var("ETHERSCAN_API_KEY").is_ok() {
+    //     info!(LOG, "Verify contracts");
+    //     run_command(
+    //         "forge",
+    //         &[
+    //             "verify-contract",
+    //             "--chain-id",
+    //             payload.chain_id.to_string().as_str(),
+    //             contract_addresses.get("ClientProofVerifier").unwrap(),
+    //             "tmp/ClientProofVerifier.sol:ClientProofVerifier",
+    //         ],
+    //         None,
+    //     )
+    //     .await?;
 
-        run_command(
-            "forge",
-            &[
-                "verify-contract",
-                "--chain-id",
-                payload.chain_id.to_string().as_str(),
-                contract_addresses.get("ServerProofVerifier").unwrap(),
-                "tmp/ServerProofVerifier.sol:ServerProofVerifier",
-            ],
-            None,
-        )
-        .await?;
+    //     run_command(
+    //         "forge",
+    //         &[
+    //             "verify-contract",
+    //             "--chain-id",
+    //             payload.chain_id.to_string().as_str(),
+    //             contract_addresses.get("ServerProofVerifier").unwrap(),
+    //             "tmp/ServerProofVerifier.sol:ServerProofVerifier",
+    //         ],
+    //         None,
+    //     )
+    //     .await?;
 
-        run_command(
-            "forge",
-            &[
-                "verify-contract",
-                "--chain-id",
-                payload.chain_id.to_string().as_str(),
-                "--constructor-args",
-                &constructor_args,
-                contract_addresses.get("Contract").unwrap(),
-                "tmp/Contract.sol:Contract",
-            ],
-            None,
-        )
-        .await?;
-    }
+    //     run_command(
+    //         "forge",
+    //         &[
+    //             "verify-contract",
+    //             "--chain-id",
+    //             payload.chain_id.to_string().as_str(),
+    //             "--constructor-args",
+    //             &constructor_args,
+    //             contract_addresses.get("Contract").unwrap(),
+    //             "tmp/Contract.sol:Contract",
+    //         ],
+    //         None,
+    //     )
+    //     .await?;
+    // }
 
     Ok(contract_addresses.get("Contract").unwrap().to_string())
 }
