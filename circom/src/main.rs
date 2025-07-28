@@ -52,7 +52,7 @@ async fn main() -> Result<()> {
         .await?
         .trim()
         .to_string();
-    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+    let chunked_snarkjs_path = "./node_modules/.bin/snarkjs";
 
     // Generate verifier contract for client-side proofs using chunked zkey
     generate_verifier_contract(
