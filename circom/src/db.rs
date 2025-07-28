@@ -1,4 +1,5 @@
 use anyhow::Result;
+use sqlx::types::Uuid;
 use sqlx::{Pool, Postgres};
 
 pub async fn update_verifier_contract_address(
@@ -6,6 +7,7 @@ pub async fn update_verifier_contract_address(
     id: &str,
     address: &str,
 ) -> Result<()> {
+    let uuid_id = Uuid::parse_str(id)?;
     let query = r#"
         UPDATE blueprints
         SET verifier_contract_address = $1
@@ -14,7 +16,7 @@ pub async fn update_verifier_contract_address(
 
     sqlx::query(query)
         .bind(address)
-        .bind(id)
+        .bind(uuid_id)
         .execute(pool)
         .await?;
 
