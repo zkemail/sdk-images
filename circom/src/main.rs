@@ -234,7 +234,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
         .await?
         .trim()
         .to_string();
-    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+    let chunked_snarkjs_path = "./node_modules/.bin/snarkjs";
 
     println!("node_path: {}", node_path);
     println!("snarkjs_path: {}", snarkjs_path);
