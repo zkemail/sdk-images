@@ -42,6 +42,7 @@ pub struct UploadUrls {
     pub zkey_i: String,
     pub zkey_j: String,
     pub zkey_k: String,
+    pub circom_regex_graphs: String,
 }
 
 // Function to load the payload
