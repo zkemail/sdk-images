@@ -406,7 +406,7 @@ async fn cleanup() -> Result<()> {
     info!(LOG, "Creating regex graph zip file");
     run_command(
         "zip",
-        &["-r", "circomRegexGraphs.zip", "*_regex.json"],
+        &["-r", "circomRegexGraphs.zip", ".", "-i", "*_regex.json"],
         Some("tmp/regex/"),
     )
     .await?;
