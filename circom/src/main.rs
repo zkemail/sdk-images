@@ -402,6 +402,15 @@ async fn cleanup() -> Result<()> {
 
     run_command("mv", &["verification_key.json", "vk.json"], Some("tmp")).await?;
 
+    // Create regex circuit zip file
+    info!(LOG, "Creating regex graph zip file");
+    run_command(
+        "zip",
+        &["-r", "circomRegexGraphs.zip", "*_regex.json"],
+        Some("tmp/regex/"),
+    )
+    .await?;
+
     Ok(())
 }
 
@@ -474,6 +483,21 @@ async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
         } else {
             info!(LOG, "Skipping upload for missing chunk: {}", path);
         }
+    }
+
+    let regex_json_path = "./tmp/regex/circomRegexGraphs.zip";
+    if Path::new(regex_json_path).exists() {
+        upload_to_url(
+            &upload_urls.circom_regex_graphs,
+            regex_json_path,
+            "application/zip",
+        )
+        .await?;
+    } else {
+        info!(
+            LOG,
+            "Skipping upload for missing regex JSON file: {}", regex_json_path
+        );
     }
 
     Ok(())
