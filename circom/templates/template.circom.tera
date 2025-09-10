@@ -108,7 +108,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.name }}Regex({{ regex.max_length_of_location_name }}, {{ regex.max_match_length}})({{ regex.location }}, {{ regex.name }}MatchStart, {{ regex.name }}MatchLength, {{ regex.name }}CurrentStates, {{ regex.name }}NextStates{% if regex.num_public_parts > 0 %}, {{ regex.name }}CaptureGroup0Id, {{ regex.name }}CaptureGroup0Start, {{ regex.name }}CaptureGroupStartIndices{% endif %});
     {{ regex.name }}RegexOut === 1;
     
-    {% if regex.has_public_parts %}
+   {% if regex.num_public_parts > 0 %}
     {% if regex.is_hashed %}
     var {{ regex.name }}TotalPackedLength = computeIntChunkLength({{ regex.name }}MaxLength) * {{ regex.num_reveal_signals }};
     signal {{ regex.name }}AllPackedOut[{{ regex.name }}TotalPackedLength];
