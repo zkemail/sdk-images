@@ -109,22 +109,23 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {{ regex.name }}RegexOut === 1;
     
    {% if regex.num_public_parts > 0 %}
+   var {{ regex.name }}MaxLength = {{ regex.max_match_length }};
     {% if regex.is_hashed %}
     var {{ regex.name }}TotalPackedLength = computeIntChunkLength({{ regex.name }}MaxLength) * {{ regex.num_reveal_signals }};
     signal {{ regex.name }}AllPackedOut[{{ regex.name }}TotalPackedLength];
     {% endif %}
     {% for i in range(end=regex.num_reveal_signals) %}
     {% if i == 0 %}
-    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
-    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
+    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut[computeIntChunkLength({{ regex.public_parts_max_length[i] }})];
+    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal, {{ regex.name }}CaptureGroupStartIndices[{{ i }}]);
     {% if regex.is_hashed %}
     for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
         {{ regex.name }}AllPackedOut[j] <== {{ regex.name }}PackedOut[j];
     }
     {% endif %}
     {% else %}
-    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.name }}MaxLength)];
-    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}RegexIdx{{ i }});
+    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.public_parts_max_length[i] }})];
+    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}CaptureGroupStartIndices[{{ i }}]);
     {% if regex.is_hashed %}
     for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
         {{ regex.name }}AllPackedOut[j + ({{ i }} * computeIntChunkLength({{ regex.name }}MaxLength))] <== {{ regex.name }}PackedOut{{ i }}[j];
