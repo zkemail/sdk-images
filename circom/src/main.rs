@@ -31,7 +31,6 @@ async fn main() -> Result<()> {
         .max_connections(10)
         .connect(&payload.database_url)
         .await?;
-    println!("Database connection established");
 
     let blueprint = payload.clone().blueprint;
 
