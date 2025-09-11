@@ -117,7 +117,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% for i in range(end=regex.num_reveal_signals) %}
     {% if i == 0 %}
     signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut[computeIntChunkLength({{ regex.public_parts_max_length[i] }})];
-    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal, {{ regex.name }}CaptureGroupStartIndices[{{ i }}]);
+    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal);
     {% if regex.is_hashed %}
     for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
         {{ regex.name }}AllPackedOut[j] <== {{ regex.name }}PackedOut[j];
@@ -125,7 +125,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% endif %}
     {% else %}
     signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.public_parts_max_length[i] }})];
-    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}CaptureGroupStartIndices[{{ i }}]);
+    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal{{ i }});
     {% if regex.is_hashed %}
     for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
         {{ regex.name }}AllPackedOut[j + ({{ i }} * computeIntChunkLength({{ regex.name }}MaxLength))] <== {{ regex.name }}PackedOut{{ i }}[j];
