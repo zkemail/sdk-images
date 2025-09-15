@@ -206,49 +206,58 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     )
     .await?;
 
-    // if env::var("ETHERSCAN_API_KEY").is_ok() {
-    //     info!(LOG, "Verify contracts");
-    //     run_command(
-    //         "forge",
-    //         &[
-    //             "verify-contract",
-    //             "--chain-id",
-    //             payload.chain_id.to_string().as_str(),
-    //             contract_addresses.get("ClientProofVerifier").unwrap(),
-    //             "tmp/ClientProofVerifier.sol:ClientProofVerifier",
-    //         ],
-    //         None,
-    //     )
-    //     .await?;
+    if let Ok(_) = env::var("ETHERSCAN_API_KEY") {
+        info!(LOG, "Verify contracts");
+        if let Err(e) = run_command(
+            "forge",
+            &[
+                "verify-contract",
+                "--chain-id",
+                payload.chain_id.to_string().as_str(),
+                contract_addresses.get("ClientProofVerifier").unwrap(),
+                "tmp/ClientProofVerifier.sol:ClientProofVerifier",
+            ],
+            None,
+        )
+        .await
+        {
+            info!(LOG, "Warning: Failed to verify ClientProofVerifier: {}", e);
+        }
 
-    //     run_command(
-    //         "forge",
-    //         &[
-    //             "verify-contract",
-    //             "--chain-id",
-    //             payload.chain_id.to_string().as_str(),
-    //             contract_addresses.get("ServerProofVerifier").unwrap(),
-    //             "tmp/ServerProofVerifier.sol:ServerProofVerifier",
-    //         ],
-    //         None,
-    //     )
-    //     .await?;
+        if let Err(e) = run_command(
+            "forge",
+            &[
+                "verify-contract",
+                "--chain-id",
+                payload.chain_id.to_string().as_str(),
+                contract_addresses.get("ServerProofVerifier").unwrap(),
+                "tmp/ServerProofVerifier.sol:ServerProofVerifier",
+            ],
+            None,
+        )
+        .await
+        {
+            info!(LOG, "Warning: Failed to verify ServerProofVerifier: {}", e);
+        }
 
-    //     run_command(
-    //         "forge",
-    //         &[
-    //             "verify-contract",
-    //             "--chain-id",
-    //             payload.chain_id.to_string().as_str(),
-    //             "--constructor-args",
-    //             &constructor_args,
-    //             contract_addresses.get("Contract").unwrap(),
-    //             "tmp/Contract.sol:Contract",
-    //         ],
-    //         None,
-    //     )
-    //     .await?;
-    // }
+        if let Err(e) = run_command(
+            "forge",
+            &[
+                "verify-contract",
+                "--chain-id",
+                payload.chain_id.to_string().as_str(),
+                "--constructor-args",
+                &constructor_args,
+                contract_addresses.get("Contract").unwrap(),
+                "tmp/Contract.sol:Contract",
+            ],
+            None,
+        )
+        .await
+        {
+            info!(LOG, "Warning: Failed to verify Contract: {}", e);
+        }
+    }
 
     Ok(contract_addresses.get("Contract").unwrap().to_string())
 }
