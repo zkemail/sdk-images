@@ -23,12 +23,12 @@ RUN apt update && \
 # Install Noir
 RUN curl -L https://raw.githubusercontent.com/noir-lang/noirup/refs/heads/main/install | bash
 ENV PATH="/root/.nargo/bin:$PATH"
-RUN noirup --version 1.0.0-beta.4
+RUN noirup --version 1.0.0-beta.5
 
 # Install Barrentenberg
 RUN curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/master/barretenberg/bbup/install | bash
 ENV PATH="/root/.bb:$PATH"
-RUN bbup --version 0.82.2
+RUN bbup --version 0.84.0
 
 # Install Rust
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
