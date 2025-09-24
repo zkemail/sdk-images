@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use sdk_utils::proto_types::proto_blueprint::DecomposedRegex;
 use std::fs;
 use zk_regex_compiler::{DecomposedRegexConfig, ProvingFramework, RegexPart, gen_from_decomposed};
@@ -9,10 +9,15 @@ pub fn generate_regex_circuits(decomposed_regexes: &Vec<DecomposedRegex>) -> Res
         let mut decomposed_regex_config = Vec::new();
         for part in decomposed_regex.parts.clone() {
             if part.is_public == Some(true) {
-                decomposed_regex_config.push(RegexPart::PublicPattern((
-                    part.regex_def,
-                    part.max_length.unwrap() as usize,
-                )));
+                let max_length = part.max_length.ok_or_else(|| {
+                    anyhow!(
+                        "max_length is required for public regex part '{}' in regex '{}', but was not provided",
+                        part.regex_def,
+                        decomposed_regex.name
+                    )
+                })? as usize;
+                decomposed_regex_config
+                    .push(RegexPart::PublicPattern((part.regex_def, max_length)));
             } else {
                 decomposed_regex_config.push(RegexPart::Pattern(part.regex_def));
             }
