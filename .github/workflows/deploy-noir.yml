@@ -7,7 +7,7 @@ on:
         description: 'Commit SHA to deploy (short form)'
         required: false
   workflow_run:
-    workflows: ["Build rnd Push Noir"]
+    workflows: ["Build and Push Noir"]
     branches: [main]
     types:
       - completed
