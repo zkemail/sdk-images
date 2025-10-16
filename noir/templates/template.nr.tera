@@ -1,9 +1,13 @@
 {% for regex in regexes %}
 mod {{ regex.regex_circuit_name }};
 {% endfor %}
-
+use poseidon::poseidon;
 use std::{collections::bounded_vec::BoundedVec, hash::pedersen_hash};
-use zkemail::{dkim::RSAPubkey, headers::body_hash::get_body_hash, KEY_LIMBS_2048, Sequence, utils::pack_bytes, remove_soft_line_breaks::remove_soft_line_breaks, partial_hash::partial_sha256_var_end};
+use zkemail::{
+    dkim::RSAPubkey, hash::poseidon_large, headers::body_hash::get_body_hash, KEY_LIMBS_2048,
+    partial_hash::partial_sha256_var_end, remove_soft_line_breaks::remove_soft_line_breaks,
+    Sequence, utils::pack_bytes,
+};
 
 fn main(
     header: BoundedVec<u8, {{ email_header_max_length }}>,
@@ -38,7 +42,7 @@ fn main(
     {{ regex.name }}_capture_group_start_indices: [Field; {{ regex.num_public_parts }}],
     {% endif %}
     {% endfor %}
-) -> pub (Field, Field, Field, [Field; 1] {{ output_args }}) {
+) -> pub (Field, Field, Field, Field, [Field; 1] {{ output_args }}) {
     // check the body and header lengths are within bounds
     assert(header.len() <= {{ email_header_max_length }});
     {% if not ignore_body_hash_check %}
@@ -52,7 +56,12 @@ fn main(
     {% if not ignore_body_hash_check %}
     // Body Hash Verification
     let signed_body_hash = get_body_hash(header, dkim_header_sequence, body_hash_index);
-    let computed_body_hash: [u8; 32] = partial_sha256_var_end(partial_body_hash, body.storage(), body.len() as u64, partial_body_real_length);
+    let computed_body_hash: [u8; 32] = partial_sha256_var_end(
+        partial_body_hash,
+        body.storage(),
+        body.len() as u64,
+        partial_body_real_length,
+    );
     assert(
         signed_body_hash == computed_body_hash,
         "SHA256 hash computed over body does not match body hash found in DKIM-signed header",
@@ -66,22 +75,23 @@ fn main(
     {% endif %}
 
     let pubkey_hash = pubkey.hash();
+    let email_nullifier = poseidon::bn254::hash_1([poseidon_large(signature)]);
 
     {% for regex in regexes %}
     {% if regex.num_public_parts > 0 %}
     let {% if regex.num_public_parts > 1 %}({% endif %}{{ regex.capture_string }}{% if regex.num_public_parts > 1 %}){% endif %} = {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_match_length }}>(
-        {{ regex.location }}.storage(), 
-        {{ regex.name }}_match_start, 
-        {{ regex.name }}_match_length, 
-        {{ regex.name }}_current_states, 
-        {{ regex.name }}_next_states
-        {%- for j in range(start=1, end=regex.num_public_parts + 1) -%}
-        , {{ regex.name }}_capture_group_{{ j }}_id
-        {%- endfor -%}
-        {%- for j in range(start=1, end=regex.num_public_parts + 1) -%}
-        , {{ regex.name }}_capture_group_{{ j }}_start
-        {%- endfor -%}
-        , {{ regex.name }}_capture_group_start_indices
+        {{ regex.location }}.storage(),
+        {{ regex.name }}_match_start,
+        {{ regex.name }}_match_length,
+        {{ regex.name }}_current_states,
+        {{ regex.name }}_next_states,
+        {% for j in range(start=1, end=regex.num_public_parts + 1) -%}
+        {{ regex.name }}_capture_group_{{ j }}_id,
+        {%- endfor %}
+        {% for j in range(start=1, end=regex.num_public_parts + 1) -%}
+        {{ regex.name }}_capture_group_{{ j }}_start,
+        {%- endfor %}
+        {{ regex.name }}_capture_group_start_indices,
     );
     {% else %}
     regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_match_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states);
@@ -94,5 +104,5 @@ fn main(
     {% endif %}
     {% endfor %}
 
-    (pubkey_hash, header_hash[0], header_hash[1], prover_address {{ output_signals }})
+    (pubkey_hash, email_nullifier, header_hash[0], header_hash[1], prover_address{{ output_signals }})
 }
