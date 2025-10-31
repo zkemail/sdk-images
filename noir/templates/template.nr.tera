@@ -14,6 +14,9 @@ fn main(
     pubkey: RSAPubkey<KEY_LIMBS_2048>,
     signature: [Field; KEY_LIMBS_2048],
     prover_address: [Field; 1],
+{% if enable_header_masking %}
+    header_mask: [Field; {{ email_header_max_length }}],
+{% endif %}
 {% if not ignore_body_hash_check %}
     dkim_header_sequence: Sequence,
     body: BoundedVec<u8, {{ email_body_max_length }}>,
@@ -22,6 +25,9 @@ fn main(
     partial_body_real_length: u64,
 {% if remove_soft_linebreaks %}
     decoded_body: BoundedVec<u8, {{ email_body_max_length }}>,
+{% endif %}
+{% if enable_body_masking %}
+    body_mask: [Field; {{ email_body_max_length }}],
 {% endif %}
 {% endif %}
 {% for external_input in external_inputs %}
@@ -76,6 +82,29 @@ fn main(
 
     let pubkey_hash = pubkey.hash();
     let email_nullifier = poseidon::bn254::hash_1([poseidon_large(signature)]);
+
+{% if enable_header_masking %}
+    let header_storage = header.storage();
+    let mut masked_header: [Field; {{ email_header_max_length }}] = [0; {{ email_header_max_length }}];
+    for i in 0..{{ email_header_max_length }} {
+        // Constrain mask bits to 0/1
+        assert(header_mask[i] * (header_mask[i] - 1) == 0);
+        masked_header[i] = (header_storage[i] as Field) * header_mask[i];
+    }
+{% endif %}
+{% if enable_body_masking and not ignore_body_hash_check %}
+    {% if remove_soft_linebreaks %}
+    let body_storage = decoded_body.storage();
+    {% else %}
+    let body_storage = body.storage();
+    {% endif %}
+    let mut masked_body: [Field; {{ email_body_max_length }}] = [0; {{ email_body_max_length }}];
+    for i in 0..{{ email_body_max_length }} {
+        // Constrain mask bits to 0/1
+        assert(body_mask[i] * (body_mask[i] - 1) == 0);
+        masked_body[i] = (body_storage[i] as Field) * body_mask[i];
+    }
+{% endif %}
 
 {% for regex in regexes %}
 {% if regex.num_public_parts > 0 %}

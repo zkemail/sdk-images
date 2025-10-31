@@ -34,6 +34,8 @@ pub struct CircuitTemplateInputs {
     pub email_header_max_length: usize,
     pub email_body_max_length: usize,
     pub ignore_body_hash_check: bool,
+    pub enable_header_masking: bool,
+    pub enable_body_masking: bool,
     pub remove_soft_linebreaks: bool,
     pub regexes: Vec<RegexEntry>,
     pub external_inputs: Vec<ExternalInputEntry>,
@@ -47,6 +49,8 @@ impl From<Blueprint> for CircuitTemplateInputs {
         let email_header_max_length = value.email_header_max_length as usize;
         let email_body_max_length = value.email_body_max_length as usize;
         let ignore_body_hash_check = value.ignore_body_hash_check;
+        let enable_header_masking = value.enable_header_masking;
+        let enable_body_masking = value.enable_body_masking;
         let remove_soft_linebreaks = value.remove_soft_linebreaks;
 
         // Process regexes
@@ -130,6 +134,16 @@ impl From<Blueprint> for CircuitTemplateInputs {
         // Compute output signals and args
         let mut output_signals = String::new();
         let mut output_args = String::new();
+
+        // Masked outputs, if enabled
+        if enable_header_masking {
+            output_signals.push_str(", masked_header");
+            output_args.push_str(&format!(", [Field; {}]", email_header_max_length));
+        }
+        if enable_body_masking && !ignore_body_hash_check {
+            output_signals.push_str(", masked_body");
+            output_args.push_str(&format!(", [Field; {}]", email_body_max_length));
+        }
         for input in &external_inputs {
             output_signals.push_str(&format!(", {}", input.name));
             output_args.push_str(&format!(", [Field; {}]", input.signal_length));
@@ -160,6 +174,8 @@ impl From<Blueprint> for CircuitTemplateInputs {
             email_header_max_length,
             email_body_max_length,
             ignore_body_hash_check,
+            enable_header_masking,
+            enable_body_masking,
             remove_soft_linebreaks,
             regexes,
             external_inputs,
