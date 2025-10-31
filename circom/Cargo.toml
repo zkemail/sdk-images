@@ -17,7 +17,7 @@ serde = "1.0.215"
 base64 = "0.22.1"
 serde_json = "1.0.133"
 regex = "=1.10.6"
-zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", rev = "35014c2bff69115bb92be2dc2c9b006fa69a6649" }
+zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", rev = "3d37c3110fbd1baa96d048ab658bcb47acd8731b" }
 tera = "1.20.0"
 rand = "0.8.5"
 sqlx = { version = "0.8.2", features = [
