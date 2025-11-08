@@ -7,7 +7,7 @@ edition = "2021"
 anyhow = "1.0.90"
 dotenv = "0.15.0"
 tokio = { version = "1.40.0", features = ["full"] }
-relayer-utils = { git = "https://github.com/zkemail/relayer-utils", rev = "728b8f643a6c9a1e5b400be6407727851cc8c92c" }
+relayer-utils = { git = "https://github.com/zkemail/relayer-utils", rev = "025405a620dfacb33084b705e2f3424a4db78a04" }
 slog = { version = "2.7.0", features = [
     "max_level_trace",
     "release_max_level_warn",
@@ -17,7 +17,7 @@ serde = "1.0.215"
 base64 = "0.22.1"
 serde_json = "1.0.133"
 regex = "=1.10.6"
-zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", rev = "3d37c3110fbd1baa96d048ab658bcb47acd8731b" }
+zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", rev = "a2ce67ff8ae667bc7846cf8920d7d866f2f02d4c" }
 tera = "1.20.0"
 rand = "0.8.5"
 sqlx = { version = "0.8.2", features = [
