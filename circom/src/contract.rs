@@ -59,57 +59,47 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     let mut current_idx = 1;
 
     let mut values = Vec::new();
-    if let Some(decomposed_regexes) = &payload.blueprint.decomposed_regexes {
-        for regex in decomposed_regexes {
-            let pack_size = ((regex.max_length as f64) / 31.0).ceil() as usize;
-            let field = Field {
-                name: regex.name.clone(),
-                max_length: regex.max_length,
-                pack_size,
-                start_idx: current_idx,
-            };
-            for part in regex.parts.iter() {
-                if part.is_public {
-                    if regex.is_hashed.unwrap_or(false) {
-                        signal_size += 1;
-                        current_idx += 1;
-                    } else {
-                        signal_size += pack_size;
-                        current_idx += pack_size;
-                    }
+    for regex in &payload.blueprint.decomposed_regexes {
+        let pack_size = ((regex.max_match_length as f64) / 31.0).ceil() as usize;
+        let field = Field {
+            name: regex.name.clone(),
+            max_length: regex.max_match_length as usize,
+            pack_size,
+            start_idx: current_idx,
+        };
+        for part in regex.parts.iter() {
+            if part.is_public == Some(true) {
+                if regex.is_hashed.unwrap_or(false) {
+                    signal_size += 1;
+                    current_idx += 1;
+                } else {
+                    signal_size += pack_size;
+                    current_idx += pack_size;
                 }
             }
-            values.push(field);
         }
+        values.push(field);
     }
 
     let prover_eth_address_idx = current_idx;
     current_idx += 1; // Add 1 prover ETH address
 
     let mut external_inputs = Vec::new();
-    if let Some(inputs) = &payload.blueprint.external_inputs {
-        for input in inputs.iter() {
-            let pack_size = ((input.max_length as f64) / 31.0).ceil() as usize;
-            let field = Field {
-                name: input.name.clone(),
-                max_length: input.max_length,
-                pack_size,
-                start_idx: current_idx,
-            };
-            signal_size += pack_size;
-            current_idx += pack_size;
-            external_inputs.push(field);
-        }
+    for input in &payload.blueprint.external_inputs {
+        let pack_size = ((input.max_length as f64) / 31.0).ceil() as usize;
+        let field = Field {
+            name: input.name.clone(),
+            max_length: input.max_length as usize,
+            pack_size,
+            start_idx: current_idx,
+        };
+        signal_size += pack_size;
+        current_idx += pack_size;
+        external_inputs.push(field);
     }
 
-    let sender_domain = payload
-        .blueprint
-        .sender_domain
-        .clone()
-        .expect("Sender domain not found");
-
     ContractData {
-        sender_domain,
+        sender_domain: payload.blueprint.sender_domain.clone(),
         values,
         external_inputs,
         signal_size,
@@ -190,8 +180,9 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
 
     // Parse the output to extract addresses
-    let re =
-        Regex::new(r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})").unwrap();
+    let re = Regex::new(
+        r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})"
+    ).unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
         let contract_name = &cap[1];
@@ -215,48 +206,150 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     )
     .await?;
 
-    if env::var("ETHERSCAN_API_KEY").is_ok() {
+    if let Ok(_) = env::var("ETHERSCAN_API_KEY") {
         info!(LOG, "Verify contracts");
-        run_command(
-            "forge",
-            &[
-                "verify-contract",
-                "--chain-id",
-                payload.chain_id.to_string().as_str(),
-                contract_addresses.get("ClientProofVerifier").unwrap(),
-                "tmp/ClientProofVerifier.sol:ClientProofVerifier",
-            ],
-            None,
-        )
-        .await?;
 
-        run_command(
-            "forge",
-            &[
-                "verify-contract",
-                "--chain-id",
-                payload.chain_id.to_string().as_str(),
-                contract_addresses.get("ServerProofVerifier").unwrap(),
-                "tmp/ServerProofVerifier.sol:ServerProofVerifier",
-            ],
-            None,
-        )
-        .await?;
+        // Verify ClientProofVerifier with retries
+        let mut last_error = None;
+        for attempt in 1..=3 {
+            info!(
+                LOG,
+                "Attempting to verify ClientProofVerifier (attempt {}/3)", attempt
+            );
+            match run_command(
+                "forge",
+                &[
+                    "verify-contract",
+                    "--chain-id",
+                    payload.chain_id.to_string().as_str(),
+                    contract_addresses.get("ClientProofVerifier").unwrap(),
+                    "tmp/ClientProofVerifier.sol:ClientProofVerifier",
+                ],
+                None,
+            )
+            .await
+            {
+                Ok(_) => {
+                    info!(LOG, "Successfully verified ClientProofVerifier");
+                    last_error = None;
+                    break;
+                }
+                Err(e) => {
+                    info!(
+                        LOG,
+                        "Attempt {}/3 failed to verify ClientProofVerifier: {}", attempt, e
+                    );
+                    last_error = Some(e);
+                    if attempt < 3 {
+                        info!(LOG, "Waiting 10 seconds before retry...");
+                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+                    }
+                }
+            }
+        }
+        if let Some(e) = last_error {
+            return Err(anyhow::anyhow!(
+                "Failed to verify ClientProofVerifier after 3 attempts: {}",
+                e
+            ));
+        }
 
-        run_command(
-            "forge",
-            &[
-                "verify-contract",
-                "--chain-id",
-                payload.chain_id.to_string().as_str(),
-                "--constructor-args",
-                &constructor_args,
-                contract_addresses.get("Contract").unwrap(),
-                "tmp/Contract.sol:Contract",
-            ],
-            None,
-        )
-        .await?;
+        // Delay between contract verifications
+        info!(LOG, "Waiting 5 seconds before next verification...");
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+        // Verify ServerProofVerifier with retries
+        let mut last_error = None;
+        for attempt in 1..=3 {
+            info!(
+                LOG,
+                "Attempting to verify ServerProofVerifier (attempt {}/3)", attempt
+            );
+            match run_command(
+                "forge",
+                &[
+                    "verify-contract",
+                    "--chain-id",
+                    payload.chain_id.to_string().as_str(),
+                    contract_addresses.get("ServerProofVerifier").unwrap(),
+                    "tmp/ServerProofVerifier.sol:ServerProofVerifier",
+                ],
+                None,
+            )
+            .await
+            {
+                Ok(_) => {
+                    info!(LOG, "Successfully verified ServerProofVerifier");
+                    last_error = None;
+                    break;
+                }
+                Err(e) => {
+                    info!(
+                        LOG,
+                        "Attempt {}/3 failed to verify ServerProofVerifier: {}", attempt, e
+                    );
+                    last_error = Some(e);
+                    if attempt < 3 {
+                        info!(LOG, "Waiting 10 seconds before retry...");
+                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+                    }
+                }
+            }
+        }
+        if let Some(e) = last_error {
+            return Err(anyhow::anyhow!(
+                "Failed to verify ServerProofVerifier after 3 attempts: {}",
+                e
+            ));
+        }
+
+        // Delay between contract verifications
+        info!(LOG, "Waiting 5 seconds before next verification...");
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+        // Verify Contract with retries
+        let mut last_error = None;
+        for attempt in 1..=3 {
+            info!(LOG, "Attempting to verify Contract (attempt {}/3)", attempt);
+            match run_command(
+                "forge",
+                &[
+                    "verify-contract",
+                    "--chain-id",
+                    payload.chain_id.to_string().as_str(),
+                    "--constructor-args",
+                    &constructor_args,
+                    contract_addresses.get("Contract").unwrap(),
+                    "tmp/Contract.sol:Contract",
+                ],
+                None,
+            )
+            .await
+            {
+                Ok(_) => {
+                    info!(LOG, "Successfully verified Contract");
+                    last_error = None;
+                    break;
+                }
+                Err(e) => {
+                    info!(
+                        LOG,
+                        "Attempt {}/3 failed to verify Contract: {}", attempt, e
+                    );
+                    last_error = Some(e);
+                    if attempt < 3 {
+                        info!(LOG, "Waiting 10 seconds before retry...");
+                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+                    }
+                }
+            }
+        }
+        if let Some(e) = last_error {
+            return Err(anyhow::anyhow!(
+                "Failed to verify Contract after 3 attempts: {}",
+                e
+            ));
+        }
     }
 
     Ok(contract_addresses.get("Contract").unwrap().to_string())

@@ -8,7 +8,7 @@ use crate::handlers::UploadUrls;
 
 #[cfg_attr(test, mockall::automock)]
 pub trait FileUploader {
-    async fn upload_files(&self, upload_urls: UploadUrls) -> Result<()>;
+    fn upload_files(&self, upload_urls: UploadUrls) -> impl Future<Output = Result<()>> + Send;
 }
 
 pub struct ProductionFileUploader;

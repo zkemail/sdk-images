@@ -29,49 +29,49 @@ message Blueprint {
     string slug = 4;
     repeated string tags = 5;
     string email_query = 6;
-    bool use_new_sdk = 7;
-    string circuit_name = 8;
-    bool ignore_body_hash_check = 9;
-    string sha_precompute_selector = 10;
-    int32 email_body_max_length = 11;
-    string sender_domain = 12;
-    bool enable_header_masking = 13;
-    bool enable_body_masking = 14;
-    ZkFramework client_zk_framework = 15;
-    ZkFramework server_zk_framework = 16;
-    int32 verifier_contract_chain = 17;
-    string verifier_contract_address = 18;
-    bool is_public = 19;
-    google.protobuf.Timestamp created_at = 20;
-    google.protobuf.Timestamp updated_at = 21;
-    repeated ExternalInput external_inputs = 22;
-    repeated DecomposedRegex decomposed_regexes = 23;
-    BlueprintStatus client_status = 24;
-    BlueprintStatus server_status = 25;
-    int32 version = 26;
-    string github_username = 27;
-    int32 email_header_max_length = 28;
-    bool remove_soft_linebreaks = 29;
-    int32 stars = 30;
-    int32 ptau = 31;
-    int32 num_local_proofs = 32;
+    string circuit_name = 7;
+    bool ignore_body_hash_check = 8;
+    string sha_precompute_selector = 9;
+    int32 email_body_max_length = 10;
+    string sender_domain = 11;
+    bool enable_header_masking = 12;
+    bool enable_body_masking = 13;
+    ZkFramework client_zk_framework = 14;
+    ZkFramework server_zk_framework = 15;
+    int32 verifier_contract_chain = 16;
+    string verifier_contract_address = 17;
+    bool is_public = 18;
+    google.protobuf.Timestamp created_at = 19;
+    google.protobuf.Timestamp updated_at = 20;
+    repeated ExternalInput external_inputs = 21;
+    repeated DecomposedRegex decomposed_regexes = 22;
+    BlueprintStatus client_status = 23;
+    BlueprintStatus server_status = 24;
+    int32 version = 25;
+    string github_username = 26;
+    int32 email_header_max_length = 27;
+    bool remove_soft_linebreaks = 28;
+    int32 stars = 29;
+    int32 ptau = 30;
+    int32 num_local_proofs = 31;
+    string internal_version = 32;
 }
 
-
 message ExternalInput {
-    string name = 3;
-    int32 max_length = 4;
+    string name = 1;
+    int32 max_length = 2;
 }
 
 message DecomposedRegex {
-    string name = 3;
-    int32 max_length = 4;
-    string location = 5;
-    bool is_hashed = 6;
-    repeated DecomposedRegexPart parts = 7;
+    string name = 1;
+    string location = 2;
+    int32 max_match_length = 3;
+    optional bool is_hashed = 4;
+    repeated DecomposedRegexPart parts = 5;
 }
 
 message DecomposedRegexPart {
-    optional bool is_public = 3;
-    string regex_def = 4;
+    optional bool is_public = 1;
+    string regex_def = 2;
+    optional int32 max_length = 3;
 }

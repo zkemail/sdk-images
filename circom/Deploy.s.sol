@@ -39,8 +39,8 @@ contract Deploy is Script {
         Contract circuitContract = new Contract(dkimRegistry, clientProofVerifier, serverProofVerifier);
         vm.stopBroadcast();
 
-        console.log("Deployed ClientProofVerifier at", address(cpv));
-        console.log("Deployed ServerProofVerifier at", address(spv));
+        console.log("Deployed ClientProofVerifier at", address(clientProofVerifier));
+        console.log("Deployed ServerProofVerifier at", address(serverProofVerifier));
         console.log("Deployed Contract at", address(circuitContract));
         console.log("Deployed DKIMRegistry at", dkimRegistryAddr);
         return;

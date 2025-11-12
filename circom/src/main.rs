@@ -14,7 +14,8 @@ use payload::UploadUrls;
 use rand::Rng;
 use relayer_utils::LOG;
 use sdk_utils::{
-    run_command, run_command_and_return_output, run_command_with_input, upload_to_url,
+    proto_types::proto_blueprint::Blueprint, run_command, run_command_and_return_output,
+    run_command_with_input, upload_to_url,
 };
 use slog::info;
 use sqlx::postgres::PgPoolOptions;
@@ -24,30 +25,16 @@ use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs}
 async fn main() -> Result<()> {
     let payload = payload::load_payload()?;
     info!(LOG, "Loaded configuration: {:?}", payload);
+    println!("payload: {:?}", payload);
 
     let pool = PgPoolOptions::new()
         .max_connections(10)
         .connect(&payload.database_url)
         .await?;
-    println!("Database connection established");
 
     let blueprint = payload.clone().blueprint;
 
-    setup().await?;
-
-    generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
-
-    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint.clone());
-
-    let circuit = generate_circuit(circuit_template_inputs)?;
-
-    // Write the circuit to a file
-    let circuit_path = "./tmp/circuit.circom";
-    std::fs::write(circuit_path, circuit)?;
-
-    let ptau: usize = compile_circuit().await?;
-
-    // update_ptau(&pool, blueprint.id.expect("No ID found"), ptau).await?;
+    let ptau: usize = process_circuit(blueprint.clone()).await?;
 
     println!("ptau: {}", ptau);
 
@@ -64,7 +51,7 @@ async fn main() -> Result<()> {
         .await?
         .trim()
         .to_string();
-    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+    let chunked_snarkjs_path = "./node_modules/.bin/snarkjs";
 
     // Generate verifier contract for client-side proofs using chunked zkey
     generate_verifier_contract(
@@ -90,8 +77,7 @@ async fn main() -> Result<()> {
 
     cleanup().await?;
 
-    update_verifier_contract_address(&pool, blueprint.id.expect("No ID found"), &contract_address)
-        .await?;
+    update_verifier_contract_address(&pool, &blueprint.id, &contract_address).await?;
 
     upload_files(payload.upload_urls).await?;
 
@@ -125,6 +111,7 @@ async fn setup() -> Result<()> {
     }
     fs::create_dir_all(&regex_path)?;
 
+    run_command("cp", &["package.json", "./tmp"], None).await?;
     Ok(())
 }
 
@@ -145,7 +132,7 @@ async fn compile_circuit() -> Result<usize> {
             "--c",
             "--wasm",
             "-l",
-            "../node_modules",
+            "./node_modules",
         ],
         Some("tmp"),
     )
@@ -176,7 +163,7 @@ async fn compile_circuit() -> Result<usize> {
 
     // Compute the minimal power k such that 2^k > max_value
     let mut k = 0u32;
-    while (1u64 << k) <= max_value {
+    while 1u64 << k <= max_value {
         k += 1;
     }
 
@@ -186,33 +173,36 @@ async fn compile_circuit() -> Result<usize> {
     let current_dir = std::env::current_dir()?;
     let current_dir_str = current_dir.to_str().unwrap_or("");
 
-    // Get Home directory
-    let tachyon_dir = std::env::var("TACHYON_DIR")?;
-    let tachyon_dir_str = tachyon_dir.as_str();
+    // Get Home directory - skip binary compilation if TACHYON_DIR is not set (e.g., in tests)
+    if let Ok(tachyon_dir) = std::env::var("TACHYON_DIR") {
+        let tachyon_dir_str = tachyon_dir.as_str();
 
-    // Run make in the circuit_cpp folder
-    info!(LOG, "Compiling circuit binary");
-    run_command(
-        "bazel-bin/circomlib/build/compile_witness_generator",
-        &[
-            "--cpp",
-            &format!("{}/tmp/circuit_cpp/circuit.cpp", current_dir_str),
-        ],
-        Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
-    )
-    .await?;
+        // Run make in the circuit_cpp folder
+        info!(LOG, "Compiling circuit binary");
+        run_command(
+            "bazel-bin/circomlib/build/compile_witness_generator",
+            &[
+                "--cpp",
+                &format!("{}/tmp/circuit_cpp/circuit.cpp", current_dir_str),
+            ],
+            Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
+        )
+        .await?;
 
-    // Move the binary
-    info!(LOG, "Copying binary");
-    run_command(
-        "mv",
-        &[
-            "witness_generator",
-            &format!("{}/tmp/circuit_cpp/circuit", current_dir_str),
-        ],
-        Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
-    )
-    .await?;
+        // Move the binary
+        info!(LOG, "Copying binary");
+        run_command(
+            "mv",
+            &[
+                "witness_generator",
+                &format!("{}/tmp/circuit_cpp/circuit", current_dir_str),
+            ],
+            Some(format!("{}/vendors/circom", tachyon_dir_str).as_str()),
+        )
+        .await?;
+    } else {
+        info!(LOG, "Skipping binary compilation - TACHYON_DIR not set");
+    }
 
     Ok(k as usize)
 }
@@ -243,7 +233,7 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
         .await?
         .trim()
         .to_string();
-    let chunked_snarkjs_path = "../node_modules/.bin/snarkjs";
+    let chunked_snarkjs_path = "./node_modules/.bin/snarkjs";
 
     println!("node_path: {}", node_path);
     println!("snarkjs_path: {}", snarkjs_path);
@@ -411,6 +401,15 @@ async fn cleanup() -> Result<()> {
 
     run_command("mv", &["verification_key.json", "vk.json"], Some("tmp")).await?;
 
+    // Create regex circuit zip file
+    info!(LOG, "Creating regex graph zip file");
+    run_command(
+        "zip",
+        &["-r", "circomRegexGraphs.zip", ".", "-i", "*_regex.json"],
+        Some("tmp/regex/"),
+    )
+    .await?;
+
     Ok(())
 }
 
@@ -485,5 +484,430 @@ async fn upload_files(upload_urls: UploadUrls) -> Result<()> {
         }
     }
 
+    let regex_json_path = "./tmp/regex/circomRegexGraphs.zip";
+    if Path::new(regex_json_path).exists() {
+        upload_to_url(
+            &upload_urls.circom_regex_graphs,
+            regex_json_path,
+            "application/zip",
+        )
+        .await?;
+    } else {
+        info!(
+            LOG,
+            "Skipping upload for missing regex JSON file: {}", regex_json_path
+        );
+    }
+
     Ok(())
+}
+
+pub async fn process_circuit(blueprint: Blueprint) -> Result<usize> {
+    setup().await?;
+
+    generate_regex_circuits(blueprint.clone().decomposed_regexes)?;
+
+    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint.clone());
+
+    let circuit = generate_circuit(circuit_template_inputs)?;
+
+    // Write the circuit to a file
+    let circuit_path = "./tmp/circuit.circom";
+    std::fs::write(circuit_path, circuit)?;
+
+    // Run npm install in the tmp directory to ensure dependencies are available
+    info!(LOG, "Installing npm dependencies");
+    run_command("npm", &["install"], Some("tmp")).await?;
+
+    let ptau: usize = compile_circuit().await?;
+
+    Ok(ptau)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use prost_wkt_types::Timestamp;
+    use sdk_utils::proto_types::proto_blueprint::{
+        Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
+    };
+
+    #[tokio::test]
+    async fn test_compile_circuit_x_export_data() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "4478f3bc-9ba8-4906-ba87-09fc049cef46".to_string(),
+            title: "XAccountExportData".to_string(),
+            description:
+                "Prove you've asked to export your twitter/X data and reveal only the download link"
+                    .to_string(),
+            slug: "DimiDumo/XAccountExportData".to_string(),
+            tags: vec![],
+            email_query: "from:x.com".to_string(),
+            circuit_name: "XAccountExportData".to_string(),
+            ignore_body_hash_check: false,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 6208,
+            sender_domain: "x.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "0x6679b65c5CFCba507Bf105491A3b5B68764B1464".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746574183,
+                nanos: 310124000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746574183,
+                nanos: 310124000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "downloadDataLink".to_string(),
+                max_match_length: 128,
+                location: "body".to_string(),
+                is_hashed: Some(false),
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "ready for you to download ".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "[^ ]*".to_string(),
+                        max_length: Some(20),
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 1,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 1024,
+            remove_soft_linebreaks: true,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_apple() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "88802381-0501-4c4a-bcb5-03fdeacf453e".to_string(),
+            title: "AppleKYC".to_string(),
+            description: "Prove you have a valid Apple account".to_string(),
+            slug: "DimiDumo/AppleKYC".to_string(),
+            tags: vec![],
+            email_query: "from:email.apple.com".to_string(),
+            circuit_name: "AppleKYC".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "email.apple.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "0x1E8AbE8B8551E73d25239004EffccA2d077eF146".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746538605,
+                nanos: 86528000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746538605,
+                nanos: 86528000,
+            }),
+            external_inputs: vec![ExternalInput {
+                name: "address".to_string(),
+                max_length: 44,
+            }],
+            decomposed_regexes: vec![
+                DecomposedRegex {
+                    name: "Subject".to_string(),
+                    max_match_length: 256,
+                    location: "header".to_string(),
+                    is_hashed: Some(false),
+                    parts: vec![
+                        DecomposedRegexPart {
+                            is_public: Some(false),
+                            regex_def: "(?:\r\n|^)subject:".to_string(),
+                            max_length: None,
+                        },
+                        DecomposedRegexPart {
+                            is_public: Some(true),
+                            regex_def: "[^\r\n]+".to_string(),
+                            max_length: Some(20),
+                        },
+                        DecomposedRegexPart {
+                            is_public: Some(false),
+                            regex_def: "\r\n".to_string(),
+                            max_length: None,
+                        },
+                    ],
+                }, // Other DecomposedRegex objects omitted for brevity - add them if needed
+            ],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 6,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 2048,
+            remove_soft_linebreaks: true,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_registry() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
+            title: "Sp1Residency".to_string(),
+            description: "Sp1Residency".to_string(),
+            slug: "DimiDumo/sp1_residency".to_string(),
+            tags: vec![],
+            email_query: "".to_string(),
+            circuit_name: "sp1_residency".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "succinct.xyz".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 0,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "Subject".to_string(),
+                max_match_length: 50,
+                location: "header".to_string(),
+                is_hashed: Some(false),
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "Welcome ".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "to the ".to_string(),
+                        max_length: Some(20),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "Succinct ZK Residency!".to_string(),
+                        max_length: None,
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 31,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 896,
+            remove_soft_linebreaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_kraken() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "85255ee2-acfe-49ca-959c-edd009b53bb5".to_string(),
+            title: "Kraken KYC (Intermediate)".to_string(),
+            description: "Proof of Kraken Intermediate Account".to_string(),
+            slug: "Bisht13/krakenintermediate".to_string(),
+            tags: vec![],
+            email_query: "from:kraken.com".to_string(),
+            circuit_name: "krakenintermediate".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 4096,
+            sender_domain: "kraken.com".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 84532,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1736325873,
+                nanos: 967251000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1736326473,
+                nanos: 627382000,
+            }),
+            external_inputs: vec![ExternalInput {
+                name: "test".to_string(),
+                max_length: 4096,
+            }],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "EmailSubject".to_string(),
+                max_match_length: 64,
+                location: "header".to_string(),
+                is_hashed: Some(true),
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "subject:".to_string(),
+                        max_length: Some(20),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "Good news: your account is now Intermediate!".to_string(),
+                        max_length: Some(20),
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 1,
+            github_username: "Bisht13".to_string(),
+            email_header_max_length: 1088,
+            remove_soft_linebreaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compile_circuit_subject_extract() {
+        let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
+            id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
+            title: "Sp1Residency".to_string(),
+            description: "Sp1Residency".to_string(),
+            slug: "DimiDumo/sp1_residency".to_string(),
+            tags: vec![],
+            email_query: "".to_string(),
+            circuit_name: "sp1_residency".to_string(),
+            ignore_body_hash_check: true,
+            sha_precompute_selector: "".to_string(),
+            email_body_max_length: 0,
+            sender_domain: "succinct.xyz".to_string(),
+            enable_header_masking: false,
+            enable_body_masking: false,
+            client_zk_framework: 1, // Circom
+            server_zk_framework: 0, // None
+            verifier_contract_chain: 0,
+            verifier_contract_address: "".to_string(),
+            is_public: true,
+            created_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            updated_at: Some(Timestamp {
+                seconds: 1746543161,
+                nanos: 36149000,
+            }),
+            external_inputs: vec![],
+            decomposed_regexes: vec![DecomposedRegex {
+                name: "Subject".to_string(),
+                max_match_length: 64,
+                location: "header".to_string(),
+                is_hashed: Some(false),
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "(?:\r\n|^)subject:".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "[a-z]+".to_string(),
+                        max_length: Some(20),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "\r\n".to_string(),
+                        max_length: None,
+                    },
+                ],
+            }],
+            client_status: 1, // InProgress
+            server_status: 3, // Done
+            version: 31,
+            github_username: "DimiDumo".to_string(),
+            email_header_max_length: 896,
+            remove_soft_linebreaks: false,
+            stars: 0,
+            ptau: 0,
+            num_local_proofs: 0,
+        };
+
+        // Call the handler with the mock uploader
+        let result = process_circuit(blueprint).await;
+
+        if let Err(ref e) = result {
+            println!("Error: {:?}", e);
+        }
+
+        // Assert the result
+        assert!(result.is_ok());
+    }
 }

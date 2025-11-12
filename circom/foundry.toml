@@ -4,6 +4,6 @@ out = "artifacts"
 libs = ["./node_modules", "lib"]
 optimizer = true
 optimizer_runs = 200
-evm_version = 'shanghai'
+evm_version = 'prague'
 via-ir = true
 solc = "0.8.26"

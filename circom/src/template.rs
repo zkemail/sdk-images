@@ -1,11 +1,13 @@
-use std::collections::VecDeque;
-
 use anyhow::Result;
 use regex::Regex;
-use sdk_utils::{compute_signal_length, Blueprint, DecomposedRegex};
+use sdk_utils::{
+    compute_signal_length,
+    proto_types::proto_blueprint::{Blueprint, DecomposedRegex},
+};
 use serde::Serialize;
+use std::fs;
 use tera::{Context, Tera};
-use zk_regex_compiler::{gen_circom_from_decomposed_regex, DecomposedRegexConfig, RegexPartConfig};
+use zk_regex_compiler::{gen_from_decomposed, DecomposedRegexConfig, ProvingFramework, RegexPart};
 
 /// Represents a single decomposed regex, along with computed fields
 /// used for generating the circuit template.
@@ -13,13 +15,14 @@ use zk_regex_compiler::{gen_circom_from_decomposed_regex, DecomposedRegexConfig,
 struct RegexEntry {
     name: String,
     uppercased_name: String,
-    max_length: usize,
+    max_match_length: usize,
     regex_circuit_name: String,
     location: String,
     max_length_of_location: usize,
     max_length_of_location_name: String,
     reveal_string: String,
-    has_public_parts: bool,
+    num_public_parts: usize,
+    public_parts_max_length: Vec<usize>,
     is_hashed: bool,
     regex_idx_name: String,
     num_reveal_signals: i32,
@@ -43,7 +46,7 @@ pub struct CircuitTemplateInputs {
     ignore_body_hash_check: bool,
     enable_header_masking: bool,
     enable_body_masking: bool,
-    remove_soft_line_breaks: bool,
+    remove_soft_linebreaks: bool,
     regexes: Vec<RegexEntry>,
     external_inputs: Vec<ExternalInputEntry>,
     public_args_string: String,
@@ -51,116 +54,121 @@ pub struct CircuitTemplateInputs {
 
 impl From<Blueprint> for CircuitTemplateInputs {
     fn from(value: Blueprint) -> Self {
-        let circuit_name = value.circuit_name.unwrap_or_else(|| "circuit".to_string());
-        let email_header_max_length = value.email_header_max_length.unwrap_or(1024);
-        let email_body_max_length = value.email_body_max_length.unwrap_or(2048);
-        let ignore_body_hash_check = value.ignore_body_hash_check.unwrap_or(false);
-        let enable_header_masking = value.enable_header_masking.unwrap_or(false);
-        let enable_body_masking = value.enable_body_masking.unwrap_or(false);
-        let remove_soft_line_breaks = value
-            .remove_soft_line_breaks
-            .unwrap_or(!ignore_body_hash_check);
+        let circuit_name = value.circuit_name;
+        let email_header_max_length = value.email_header_max_length as usize;
+        let email_body_max_length = value.email_body_max_length as usize;
+        let ignore_body_hash_check = value.ignore_body_hash_check;
+        let enable_header_masking = value.enable_header_masking;
+        let enable_body_masking = value.enable_body_masking;
+        let remove_soft_linebreaks = value.remove_soft_linebreaks;
 
         // Process regexes
         let mut regexes = Vec::new();
-        if let Some(decomposed_regexes) = value.decomposed_regexes {
-            for regex in decomposed_regexes {
-                let name = regex.name.clone();
-                let uppercased_name = name.to_uppercase();
-                let max_length = regex.max_length;
-                let regex_circuit_name = format!("{}Regex", regex.name);
 
-                // Determine location and its max length
-                let (location, max_length_of_location, max_length_of_location_name) =
-                    if regex.location == "header" {
-                        (
-                            "emailHeader".to_string(),
-                            email_header_max_length,
-                            "maxHeaderLength".to_string(),
-                        )
-                    } else if remove_soft_line_breaks {
-                        (
-                            "decodedEmailBodyIn".to_string(),
-                            email_body_max_length,
-                            "maxBodyLength".to_string(),
-                        )
+        for regex in value.decomposed_regexes {
+            let name = regex.name.clone();
+            let uppercased_name = name.to_uppercase();
+            let max_match_length = regex.max_match_length as usize;
+            let regex_circuit_name = format!("{}_regex", regex.name);
+
+            // Determine location and its max length
+            let (location, max_length_of_location, max_length_of_location_name) =
+                if regex.location == "header" {
+                    (
+                        "emailHeader".to_string(),
+                        email_header_max_length as usize,
+                        "maxHeaderLength".to_string(),
+                    )
+                } else if remove_soft_linebreaks {
+                    (
+                        "decodedEmailBodyIn".to_string(),
+                        email_body_max_length as usize,
+                        "maxBodyLength".to_string(),
+                    )
+                } else {
+                    (
+                        "emailBody".to_string(),
+                        email_body_max_length as usize,
+                        "maxBodyLength".to_string(),
+                    )
+                };
+
+            // Compute reveal and indexing strings
+            let mut reveal_string = String::new();
+            let mut num_public_parts = 0;
+            let mut public_parts_max_length = Vec::new();
+            let is_hashed = regex.is_hashed.unwrap_or(false);
+            let mut regex_idx_name = String::new();
+            let mut num_reveal_signals: i32 = -1;
+            let mut signal_regex_out_string = String::new();
+
+            for part in &regex.parts {
+                if part.is_public == Some(true) {
+                    num_reveal_signals += 1;
+                    if regex_idx_name.is_empty() {
+                        regex_idx_name = format!("{}RegexIdx", name);
                     } else {
-                        (
-                            "emailBody".to_string(),
-                            email_body_max_length,
-                            "maxBodyLength".to_string(),
-                        )
-                    };
+                        regex_idx_name
+                            .push_str(&format!(", {}RegexIdx{}", name, num_reveal_signals));
+                    }
 
-                // Compute reveal and indexing strings
-                let mut reveal_string = String::new();
-                let mut has_public_parts = false;
-                let is_hashed = regex.is_hashed;
-                let mut regex_idx_name = String::new();
-                let mut num_reveal_signals: i32 = -1;
-                let mut signal_regex_out_string = String::new();
+                    num_public_parts += 1;
+                    public_parts_max_length.push(part.max_length() as usize);
 
-                for part in &regex.parts {
-                    if part.is_public {
-                        num_reveal_signals += 1;
-                        if regex_idx_name.is_empty() {
-                            regex_idx_name = format!("{}RegexIdx", name);
-                        } else {
-                            regex_idx_name
-                                .push_str(&format!(", {}RegexIdx{}", name, num_reveal_signals));
-                        }
+                    if num_reveal_signals == 0 {
+                        signal_regex_out_string.push_str(&format!(
+                            ", {}RegexReveal[{}]",
+                            name,
+                            part.max_length()
+                        ));
+                    } else {
+                        signal_regex_out_string.push_str(&format!(
+                            ", {}RegexReveal{}[{}]",
+                            name,
+                            num_reveal_signals,
+                            part.max_length()
+                        ));
+                    }
 
-                        has_public_parts = true;
-                        if reveal_string.is_empty() {
-                            reveal_string.push_str(&format!(", {}RegexReveal", name));
-                        } else {
-                            reveal_string
-                                .push_str(&format!(", {}RegexReveal{}", name, num_reveal_signals));
-                        }
-                        if num_reveal_signals == 0 {
-                            signal_regex_out_string.push_str(&format!(
-                                ", {}RegexReveal[{}]",
-                                name, max_length_of_location
-                            ));
-                        } else {
-                            signal_regex_out_string.push_str(&format!(
-                                ", {}RegexReveal{}[{}]",
-                                name, num_reveal_signals, max_length_of_location
-                            ));
-                        }
+                    if reveal_string.is_empty() {
+                        reveal_string.push_str(&format!(", {}RegexReveal", name));
+                    } else {
+                        reveal_string
+                            .push_str(&format!(", {}RegexReveal{}", name, num_reveal_signals));
                     }
                 }
-
-                // Increment once more to account for indexing
-                num_reveal_signals += 1;
-
-                regexes.push(RegexEntry {
-                    name,
-                    uppercased_name,
-                    max_length,
-                    regex_circuit_name,
-                    location,
-                    max_length_of_location,
-                    max_length_of_location_name,
-                    reveal_string,
-                    has_public_parts,
-                    is_hashed: is_hashed.unwrap_or(false),
-                    regex_idx_name,
-                    num_reveal_signals,
-                    signal_regex_out_string,
-                });
             }
+
+            // Increment once more to account for indexing
+            num_reveal_signals += 1;
+
+            regexes.push(RegexEntry {
+                name,
+                uppercased_name,
+                max_match_length,
+                regex_circuit_name,
+                location,
+                max_length_of_location,
+                max_length_of_location_name,
+                reveal_string,
+                num_public_parts,
+                public_parts_max_length,
+                is_hashed,
+                regex_idx_name,
+                num_reveal_signals,
+                signal_regex_out_string,
+            });
         }
 
         // Process external inputs
-        let external_inputs_data = value.external_inputs.unwrap_or_default();
-        let external_inputs: Vec<ExternalInputEntry> = external_inputs_data
+        let external_inputs: Vec<ExternalInputEntry> = value
+            .external_inputs
             .iter()
             .map(|input| {
-                let signal_length = compute_signal_length(input.max_length);
+                let signal_length = compute_signal_length(input.max_length as usize);
                 ExternalInputEntry {
                     name: input.name.clone(),
-                    max_length: input.max_length,
+                    max_length: input.max_length as usize,
                     signal_length,
                 }
             })
@@ -180,7 +188,7 @@ impl From<Blueprint> for CircuitTemplateInputs {
             ignore_body_hash_check,
             enable_header_masking,
             enable_body_masking,
-            remove_soft_line_breaks,
+            remove_soft_linebreaks,
             regexes,
             external_inputs,
             public_args_string,
@@ -217,8 +225,8 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
         &circuit_template_input.enable_body_masking,
     );
     context.insert(
-        "remove_soft_line_breaks",
-        &circuit_template_input.remove_soft_line_breaks,
+        "remove_soft_linebreaks",
+        &circuit_template_input.remove_soft_linebreaks,
     );
     context.insert("regexes", &circuit_template_input.regexes);
     context.insert("external_inputs", &circuit_template_input.external_inputs);
@@ -234,32 +242,32 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
 }
 
 /// Generates CIRCOM files for the provided decomposed regexes.
-pub fn generate_regex_circuits(decomposed_regexes: Option<Vec<DecomposedRegex>>) -> Result<()> {
-    if let Some(decomposed_regexes) = decomposed_regexes {
-        for decomposed_regex in decomposed_regexes {
-            let mut decomposed_regex_config = VecDeque::new();
-            for part in decomposed_regex.parts {
-                let part_config = RegexPartConfig {
-                    is_public: part.is_public,
-                    regex_def: part.regex_def.clone(),
-                };
-                decomposed_regex_config.push_back(part_config);
+pub fn generate_regex_circuits(decomposed_regexes: Vec<DecomposedRegex>) -> Result<()> {
+    for decomposed_regex in decomposed_regexes {
+        let mut decomposed_regex_config = Vec::new();
+        for part in decomposed_regex.parts.clone() {
+            if part.is_public == Some(true) {
+                decomposed_regex_config.push(RegexPart::PublicPattern((
+                    part.regex_def,
+                    part.max_length.unwrap() as usize,
+                )));
+            } else {
+                decomposed_regex_config.push(RegexPart::Pattern(part.regex_def));
             }
-
-            let config = DecomposedRegexConfig {
-                parts: decomposed_regex_config,
-            };
-
-            gen_circom_from_decomposed_regex(
-                &mut config.clone(),
-                Some(&format!(
-                    "./tmp/regex/{}Regex.circom",
-                    decomposed_regex.name
-                )),
-                Some(&format!("{}Regex", decomposed_regex.name)),
-                Some(true),
-            )?;
         }
+
+        let config = DecomposedRegexConfig {
+            parts: decomposed_regex_config,
+        };
+
+        let (graph, code) =
+            gen_from_decomposed(config, &decomposed_regex.name, ProvingFramework::Circom)?;
+
+        let file_path = format!("./tmp/regex/{}_regex.circom", decomposed_regex.name);
+        fs::write(file_path, code)?;
+        let graph_path = format!("./tmp/regex/{}_regex.json", decomposed_regex.name);
+        fs::write(graph_path, serde_json::to_string(&graph)?)?;
     }
+
     Ok(())
 }

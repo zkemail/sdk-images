@@ -24,7 +24,7 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     {% endfor %}
 
     // DKIM Verification
-    component EV = EmailVerifier(maxHeaderLength, maxBodyLength, n, k, {% if ignore_body_hash_check %}1{% else %}0{% endif %}, {% if enable_header_masking %}1{% else %}0{% endif %}, {% if enable_body_masking %}1{% else %}0{% endif %}, {% if remove_soft_line_breaks %}1{% else %}0{% endif %});
+    component EV = EmailVerifier(maxHeaderLength, maxBodyLength, n, k, {% if ignore_body_hash_check %}1{% else %}0{% endif %}, {% if enable_header_masking %}1{% else %}0{% endif %}, {% if enable_body_masking %}1{% else %}0{% endif %}, {% if remove_soft_linebreaks %}1{% else %}0{% endif %});
     EV.emailHeader <== emailHeader;
     EV.emailHeaderLength <== emailHeaderLength;
     EV.pubkey <== pubkey;
@@ -32,16 +32,30 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
 
     {% if not ignore_body_hash_check %}
     signal input bodyHashIndex;
+    signal input bodyHashMatchStart;
+    signal input bodyHashMatchLength;
+    signal input bodyHashCurrStates[maxHeaderLength-1];
+    signal input bodyHashNextStates[maxHeaderLength-1];
+    signal input bodyHashCaptureGroup1Id[maxHeaderLength-1];
+    signal input bodyHashCaptureGroup1Start[maxHeaderLength-1];
+    signal input bodyHashCaptureGroupStartIndices[1];
     signal input precomputedSHA[32];
     signal input emailBody[maxBodyLength];
     signal input emailBodyLength;
 
     EV.bodyHashIndex <== bodyHashIndex;
+    EV.bodyHashMatchStart <== bodyHashMatchStart;
+    EV.bodyHashMatchLength <== bodyHashMatchLength;
+    EV.bodyHashCurrStates <== bodyHashCurrStates;
+    EV.bodyHashNextStates <== bodyHashNextStates;
+    EV.bodyHashCaptureGroup1Id <== bodyHashCaptureGroup1Id;
+    EV.bodyHashCaptureGroup1Start <== bodyHashCaptureGroup1Start;
+    EV.bodyHashCaptureGroupStartIndices <== bodyHashCaptureGroupStartIndices;
     EV.precomputedSHA <== precomputedSHA;
     EV.emailBody <== emailBody;
     EV.emailBodyLength <== emailBodyLength;
 
-    {% if remove_soft_line_breaks %}
+    {% if remove_soft_linebreaks %}
     signal input decodedEmailBodyIn[maxBodyLength];
 
     EV.decodedEmailBodyIn <== decodedEmailBodyIn;
@@ -75,32 +89,43 @@ template {{ circuit_name }}(maxHeaderLength, maxBodyLength, n, k, packSize) {
     // Used for nullifier later
     signal output headerHashHi <== EV.shaHi;
     signal output headerHashLo <== EV.shaLo;
+
     {% for regex in regexes %}
     // {{ regex.uppercased_name }} Extraction
-    {% if regex.has_public_parts %}
-    var {{ regex.name }}MaxLength = {{ regex.max_length }};
-    signal input {{ regex.regex_idx_name }};
+    signal input {{ regex.name }}MatchStart;
+    signal input {{ regex.name }}MatchLength;
+    signal input {{ regex.name }}CurrentStates[{{ regex.max_match_length }}];
+    signal input {{ regex.name }}NextStates[{{ regex.max_match_length }}];
+    {% if regex.num_public_parts > 0 %}
+    {% for i in range(end=regex.num_public_parts) %}
+    signal input {{ regex.name }}CaptureGroup{{ i }}Id[{{ regex.max_match_length }}];
+    signal input {{ regex.name }}CaptureGroup{{ i }}Start[{{ regex.max_match_length }}];
+    {% endfor %}
+    signal input {{ regex.name }}CaptureGroupStartIndices[{{ regex.num_public_parts }}];
     {% endif %}
+
     signal {{ regex.name }}RegexOut{{ regex.signal_regex_out_string }};
-    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.regex_circuit_name }}({{ regex.max_length_of_location_name }})({{ regex.location }});
+    ({{ regex.name }}RegexOut{{ regex.reveal_string }}) <== {{ regex.name }}Regex({{ regex.max_length_of_location_name }}, {{ regex.max_match_length}})({{ regex.location }}, {{ regex.name }}MatchStart, {{ regex.name }}MatchLength, {{ regex.name }}CurrentStates, {{ regex.name }}NextStates{% if regex.num_public_parts > 0 %}, {{ regex.name }}CaptureGroup0Id, {{ regex.name }}CaptureGroup0Start, {{ regex.name }}CaptureGroupStartIndices{% endif %});
     {{ regex.name }}RegexOut === 1;
-    {% if regex.has_public_parts %}
+    
+   {% if regex.num_public_parts > 0 %}
+   var {{ regex.name }}MaxLength = {{ regex.max_match_length }};
     {% if regex.is_hashed %}
     var {{ regex.name }}TotalPackedLength = computeIntChunkLength({{ regex.name }}MaxLength) * {{ regex.num_reveal_signals }};
     signal {{ regex.name }}AllPackedOut[{{ regex.name }}TotalPackedLength];
     {% endif %}
     {% for i in range(end=regex.num_reveal_signals) %}
     {% if i == 0 %}
-    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut[computeIntChunkLength({{ regex.name }}MaxLength)];
-    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal, {{ regex.name }}RegexIdx);
+    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut[computeIntChunkLength({{ regex.public_parts_max_length[i] }})];
+    {{ regex.name }}PackedOut <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal, 0);
     {% if regex.is_hashed %}
     for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
         {{ regex.name }}AllPackedOut[j] <== {{ regex.name }}PackedOut[j];
     }
     {% endif %}
     {% else %}
-    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.name }}MaxLength)];
-    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.max_length_of_location_name }}, {{ regex.name }}MaxLength)({{ regex.name }}RegexReveal{{ i }}, {{ regex.name }}RegexIdx{{ i }});
+    signal {% if not regex.is_hashed %}output {% endif %}{{ regex.name }}PackedOut{{ i }}[computeIntChunkLength({{ regex.public_parts_max_length[i] }})];
+    {{ regex.name }}PackedOut{{ i }} <== PackRegexReveal({{ regex.public_parts_max_length[i] }}, {{ regex.public_parts_max_length[i] }})({{ regex.name }}RegexReveal{{ i }}, 0);
     {% if regex.is_hashed %}
     for (var j = 0; j < computeIntChunkLength({{ regex.name }}MaxLength); j++) {
         {{ regex.name }}AllPackedOut[j + ({{ i }} * computeIntChunkLength({{ regex.name }}MaxLength))] <== {{ regex.name }}PackedOut{{ i }}[j];

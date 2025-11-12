@@ -33,7 +33,8 @@ RUN apt update && \
     gzip \
     protobuf-compiler \
     libprotobuf-dev \
-    zip && \
+    zip \
+    unzip && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python version using pyenv
@@ -42,10 +43,12 @@ ENV HOME /root
 RUN CONFIGURE_OPTS=--enable-shared $HOME/.pyenv/bin/pyenv install ${PYTHON_VERSION}
 ENV PATH="${HOME}/.pyenv/shims:${HOME}/.pyenv/bin:${HOME}/bin:${PATH}"
 
-# Install Bazelisk for building Circom dependencies
-RUN wget https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 && \
-    chmod +x bazelisk-linux-amd64 && \
-    mv bazelisk-linux-amd64 /usr/local/bin/bazel
+# Install Bazel 6.3.0 for building Circom dependencies (required by tachyon)
+RUN wget https://github.com/bazelbuild/bazel/releases/download/6.3.0/bazel-6.3.0-installer-linux-x86_64.sh && \
+    chmod +x bazel-6.3.0-installer-linux-x86_64.sh && \
+    ./bazel-6.3.0-installer-linux-x86_64.sh --user && \
+    cp /root/bin/bazel /usr/local/bin/bazel && \
+    rm bazel-6.3.0-installer-linux-x86_64.sh
 
 # Clone and set up Tachyon
 WORKDIR /root
@@ -89,6 +92,7 @@ ENV NODE_OPTIONS=--max_old_space_size=65536
 RUN sysctl -w vm.max_map_count=262144
 
 WORKDIR /root/circom/circom
+RUN yarn install
 
 ENV LOG_LEVEL=info
 

@@ -1,7 +1,6 @@
 use anyhow::Result;
 use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use relayer_utils::LOG;
-// use sdk_utils::Blueprint;
 use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Deserialize;
 use slog::info;
@@ -95,9 +94,10 @@ mod tests {
         mock_uploader
             .expect_upload_files()
             .times(1)
-            .returning(|_| Ok(()));
+            .returning(|_| Box::pin(async { Ok(()) }));
 
         let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
             id: "4478f3bc-9ba8-4906-ba87-09fc049cef46".to_string(),
             title: "XAccountExportData".to_string(),
             description:
@@ -106,7 +106,6 @@ mod tests {
             slug: "DimiDumo/XAccountExportData".to_string(),
             tags: vec![],
             email_query: "from:x.com".to_string(),
-            use_new_sdk: false,
             circuit_name: "XAccountExportData".to_string(),
             ignore_body_hash_check: false,
             sha_precompute_selector: "".to_string(),
@@ -130,17 +129,19 @@ mod tests {
             external_inputs: vec![],
             decomposed_regexes: vec![DecomposedRegex {
                 name: "download_data_link".to_string(),
-                max_length: 128,
+                max_match_length: 128,
                 location: "body".to_string(),
-                is_hashed: false,
+                is_hashed: Some(false),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(false),
                         regex_def: "ready for you to download ".to_string(),
+                        max_length: None,
                     },
                     DecomposedRegexPart {
                         is_public: Some(true),
                         regex_def: "[^ ]*".to_string(),
+                        max_length: Some(20),
                     },
                 ],
             }],
@@ -195,16 +196,16 @@ mod tests {
         mock_uploader
             .expect_upload_files()
             .times(1)
-            .returning(|_| Ok(()));
+            .returning(|_| Box::pin(async { Ok(()) }));
 
         let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
             id: "88802381-0501-4c4a-bcb5-03fdeacf453e".to_string(),
             title: "AppleKYC".to_string(),
             description: "Prove you have a valid Apple account".to_string(),
             slug: "DimiDumo/AppleKYC".to_string(),
             tags: vec![],
             email_query: "from:email.apple.com".to_string(),
-            use_new_sdk: false,
             circuit_name: "AppleKYC".to_string(),
             ignore_body_hash_check: true,
             sha_precompute_selector: "".to_string(),
@@ -232,25 +233,27 @@ mod tests {
             decomposed_regexes: vec![
                 DecomposedRegex {
                     name: "subject".to_string(),
-                    max_length: 256,
+                    max_match_length: 256,
                     location: "header".to_string(),
-                    is_hashed: false,
+                    is_hashed: Some(false),
                     parts: vec![
                         DecomposedRegexPart {
                             is_public: Some(false),
                             regex_def: "(?:\r\n|^)subject:".to_string(),
+                            max_length: None,
                         },
                         DecomposedRegexPart {
                             is_public: Some(true),
                             regex_def: "[^\r\n]+".to_string(),
+                            max_length: Some(20),
                         },
                         DecomposedRegexPart {
                             is_public: Some(false),
                             regex_def: "\r\n".to_string(),
+                            max_length: None,
                         },
                     ],
-                },
-                // Other DecomposedRegex objects omitted for brevity - add them if needed
+                }, // Other DecomposedRegex objects omitted for brevity - add them if needed
             ],
             client_status: 1, // InProgress
             server_status: 3, // Done
@@ -302,16 +305,16 @@ mod tests {
         mock_uploader
             .expect_upload_files()
             .times(1)
-            .returning(|_| Ok(()));
+            .returning(|_| Box::pin(async { Ok(()) }));
 
         let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
             id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
             title: "Sp1Residency".to_string(),
             description: "Sp1Residency".to_string(),
             slug: "DimiDumo/sp1_residency".to_string(),
             tags: vec![],
             email_query: "".to_string(),
-            use_new_sdk: false,
             circuit_name: "sp1_residency".to_string(),
             ignore_body_hash_check: true,
             sha_precompute_selector: "".to_string(),
@@ -335,21 +338,24 @@ mod tests {
             external_inputs: vec![],
             decomposed_regexes: vec![DecomposedRegex {
                 name: "subject".to_string(),
-                max_length: 50,
+                max_match_length: 50,
                 location: "header".to_string(),
-                is_hashed: false,
+                is_hashed: Some(false),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(false),
                         regex_def: "Welcome ".to_string(),
+                        max_length: None,
                     },
                     DecomposedRegexPart {
                         is_public: Some(true),
                         regex_def: "to the ".to_string(),
+                        max_length: Some(20),
                     },
                     DecomposedRegexPart {
                         is_public: Some(false),
                         regex_def: "Succinct ZK Residency!".to_string(),
+                        max_length: None,
                     },
                 ],
             }],
@@ -399,16 +405,16 @@ mod tests {
         mock_uploader
             .expect_upload_files()
             .times(1)
-            .returning(|_| Ok(()));
+            .returning(|_| Box::pin(async { Ok(()) }));
 
         let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
             id: "85255ee2-acfe-49ca-959c-edd009b53bb5".to_string(),
             title: "Kraken KYC (Intermediate)".to_string(),
             description: "Proof of Kraken Intermediate Account".to_string(),
             slug: "Bisht13/krakenintermediate".to_string(),
             tags: vec![],
             email_query: "from:kraken.com".to_string(),
-            use_new_sdk: false,
             circuit_name: "krakenintermediate".to_string(),
             ignore_body_hash_check: true,
             sha_precompute_selector: "".to_string(),
@@ -435,17 +441,19 @@ mod tests {
             }],
             decomposed_regexes: vec![DecomposedRegex {
                 name: "email_subject".to_string(),
-                max_length: 64,
+                max_match_length: 64,
                 location: "header".to_string(),
-                is_hashed: true,
+                is_hashed: Some(true),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(true),
                         regex_def: "subject:".to_string(),
+                        max_length: Some(20),
                     },
                     DecomposedRegexPart {
                         is_public: Some(true),
                         regex_def: "Good news: your account is now Intermediate!".to_string(),
+                        max_length: Some(20),
                     },
                 ],
             }],
@@ -495,16 +503,16 @@ mod tests {
         mock_uploader
             .expect_upload_files()
             .times(1)
-            .returning(|_| Ok(()));
+            .returning(|_| Box::pin(async { Ok(()) }));
 
         let blueprint = Blueprint {
+            internal_version: "v2".to_string(),
             id: "87ec6e2f-ca5a-4af8-ac85-2e2cc94602f0".to_string(),
             title: "Sp1Residency".to_string(),
             description: "Sp1Residency".to_string(),
             slug: "DimiDumo/sp1_residency".to_string(),
             tags: vec![],
             email_query: "".to_string(),
-            use_new_sdk: false,
             circuit_name: "sp1_residency".to_string(),
             ignore_body_hash_check: true,
             sha_precompute_selector: "".to_string(),
@@ -528,21 +536,24 @@ mod tests {
             external_inputs: vec![],
             decomposed_regexes: vec![DecomposedRegex {
                 name: "subject".to_string(),
-                max_length: 64,
+                max_match_length: 64,
                 location: "header".to_string(),
-                is_hashed: false,
+                is_hashed: Some(false),
                 parts: vec![
                     DecomposedRegexPart {
                         is_public: Some(false),
                         regex_def: "(?:\r\n|^)subject:".to_string(),
+                        max_length: None,
                     },
                     DecomposedRegexPart {
                         is_public: Some(true),
                         regex_def: "[a-z]+".to_string(),
+                        max_length: Some(20),
                     },
                     DecomposedRegexPart {
                         is_public: Some(false),
                         regex_def: "\r\n".to_string(),
+                        max_length: None,
                     },
                 ],
             }],

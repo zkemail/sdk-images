@@ -9,6 +9,16 @@ on:
       - 'circom/**'
       - 'sdk-utils/**'
       - 'Cargo.toml'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build from'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
 
 permissions:
   id-token: write
@@ -22,6 +32,8 @@ jobs:
       # Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
 
       # Get the short SHA for tagging
       - name: Get Short SHA

@@ -4,7 +4,7 @@ use anyhow::Result;
 use base64::Engine;
 use dotenv::dotenv;
 use relayer_utils::LOG;
-use sdk_utils::Blueprint;
+use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Deserialize;
 use slog::info;
 
@@ -42,6 +42,7 @@ pub struct UploadUrls {
     pub zkey_i: String,
     pub zkey_j: String,
     pub zkey_k: String,
+    pub circom_regex_graphs: String,
 }
 
 // Function to load the payload

@@ -1,0 +1,283 @@
+name: Build Push Deploy Noir
+
+on:
+  push:
+    branches: [main, staging, dev]
+    paths:
+      - 'noir/**'
+      - 'sdk-utils/**'
+      - 'Cargo.toml'
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Optional commit SHA to tag and deploy (7 chars)'
+        required: false
+      environment:
+        description: 'Target environment'
+        required: false
+        type: choice
+        options: [dev, staging, production]
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: noir-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+      environment: ${{ steps.env.outputs.environment }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Determine SHA
+        id: sha
+        run: |
+          if [ -n "${{ github.event.inputs.sha }}" ]; then
+            # Manual input - normalize to 7 chars
+            COMMIT_SHA=$(echo "${{ github.event.inputs.sha }}" | cut -c1-7)
+          else
+            # Auto from git - get 7 chars
+            COMMIT_SHA=$(git rev-parse --short=7 HEAD)
+          fi
+          echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "Using SHA: $COMMIT_SHA"
+
+      - name: Determine Environment
+        id: env
+        run: |
+          if [ -n "${{ github.event.inputs.environment }}" ]; then
+            # Manual dispatch
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+          else
+            # Auto from branch
+            BRANCH="${GITHUB_REF##*/}"
+            case "$BRANCH" in
+              dev)
+                ENVIRONMENT="dev"
+                ;;
+              staging)
+                ENVIRONMENT="staging"
+                ;;
+              main)
+                ENVIRONMENT="production"
+                ;;
+              *)
+                echo "ERROR: Unknown branch: $BRANCH"
+                exit 1
+                ;;
+            esac
+          fi
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "Deploying to environment: $ENVIRONMENT"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Create Cloud Build Config
+        run: |
+          # Determine environment-specific tags
+          ENV="${{ steps.env.outputs.environment }}"
+          SHA="${{ steps.sha.outputs.sha }}"
+
+          if [ "$ENV" = "production" ]; then
+            ENV_TAG="latest"
+          else
+            ENV_TAG="latest-${ENV}"
+          fi
+
+          cat > cloudbuild.yaml << EOF
+          steps:
+          - name: 'gcr.io/cloud-builders/docker'
+            args: [
+              'build',
+              '-f', 'noir/Dockerfile',
+              '-t', 'us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${SHA}',
+              '-t', 'us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${ENV_TAG}',
+              '.'
+            ]
+            timeout: '3600s'
+          images:
+          - 'us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${SHA}'
+          - 'us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${ENV_TAG}'
+          options:
+            machineType: 'E2_HIGHCPU_32'
+            diskSizeGb: '100'
+          timeout: '3600s'
+          EOF
+
+          echo "Cloud Build config created with tags: ${SHA}, ${ENV_TAG}"
+
+      - name: Trigger Cloud Build and Wait for Completion
+        run: |
+          # Submit the build and capture the build ID
+          BUILD_INFO=$(gcloud builds submit --config=cloudbuild.yaml --project ${{ secrets.GCP_PROJECT_ID }} 2>&1 || echo "CONTINUE")
+          echo "$BUILD_INFO"
+
+          # Extract the build ID
+          BUILD_ID=$(echo "$BUILD_INFO" | grep -o "builds/[a-zA-Z0-9\-]*" | head -1 | cut -d'/' -f2)
+
+          if [ -z "$BUILD_ID" ]; then
+            echo "Failed to extract build ID"
+            exit 1
+          fi
+
+          echo "Build ID: $BUILD_ID"
+
+          # Poll for build status
+          STATUS="WORKING"
+          MAX_ATTEMPTS=360
+          ATTEMPTS=0
+
+          echo "Polling for build status every 10 seconds..."
+
+          while [ "$STATUS" = "WORKING" ] || [ "$STATUS" = "QUEUED" ]; do
+            ATTEMPTS=$((ATTEMPTS+1))
+            if [ $ATTEMPTS -gt $MAX_ATTEMPTS ]; then
+              echo "Build timed out after 1 hour"
+              exit 1
+            fi
+
+            sleep 10
+
+            STATUS=$(gcloud builds describe $BUILD_ID --project ${{ secrets.GCP_PROJECT_ID }} --format="value(status)" 2>/dev/null)
+            echo "Current status: $STATUS (attempt $ATTEMPTS)"
+          done
+
+          if [ "$STATUS" = "SUCCESS" ]; then
+            echo "Build completed successfully!"
+            exit 0
+          else
+            echo "Build failed with status: $STATUS"
+            exit 1
+          fi
+
+  deploy-to-cloud-run:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Verify Image Exists
+        run: |
+          SHA="${{ needs.build-and-push.outputs.sha }}"
+          IMAGE="us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${SHA}"
+
+          echo "Verifying image exists: $IMAGE"
+
+          if ! gcloud artifacts docker images describe "$IMAGE" --format=json > /dev/null 2>&1; then
+            echo "ERROR: Image $IMAGE not found in registry"
+            echo "Build may have failed or image not yet available"
+            exit 1
+          fi
+
+          echo "✓ Image verified: $IMAGE"
+
+      - name: Determine Service Name
+        id: service
+        run: |
+          ENV="${{ needs.build-and-push.outputs.environment }}"
+
+          if [ "$ENV" = "production" ]; then
+            SERVICE="noir-compile-zkemail-service"
+          else
+            SERVICE="noir-compile-zkemail-service-${ENV}"
+          fi
+
+          echo "name=$SERVICE" >> $GITHUB_OUTPUT
+          echo "Service name: $SERVICE"
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/circom-sdk-image/noir:${{ needs.build-and-push.outputs.sha }}"
+          SERVICE="${{ steps.service.outputs.name }}"
+
+          echo "Deploying to Cloud Run..."
+          echo "Service: $SERVICE"
+          echo "Image: $IMAGE"
+
+          gcloud run deploy $SERVICE \
+            --image $IMAGE \
+            --region us-east1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory 4Gi \
+            --timeout 3600 \
+            --update-secrets "ZKEMAIL_API_KEY=ZKEMAIL_API_KEY:latest"
+
+      - name: Get Service URL
+        id: url
+        run: |
+          SERVICE="${{ steps.service.outputs.name }}"
+          URL=$(gcloud run services describe $SERVICE \
+            --region us-east1 \
+            --format='value(status.url)')
+
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Service URL: $URL"
+
+      - name: Health Check
+        run: |
+          SERVICE_URL="${{ steps.url.outputs.url }}"
+
+          echo "Waiting 30s for service to be ready..."
+          sleep 30
+
+          echo "Performing health check..."
+          for i in {1..5}; do
+            # Try to reach the service (even if it returns auth error, means service is up)
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}/compile" -X POST)
+            if echo "$HTTP_CODE" | grep -E "^(200|401|405)$"; then
+              echo "✓ Service is responding with HTTP $HTTP_CODE (attempt $i)"
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $HTTP_CODE, retrying in 10s..."
+            sleep 10
+          done
+
+          echo "WARNING: Health check did not get expected response"
+          echo "Deployment completed but service may not be fully ready"
+          echo "Please verify manually: $SERVICE_URL"
+          exit 0
+
+      - name: Deployment Summary
+        run: |
+          echo "=========================================="
+          echo "✓ Deployment Successful"
+          echo "=========================================="
+          echo "Environment: ${{ needs.build-and-push.outputs.environment }}"
+          echo "Service: ${{ steps.service.outputs.name }}"
+          echo "Image SHA: ${{ needs.build-and-push.outputs.sha }}"
+          echo "Service URL: ${{ steps.url.outputs.url }}"
+          echo "=========================================="
+          echo ""
+          echo "To test the service:"
+          echo "curl -X POST '${{ steps.url.outputs.url }}/compile?api_key=YOUR_API_KEY' -H 'Content-Type: application/json' -d '{}'"
