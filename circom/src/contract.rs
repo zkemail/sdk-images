@@ -210,6 +210,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         info!(LOG, "Verify contracts");
 
         // Verify ClientProofVerifier with retries
+        let mut last_error = None;
         for attempt in 1..=3 {
             info!(
                 LOG,
@@ -230,6 +231,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             {
                 Ok(_) => {
                     info!(LOG, "Successfully verified ClientProofVerifier");
+                    last_error = None;
                     break;
                 }
                 Err(e) => {
@@ -237,6 +239,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                         LOG,
                         "Attempt {}/3 failed to verify ClientProofVerifier: {}", attempt, e
                     );
+                    last_error = Some(e);
                     if attempt < 3 {
                         info!(LOG, "Waiting 10 seconds before retry...");
                         tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
@@ -244,12 +247,19 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                 }
             }
         }
+        if let Some(e) = last_error {
+            return Err(anyhow::anyhow!(
+                "Failed to verify ClientProofVerifier after 3 attempts: {}",
+                e
+            ));
+        }
 
         // Delay between contract verifications
         info!(LOG, "Waiting 5 seconds before next verification...");
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
         // Verify ServerProofVerifier with retries
+        let mut last_error = None;
         for attempt in 1..=3 {
             info!(
                 LOG,
@@ -270,6 +280,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             {
                 Ok(_) => {
                     info!(LOG, "Successfully verified ServerProofVerifier");
+                    last_error = None;
                     break;
                 }
                 Err(e) => {
@@ -277,6 +288,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                         LOG,
                         "Attempt {}/3 failed to verify ServerProofVerifier: {}", attempt, e
                     );
+                    last_error = Some(e);
                     if attempt < 3 {
                         info!(LOG, "Waiting 10 seconds before retry...");
                         tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
@@ -284,12 +296,19 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                 }
             }
         }
+        if let Some(e) = last_error {
+            return Err(anyhow::anyhow!(
+                "Failed to verify ServerProofVerifier after 3 attempts: {}",
+                e
+            ));
+        }
 
         // Delay between contract verifications
         info!(LOG, "Waiting 5 seconds before next verification...");
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
         // Verify Contract with retries
+        let mut last_error = None;
         for attempt in 1..=3 {
             info!(LOG, "Attempting to verify Contract (attempt {}/3)", attempt);
             match run_command(
@@ -309,6 +328,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
             {
                 Ok(_) => {
                     info!(LOG, "Successfully verified Contract");
+                    last_error = None;
                     break;
                 }
                 Err(e) => {
@@ -316,12 +336,19 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                         LOG,
                         "Attempt {}/3 failed to verify Contract: {}", attempt, e
                     );
+                    last_error = Some(e);
                     if attempt < 3 {
                         info!(LOG, "Waiting 10 seconds before retry...");
                         tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
                     }
                 }
             }
+        }
+        if let Some(e) = last_error {
+            return Err(anyhow::anyhow!(
+                "Failed to verify Contract after 3 attempts: {}",
+                e
+            ));
         }
     }
 

@@ -601,7 +601,7 @@ dependencies = [
  "base64 0.22.1",
  "dotenv",
  "prost 0.13.5",
- "prost-types 0.11.9",
+ "prost-types 0.13.5",
  "prost-wkt",
  "prost-wkt-types",
  "rand 0.8.5",
