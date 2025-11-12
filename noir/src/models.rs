@@ -138,11 +138,11 @@ impl From<Blueprint> for CircuitTemplateInputs {
         // Masked outputs, if enabled
         if enable_header_masking {
             output_signals.push_str(", masked_header");
-            output_args.push_str(&format!(", [Field; {}]", email_header_max_length));
+            output_args.push_str(&format!(", [u8; {}]", email_header_max_length));
         }
         if enable_body_masking && !ignore_body_hash_check {
             output_signals.push_str(", masked_body");
-            output_args.push_str(&format!(", [Field; {}]", email_body_max_length));
+            output_args.push_str(&format!(", [u8; {}]", email_body_max_length));
         }
         for input in &external_inputs {
             output_signals.push_str(&format!(", {}", input.name));

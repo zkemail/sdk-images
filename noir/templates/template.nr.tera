@@ -6,7 +6,7 @@ use std::{collections::bounded_vec::BoundedVec, hash::pedersen_hash};
 use zkemail::{
     dkim::RSAPubkey, hash::poseidon_large, headers::body_hash::get_body_hash, KEY_LIMBS_2048,
     partial_hash::partial_sha256_var_end, remove_soft_line_breaks::remove_soft_line_breaks,
-    Sequence, utils::pack_bytes,
+    masking::mask_text, Sequence, utils::pack_bytes,
 };
 
 fn main(
@@ -15,7 +15,7 @@ fn main(
     signature: [Field; KEY_LIMBS_2048],
     prover_address: [Field; 1],
 {% if enable_header_masking %}
-    header_mask: [Field; {{ email_header_max_length }}],
+    header_mask: [bool; {{ email_header_max_length }}],
 {% endif %}
 {% if not ignore_body_hash_check %}
     dkim_header_sequence: Sequence,
@@ -27,7 +27,7 @@ fn main(
     decoded_body: BoundedVec<u8, {{ email_body_max_length }}>,
 {% endif %}
 {% if enable_body_masking %}
-    body_mask: [Field; {{ email_body_max_length }}],
+    body_mask: [bool; {{ email_body_max_length }}],
 {% endif %}
 {% endif %}
 {% for external_input in external_inputs %}
@@ -84,26 +84,17 @@ fn main(
     let email_nullifier = poseidon::bn254::hash_1([poseidon_large(signature)]);
 
 {% if enable_header_masking %}
-    let header_storage = header.storage();
-    let mut masked_header: [Field; {{ email_header_max_length }}] = [0; {{ email_header_max_length }}];
-    for i in 0..{{ email_header_max_length }} {
-        // Constrain mask bits to 0/1
-        assert(header_mask[i] * (header_mask[i] - 1) == 0);
-        masked_header[i] = (header_storage[i] as Field) * header_mask[i];
-    }
+    // Apply mask using mask_text function
+    let masked_header = mask_text::<{{ email_header_max_length }}>(header, header_mask);
 {% endif %}
 {% if enable_body_masking and not ignore_body_hash_check %}
     {% if remove_soft_linebreaks %}
-    let body_storage = decoded_body.storage();
+    // Apply mask using mask_text function
+    let masked_body = mask_text::<{{ email_body_max_length }}>(decoded_body, body_mask);
     {% else %}
-    let body_storage = body.storage();
+    // Apply mask using mask_text function
+    let masked_body = mask_text::<{{ email_body_max_length }}>(body, body_mask);
     {% endif %}
-    let mut masked_body: [Field; {{ email_body_max_length }}] = [0; {{ email_body_max_length }}];
-    for i in 0..{{ email_body_max_length }} {
-        // Constrain mask bits to 0/1
-        assert(body_mask[i] * (body_mask[i] - 1) == 0);
-        masked_body[i] = (body_storage[i] as Field) * body_mask[i];
-    }
 {% endif %}
 
 {% for regex in regexes %}
