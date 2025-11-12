@@ -24,6 +24,14 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
         &circuit_template_input.ignore_body_hash_check,
     );
     context.insert(
+        "enable_header_masking",
+        &circuit_template_input.enable_header_masking,
+    );
+    context.insert(
+        "enable_body_masking",
+        &circuit_template_input.enable_body_masking,
+    );
+    context.insert(
         "remove_soft_linebreaks",
         &circuit_template_input.remove_soft_linebreaks,
     );

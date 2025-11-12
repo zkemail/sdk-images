@@ -207,12 +207,12 @@ mod tests {
             tags: vec![],
             email_query: "from:email.apple.com".to_string(),
             circuit_name: "AppleKYC".to_string(),
-            ignore_body_hash_check: true,
+            ignore_body_hash_check: false, // Set to false to enable body masking test
             sha_precompute_selector: "".to_string(),
-            email_body_max_length: 0,
+            email_body_max_length: 2048, // Set a valid body length for body masking
             sender_domain: "email.apple.com".to_string(),
-            enable_header_masking: false,
-            enable_body_masking: false,
+            enable_header_masking: true, // Enable header masking for testing
+            enable_body_masking: true, // Enable body masking for testing
             client_zk_framework: 3, // Noir
             server_zk_framework: 0, // None
             verifier_contract_chain: 84532,
@@ -296,6 +296,37 @@ mod tests {
 
         // Assert the result
         assert!(result.is_ok());
+
+        // Verify body_mask is generated as a function input parameter
+        let circuit_path = "./tmp/src/main.nr";
+        if std::path::Path::new(circuit_path).exists() {
+            let circuit_code = std::fs::read_to_string(circuit_path)
+                .expect("Failed to read generated circuit");
+
+            // Verify header_mask is a function input parameter
+            assert!(
+                circuit_code.contains("header_mask: [bool;"),
+                "Generated circuit should have 'header_mask' as a function input parameter when enable_header_masking is true"
+            );
+
+            // Verify body_mask is a function input parameter
+            assert!(
+                circuit_code.contains("body_mask: [bool;"),
+                "Generated circuit should have 'body_mask' as a function input parameter when enable_body_masking is true"
+            );
+
+            // Verify masked outputs are present
+            assert!(
+                circuit_code.contains("masked_header"),
+                "Generated circuit should contain 'masked_header' output"
+            );
+            assert!(
+                circuit_code.contains("masked_body"),
+                "Generated circuit should contain 'masked_body' output"
+            );
+
+            println!("✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter");
+        }
     }
 
     #[tokio::test]
