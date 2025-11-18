@@ -30,19 +30,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ahash"
-version = "0.8.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
-dependencies = [
- "cfg-if",
- "getrandom 0.2.16",
- "once_cell",
- "version_check",
- "zerocopy 0.7.35",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -606,7 +593,7 @@ dependencies = [
  "prost-wkt-types",
  "rand 0.8.5",
  "regex",
- "relayer-utils 0.4.62-18",
+ "relayer-utils",
  "sdk-utils",
  "serde",
  "serde_json",
@@ -614,7 +601,7 @@ dependencies = [
  "sqlx",
  "tera",
  "tokio",
- "zk-regex-compiler 2.0.0-alpha.2",
+ "zk-regex-compiler",
 ]
 
 [[package]]
@@ -1980,17 +1967,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "graph-cycles"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a6ad932c6dd3cfaf16b66754a42f87bbeefd591530c4b6a8334270a7df3e853"
-dependencies = [
- "ahash",
- "petgraph 0.6.5",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "group"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2695,15 +2671,6 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
@@ -2928,16 +2895,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
-name = "minicov"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27fe9f1cc3c22e1687f9446c2083c4c5fc7f0bcf1c7a86bdbded14985895b4b"
-dependencies = [
- "cc",
- "walkdir",
-]
-
-[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3033,7 +2990,7 @@ dependencies = [
  "prost-wkt-build",
  "prost-wkt-types",
  "regex",
- "relayer-utils 0.4.62-18",
+ "relayer-utils",
  "sdk-utils",
  "serde",
  "serde_json",
@@ -3041,7 +2998,7 @@ dependencies = [
  "sqlx",
  "tera",
  "tokio",
- "zk-regex-compiler 2.0.0-alpha.2",
+ "zk-regex-compiler",
 ]
 
 [[package]]
@@ -3718,7 +3675,7 @@ version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
 dependencies = [
- "zerocopy 0.8.27",
+ "zerocopy",
 ]
 
 [[package]]
@@ -4112,49 +4069,6 @@ checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 
 [[package]]
 name = "relayer-utils"
-version = "0.4.62-12"
-source = "git+https://github.com/zkemail/relayer-utils?rev=728b8f643a6c9a1e5b400be6407727851cc8c92c#728b8f643a6c9a1e5b400be6407727851cc8c92c"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "cfdkim",
- "console_error_panic_hook",
- "digest",
- "ed25519-dalek",
- "ethers",
- "file-rotate",
- "halo2curves",
- "hex",
- "hmac-sha256",
- "itertools 0.10.5",
- "js-sys",
- "lazy_static",
- "mailparse",
- "num-bigint",
- "poseidon-rs",
- "rand 0.8.5",
- "rand_core 0.6.4",
- "regex",
- "reqwest 0.11.27",
- "rsa",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "sha1",
- "sha2",
- "slog",
- "slog-async",
- "slog-json",
- "slog-term",
- "sp1-verifier 4.1.7",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "zk-regex-apis",
- "zk-regex-compiler 2.3.2",
-]
-
-[[package]]
-name = "relayer-utils"
 version = "0.4.62-18"
 source = "git+https://github.com/zkemail/relayer-utils?rev=025405a620dfacb33084b705e2f3424a4db78a04#025405a620dfacb33084b705e2f3424a4db78a04"
 dependencies = [
@@ -4191,11 +4105,11 @@ dependencies = [
  "slog-async",
  "slog-json",
  "slog-term",
- "sp1-verifier 5.2.2",
+ "sp1-verifier",
  "thiserror 1.0.69",
  "wasm-bindgen",
  "wasm-bindgen-futures",
- "zk-regex-compiler 2.0.0-alpha.2",
+ "zk-regex-compiler",
 ]
 
 [[package]]
@@ -4575,7 +4489,7 @@ dependencies = [
  "prost-wkt",
  "prost-wkt-build",
  "prost-wkt-types",
- "relayer-utils 0.4.62-12",
+ "relayer-utils",
  "reqwest 0.12.24",
  "serde",
  "slog",
@@ -4958,20 +4872,6 @@ dependencies = [
  "p3-symmetric",
  "serde",
  "sha2",
-]
-
-[[package]]
-name = "sp1-verifier"
-version = "4.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4d4609dbb9662e4619e35666ea5fd89ee3dee59c2822b9c9c09dc25f585e3be"
-dependencies = [
- "cfg-if",
- "hex",
- "lazy_static",
- "sha2",
- "substrate-bn-succinct",
- "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -6212,30 +6112,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasm-bindgen-test"
-version = "0.3.55"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfc379bfb624eb59050b509c13e77b4eb53150c350db69628141abce842f2373"
-dependencies = [
- "js-sys",
- "minicov",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "wasm-bindgen-test-macro",
-]
-
-[[package]]
-name = "wasm-bindgen-test-macro"
-version = "0.3.55"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "085b2df989e1e6f9620c1311df6c996e83fe16f57792b272ce1e024ac16a90f1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.109",
-]
-
-[[package]]
 name = "web-sys"
 version = "0.3.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6788,31 +6664,11 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.7.35"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b9b4fd18abc82b8136838da5d50bae7bdea537c574d8dc1a34ed098d6c166f0"
-dependencies = [
- "zerocopy-derive 0.7.35",
-]
-
-[[package]]
-name = "zerocopy"
 version = "0.8.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0894878a5fa3edfd6da3f88c4805f4c8558e2b996227a3d864f47fe11e38282c"
 dependencies = [
- "zerocopy-derive 0.8.27",
-]
-
-[[package]]
-name = "zerocopy-derive"
-version = "0.7.35"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa4f8080344d4671fb4e831a13ad1e68092748387dfc4f55e356242fae12ce3e"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.109",
+ "zerocopy-derive",
 ]
 
 [[package]]
@@ -6907,23 +6763,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "zk-regex-apis"
-version = "2.3.2"
-source = "git+https://github.com/zkemail/zk-regex.git#4fb1bda1af71123f57f4877c29ebcb9004266fd8"
-dependencies = [
- "console_error_panic_hook",
- "fancy-regex",
- "itertools 0.13.0",
- "js-sys",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "thiserror 1.0.69",
- "wasm-bindgen",
- "wasm-bindgen-test",
-]
-
-[[package]]
 name = "zk-regex-compiler"
 version = "2.0.0-alpha.2"
 source = "git+https://github.com/zkemail/zk-regex?rev=a2ce67ff8ae667bc7846cf8920d7d866f2f02d4c#a2ce67ff8ae667bc7846cf8920d7d866f2f02d4c"
@@ -6937,28 +6776,6 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "thiserror 2.0.17",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "zk-regex-compiler"
-version = "2.3.2"
-source = "git+https://github.com/zkemail/zk-regex.git#4fb1bda1af71123f57f4877c29ebcb9004266fd8"
-dependencies = [
- "ahash",
- "clap",
- "console_error_panic_hook",
- "fancy-regex",
- "getrandom 0.2.16",
- "graph-cycles",
- "itertools 0.13.0",
- "petgraph 0.6.5",
- "regex",
- "regex-automata",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "thiserror 1.0.69",
  "wasm-bindgen",
 ]
 
