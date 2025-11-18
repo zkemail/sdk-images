@@ -57,9 +57,68 @@ It consists of several steps:
 │   ├── src             # Main Rust code for compiling and deploying circuits.
 │   └── templates       # Tera templates for generating Circom and Solidity code.
 │
-└── sdk-utils
-    ├── Cargo.toml      # Cargo configuration file for the SDK utils.
-    └── src             # Utility code used by the Circom project.
+├── noir                  # Noir-based pipeline (generation, compile, run)
+│   ├── Cargo.toml
+│   ├── src
+│   └── templates         # Tera templates for Noir
+│
+└── sdk-utils             # Shared utilities for both pipelines
+    ├── Cargo.toml
+    └── src
+```
+
+## Prerequisites (macOS)
+
+- Rust toolchain (rustup) and Cargo
+- curl, zip, gzip
+- Node.js and npm (v18+ recommended)
+
+Install the external ZK/crypto toolchain:
+
+1) Noir (via noirup)
+
+```bash
+curl -L https://raw.githubusercontent.com/noir-lang/noirup/refs/heads/main/install | bash
+# Start a new shell or source your profile if prompted, e.g.:
+source ~/.zshrc
+
+# Install a specific Nargo/Noir version (recommended for this repo)
+noirup --version 1.0.0-beta.5
+```
+
+2) Barretenberg CLI (bbup)
+
+```bash
+curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/master/barretenberg/bbup/install | bash
+# Start a new shell or source your profile if prompted
+bbup --version 0.84.0
+```
+
+3) Foundry (Solidity toolchain)
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+# After install:
+source ~/.zshenv
+foundryup
+```
+
+4) snarkjs and yarn (for Circom path)
+
+```bash
+npm install -g yarn snarkjs
+```
+
+Verify installations are on PATH:
+
+```bash
+which nargo && nargo --version
+which noirup
+which bb && bb --version
+which bbup
+which forge && forge --version
+which snarkjs && snarkjs --version
+which yarn && yarn --version
 ```
 
 ## Building and Running
