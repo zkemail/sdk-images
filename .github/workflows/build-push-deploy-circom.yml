@@ -3,6 +3,7 @@ name: Build Push Deploy Circom
 on:
   push:
     branches:
+      - main
       - staging
       - dev
     paths:
@@ -19,6 +20,7 @@ on:
         options:
           - dev
           - staging
+          - main
 
 permissions:
   id-token: write
