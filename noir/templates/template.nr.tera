@@ -4,15 +4,17 @@ mod {{ regex.regex_circuit_name }};
 use poseidon::poseidon;
 use std::{collections::bounded_vec::BoundedVec, hash::pedersen_hash};
 use zkemail::{
-    dkim::RSAPubkey, hash::poseidon_large, headers::body_hash::get_body_hash, KEY_LIMBS_2048,
+    dkim::RSAPubkey,
+    {% if key_bits == 2048 %}hash::poseidon_large,{% endif %}
+    headers::body_hash::get_body_hash,
     partial_hash::partial_sha256_var_end, remove_soft_line_breaks::remove_soft_line_breaks,
     masking::mask_text, Sequence, utils::pack_bytes,
 };
 
 fn main(
     header: BoundedVec<u8, {{ email_header_max_length }}>,
-    pubkey: RSAPubkey<KEY_LIMBS_2048>,
-    signature: [Field; KEY_LIMBS_2048],
+    pubkey: RSAPubkey<{{ key_limbs_constant }}>,
+    signature: [Field; {{ key_limbs_constant }}],
     prover_address: [Field; 1],
 {% if enable_header_masking %}
     header_mask: [bool; {{ email_header_max_length }}],
@@ -81,7 +83,11 @@ fn main(
 {% endif %}
 
     let pubkey_hash = pubkey.hash();
+{% if key_bits == 2048 %}
     let email_nullifier = poseidon::bn254::hash_1([poseidon_large(signature)]);
+{% else %}
+    let email_nullifier = poseidon::bn254::hash_1([poseidon::bn254::hash_9(signature)]);
+{% endif %}
 
 {% if enable_header_masking %}
     // Apply mask using mask_text function

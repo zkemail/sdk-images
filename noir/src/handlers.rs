@@ -7,15 +7,17 @@ use slog::info;
 
 // Import from the crate root
 use crate::circuit_generator::generate_circuit;
-use crate::filesystem::{FileUploader, ProductionFileUploader, cleanup, compile_circuit, setup};
+use crate::filesystem::{FileUploader, ProductionFileUploader, cleanup_multi_key, compile_circuit, setup};
 use crate::models::CircuitTemplateInputs;
 use crate::regex_generator::generate_regex_circuits;
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UploadUrls {
-    pub circuit: String,
-    pub circuit_json: String,
+    pub circuit_1024: String,
+    pub circuit_2048: String,
+    pub circuit_json_1024: String,
+    pub circuit_json_2048: String,
     pub regex_graphs: String,
 }
 
@@ -54,22 +56,37 @@ async fn process_circuit(payload: Payload, uploader: impl FileUploader) -> Resul
     // Extract blueprint
     let blueprint = payload.blueprint;
 
-    // Generate regex circuits
+    // Generate regex circuits (shared between both key sizes)
     generate_regex_circuits(&blueprint.decomposed_regexes)?;
 
-    // Generate main circuit from template
-    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint);
-
-    let circuit = generate_circuit(circuit_template_inputs)?;
-
-    // Write the circuit to a file
-    let circuit_path = "./tmp/src/main.nr";
-    std::fs::write(circuit_path, circuit)?;
-
-    // Compile and clean up
+    // Generate and compile 1024-bit circuit
+    info!(LOG, "Generating 1024-bit circuit");
+    let inputs_1024 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 1024);
+    let circuit_1024 = generate_circuit(inputs_1024)?;
+    std::fs::write("./tmp/src/main.nr", &circuit_1024)?;
     compile_circuit().await?;
 
-    cleanup().await?;
+    // Move 1024-bit artifacts to specific names
+    std::fs::rename(
+        "./tmp/target/sdk_noir.json",
+        "./tmp/target/sdk_noir_1024.json",
+    )?;
+
+    // Generate and compile 2048-bit circuit
+    info!(LOG, "Generating 2048-bit circuit");
+    let inputs_2048 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 2048);
+    let circuit_2048 = generate_circuit(inputs_2048)?;
+    std::fs::write("./tmp/src/main.nr", &circuit_2048)?;
+    compile_circuit().await?;
+
+    // Move 2048-bit artifacts to specific names
+    std::fs::rename(
+        "./tmp/target/sdk_noir.json",
+        "./tmp/target/sdk_noir_2048.json",
+    )?;
+
+    // Cleanup and zip both circuits
+    cleanup_multi_key(&circuit_1024, &circuit_2048).await?;
 
     // Upload files
     uploader.upload_files(payload.upload_urls).await?;
@@ -157,8 +174,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -267,8 +286,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -402,8 +423,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -500,8 +523,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -600,8 +625,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
