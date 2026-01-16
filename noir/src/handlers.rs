@@ -59,6 +59,18 @@ async fn process_circuit(payload: Payload, uploader: impl FileUploader) -> Resul
     // Generate regex circuits (shared between both key sizes)
     generate_regex_circuits(&blueprint.decomposed_regexes)?;
 
+    // Generate separate circuits for 1024-bit and 2048-bit RSA keys.
+    //
+    // Why two circuits instead of one with conditional logic?
+    // - Noir circuits are compile-time fixed; any conditional branching on key size
+    //   would still compile all code paths and incur the constraint cost of both sizes
+    // - Two specialized circuits are more efficient since each only contains the
+    //   constraints needed for its specific key size
+    // - The zkemail library exports different array sizes (KEY_LIMBS_1024=9 vs
+    //   KEY_LIMBS_2048=18) that must be known at compile time for type safety
+    // - This approach lets provers select the appropriate circuit based on the
+    //   actual DKIM key size of the email they're proving
+
     // Generate and compile 1024-bit circuit
     info!(LOG, "Generating 1024-bit circuit");
     let inputs_1024 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 1024);
