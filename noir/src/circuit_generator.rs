@@ -39,6 +39,8 @@ pub fn generate_circuit(circuit_template_input: CircuitTemplateInputs) -> Result
     context.insert("external_inputs", &circuit_template_input.external_inputs);
     context.insert("output_signals", &circuit_template_input.output_signals);
     context.insert("output_args", &circuit_template_input.output_args);
+    context.insert("key_bits", &circuit_template_input.key_bits);
+    context.insert("key_limbs_constant", &circuit_template_input.key_limbs_constant);
 
     let circuit = tera.render("template.nr.tera", &context)?;
 

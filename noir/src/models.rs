@@ -4,7 +4,7 @@ use serde::Serialize;
 
 /// Represents a single decomposed regex, along with computed fields
 /// used for generating the circuit template.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct RegexEntry {
     pub name: String,
     pub max_match_length: usize,
@@ -20,7 +20,7 @@ pub struct RegexEntry {
 }
 
 /// Represents an external input to the circuit, along with computed fields.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct ExternalInputEntry {
     pub name: String,
     pub max_length: usize,
@@ -28,7 +28,7 @@ pub struct ExternalInputEntry {
 }
 
 /// A struct that holds all the data required to render the circuit template.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct CircuitTemplateInputs {
     pub circuit_name: String,
     pub email_header_max_length: usize,
@@ -41,6 +41,26 @@ pub struct CircuitTemplateInputs {
     pub external_inputs: Vec<ExternalInputEntry>,
     pub output_args: String,
     pub output_signals: String,
+    /// RSA key size in bits (1024 or 2048)
+    pub key_bits: u32,
+    /// Constant name for the key limbs ("KEY_LIMBS_1024" or "KEY_LIMBS_2048")
+    pub key_limbs_constant: String,
+}
+
+impl CircuitTemplateInputs {
+    /// Create CircuitTemplateInputs from Blueprint with a specific key size
+    pub fn from_blueprint_with_key_size(blueprint: &Blueprint, key_bits: u32) -> Self {
+        let mut inputs = Self::from(blueprint.clone());
+        inputs.key_bits = key_bits;
+        // Use numeric values for key limbs as the constants may not be publicly exported
+        // KEY_LIMBS_1024 = 9, KEY_LIMBS_2048 = 18
+        inputs.key_limbs_constant = if key_bits == 1024 {
+            "9".to_string()
+        } else {
+            "18".to_string()
+        };
+        inputs
+    }
 }
 
 impl From<Blueprint> for CircuitTemplateInputs {
@@ -181,6 +201,9 @@ impl From<Blueprint> for CircuitTemplateInputs {
             external_inputs,
             output_args,
             output_signals,
+            // Default to 2048 for backwards compatibility
+            key_bits: 2048,
+            key_limbs_constant: "18".to_string(),
         }
     }
 }
