@@ -7,7 +7,8 @@ use std::{cmp::max, env, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
-    create_contract, create_contract_at_path, deploy_verifier_contract, generate_verifier_contract,
+    create_contract, create_mock_groth16_verifier_at_path,
+    create_zkemail_verifier_contract_at_path, deploy_verifier_contract, generate_verifier_contract,
     prepare_contract_data, ContractData,
 };
 use db::update_verifier_contract_address;
@@ -24,26 +25,59 @@ use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Check for a lightweight CLI mode to only populate the Solidity contract from a JSON payload.
+    // Check for a lightweight CLI mode to only populate the Solidity contracts from a JSON payload.
     // Usage:
-    //   circom populate-contract-template <contract_data_json_path> <output_sol_path>
+    //   circom generate-example-contracts <contract_data_json_path> <output_directory>
     let args: Vec<String> = env::args().collect();
-    if args.len() >= 2 && args[1] == "populate-contract-template" {
+    if args.len() >= 2 && args[1] == "generate-example-contracts" {
         if args.len() < 4 {
             return Err(anyhow::anyhow!(
-                "Usage: circom populate-contract-template <contract_data_json_path> <output_sol_path>"
+                "Usage: circom generate-example-contracts <contract_data_json_path> <output_dir_path>"
             ));
         }
 
         let contract_data_json_path = &args[2];
-        let output_sol_path = &args[3];
+        let output_dir = Path::new(&args[3]);
+
+        if !output_dir.exists() {
+            fs::create_dir_all(output_dir)?;
+        }
+        if !output_dir.is_dir() {
+            return Err(anyhow::anyhow!(
+                "Expected <output_directory> to be a directory, but got a file"
+            ));
+        }
+
+        let zkemail_output_path = output_dir.join("ZKEmailVerifier.sol");
 
         let json = fs::read_to_string(contract_data_json_path)?;
         let contract_data: ContractData = serde_json::from_str(&json)?;
 
-        create_contract_at_path(&contract_data, output_sol_path)?;
+        create_zkemail_verifier_contract_at_path(
+            &contract_data,
+            zkemail_output_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid ZKEmailVerifier output path"))?,
+        )?;
 
-        println!("Populated Solidity contract written to {}", output_sol_path);
+        // Also generate a mock Groth16 verifier contract in the same directory.
+        let groth16_output_path = output_dir.join("Groth16Verifier.sol");
+
+        create_mock_groth16_verifier_at_path(
+            &contract_data,
+            groth16_output_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid MockGroth16Verifier output path"))?,
+        )?;
+
+        println!(
+            "Populated ZKEmailVerifier contract written to {}",
+            zkemail_output_path.display()
+        );
+        println!(
+            "Populated MockGroth16Verifier contract written to {}",
+            groth16_output_path.display()
+        );
         return Ok(());
     }
 

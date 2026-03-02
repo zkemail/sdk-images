@@ -29,14 +29,17 @@ pub struct Field {
 
 /// Render the Solidity contract template and write it to the default tmp path.
 pub fn create_contract(contract_data: &ContractData) -> Result<()> {
-    create_contract_at_path(contract_data, "tmp/Contract.sol")
+    create_zkemail_verifier_contract_at_path(contract_data, "tmp/Contract.sol")
 }
 
-/// Render the Solidity contract template and write it to the given path.
-pub fn create_contract_at_path(contract_data: &ContractData, output_path: &str) -> Result<()> {
+/// Render the Solidity ZKEmailVerifier contract template and write it to the given path.
+pub fn create_zkemail_verifier_contract_at_path(
+    contract_data: &ContractData,
+    output_path: &str,
+) -> Result<()> {
     // Initialize Tera
     let mut tera = Tera::default();
-    tera.add_template_file("./templates/template.sol.tera", Some("Contract.sol"))?;
+    tera.add_template_file("./templates/ZKEmailVerifier.sol.tera", Some("Contract.sol"))?;
 
     let mut context = Context::new();
     context.insert("sender_domain", &contract_data.sender_domain);
@@ -51,6 +54,27 @@ pub fn create_contract_at_path(contract_data: &ContractData, output_path: &str) 
     let rendered_contract = tera.render("Contract.sol", &context)?;
 
     // Write the rendered template to the requested file
+    std::fs::write(output_path, rendered_contract)?;
+
+    Ok(())
+}
+
+/// Render the Solidity mock Groth16Verifier contract template and write it to the given path.
+pub fn create_mock_groth16_verifier_at_path(
+    contract_data: &ContractData,
+    output_path: &str,
+) -> Result<()> {
+    let mut tera = Tera::default();
+    tera.add_template_file(
+        "./templates/MockGroth16Verifier.sol.tera",
+        Some("Groth16Verifier.sol"),
+    )?;
+
+    let mut context = Context::new();
+    context.insert("signal_size", &contract_data.signal_size);
+
+    let rendered_contract = tera.render("Groth16Verifier.sol", &context)?;
+
     std::fs::write(output_path, rendered_contract)?;
 
     Ok(())
@@ -149,7 +173,7 @@ pub async fn generate_verifier_contract(
                     )
                 })?
                 .as_str(),
-            &format!("pragma solidity ^{};", "0.8.13"),
+            &format!("pragma solidity ^{};", "0.8.34"),
         )
         .replace(
             Regex::new(r"contract .*\{")

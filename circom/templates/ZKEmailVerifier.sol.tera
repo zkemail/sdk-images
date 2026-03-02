@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IERC7969.sol";
+
+/**
+ * @title Groth16 Verifier Interface
+ * @notice Interface for verifying Groth16 zk-SNARK proofs
+ */
+interface IGroth16Verifier {
+    /**
+     * @notice Verifies a Groth16 proof
+     * @param pA The proof parameter A as a G1 point [Ax, Ay]
+     * @param pB The proof parameter B as a G2 point [[Bx1, Bx2], [By1, By2]]
+     * @param pC The proof parameter C as a G1 point [Cx, Cy]
+     * @param publicSignals The array of public inputs for the circuit
+     * @return isValid True if the proof is valid, false otherwise
+     */
+    function verifyProof(
+        uint256[2] calldata pA,
+        uint256[2][2] calldata pB,
+        uint256[2] calldata pC,
+        uint256[{{ signal_size }}] calldata publicSignals
+    )
+        external
+        view
+        returns (bool);
+}
+
+contract ZKEmailVerifier is Ownable {
+    /**
+     * @notice The DKIM registry contract used to verify the public key hash
+     */
+    IDKIMRegistry public immutable DKIM_REGISTRY;
+    /**
+     * @notice The Groth16 verifier contract used to verify the Groth16 proof
+     */
+    IGroth16Verifier public immutable GROTH16_VERIFIER;
+
+    /**
+     * @notice Public key hash offset in the public inputs array
+     */
+    uint256 public constant PUBLIC_KEY_HASH_OFFSET = 0;
+    /**
+     * @notice Public inputs length (number of public inputs for the circuit)
+     */
+    uint256 public constant PUBLIC_INPUTS_LENGTH = {{ signal_size }};
+    /**
+     * @notice Constant domain hash for dkim verification
+     */
+    bytes32 public constant DOMAIN_HASH = keccak256(bytes("{{ sender_domain }}"));
+
+    /**
+     * @param _dkimRegistry The IERC7969 compliant DKIM registry contract
+     * @param _groth16Verifier The Groth16 verifier contract
+     */
+    constructor(IDKIMRegistry _dkimRegistry, IGroth16Verifier _groth16Verifier) Ownable(msg.sender) {
+        require(address(_dkimRegistry) != address(0), "Invalid DKIM registry");
+        require(address(_groth16Verifier) != address(0), "Invalid Groth16 verifier");
+        DKIM_REGISTRY = _dkimRegistry;
+        GROTH16_VERIFIER = _groth16Verifier;
+    }
+
+    /**
+     * @inheritdoc IZKEmailVerifier
+     */
+    function verify(bytes calldata proof, bytes32[] calldata publicInputs) external view {
+        require(
+            DKIM_REGISTRY.isKeyHashValid(DOMAIN_HASH, publicInputs[PUBLIC_KEY_HASH_OFFSET]), "RSA public key incorrect"
+        );
+
+        (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC) =
+            abi.decode(proof, (uint256[2], uint256[2][2], uint256[2]));
+
+        uint256[PUBLIC_INPUTS_LENGTH] memory pubSignals;
+        for (uint256 i = 0; i < PUBLIC_INPUTS_LENGTH; i++) {
+            pubSignals[i] = uint256(publicInputs[i]);
+        }
+
+        require(GROTH16_VERIFIER.verifyProof(pA, pB, pC, pubSignals), "Invalid proof");
+    }
+}

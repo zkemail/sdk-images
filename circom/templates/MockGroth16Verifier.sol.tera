@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+import { IGroth16Verifier } from "./ZKEmailVerifier.sol";
+
+contract Groth16Verifier is IGroth16Verifier {
+    bool public shouldValidate = true;
+
+    function setShouldValidate(bool _value) external {
+        shouldValidate = _value;
+    }
+
+    function verifyProof(
+        uint256[2] calldata,
+        uint256[2][2] calldata,
+        uint256[2] calldata,
+        uint256[{{ signal_size }}] calldata
+    )
+        external
+        view
+        returns (bool)
+    {
+        return shouldValidate;
+    }
+}
+

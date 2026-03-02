@@ -5,11 +5,14 @@
   "license": "MIT",
   "scripts": {
     "build": "forge build",
-    "deploy": "forge script Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast --non-interactive"
+    "deploy": "forge script script/DeployZKEmailVerifier.s.sol --broadcast --non-interactive --rpc-url",
+    "deploy-mock-dkim-registry": "forge script script/DeployMockDKIMRegistry.s.sol --broadcast --non-interactive --rpc-url"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.0",
-    "@openzeppelin/contracts-upgradeable": "^5.0.0",
+    "@openzeppelin/contracts": "^5.6.0",
+    "@zk-email/zk-email-verify": "github:zkemail/zk-email-verify#abe9d839d2518ef3f3f0a5fab2283fd672672dde"
+  },
+  "devDependencies": {
     "forge-std": "https://github.com/foundry-rs/forge-std"
   }
 }
