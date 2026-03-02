@@ -3,11 +3,12 @@ mod db;
 mod payload;
 mod template;
 
-use std::{cmp::max, fs, path::Path};
+use std::{cmp::max, env, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
-    create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
+    create_contract, create_contract_at_path, deploy_verifier_contract, generate_verifier_contract,
+    prepare_contract_data, ContractData,
 };
 use db::update_verifier_contract_address;
 use payload::UploadUrls;
@@ -23,6 +24,29 @@ use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs}
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Check for a lightweight CLI mode to only populate the Solidity contract from a JSON payload.
+    // Usage:
+    //   circom populate-contract-template <contract_data_json_path> <output_sol_path>
+    let args: Vec<String> = env::args().collect();
+    if args.len() >= 2 && args[1] == "populate-contract-template" {
+        if args.len() < 4 {
+            return Err(anyhow::anyhow!(
+                "Usage: circom populate-contract-template <contract_data_json_path> <output_sol_path>"
+            ));
+        }
+
+        let contract_data_json_path = &args[2];
+        let output_sol_path = &args[3];
+
+        let json = fs::read_to_string(contract_data_json_path)?;
+        let contract_data: ContractData = serde_json::from_str(&json)?;
+
+        create_contract_at_path(&contract_data, output_sol_path)?;
+
+        println!("Populated Solidity contract written to {}", output_sol_path);
+        return Ok(());
+    }
+
     let payload = payload::load_payload()?;
     info!(LOG, "Loaded configuration: {:?}", payload);
     println!("payload: {:?}", payload);

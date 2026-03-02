@@ -4,13 +4,13 @@ use anyhow::Result;
 use regex::Regex;
 use relayer_utils::LOG;
 use sdk_utils::{run_command, run_command_and_return_output};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use slog::info;
 use tera::{Context, Tera};
 
 use crate::payload::Payload;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ContractData {
     pub sender_domain: String,
     pub values: Vec<Field>,
@@ -19,7 +19,7 @@ pub struct ContractData {
     pub prover_eth_address_idx: usize,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Field {
     pub name: String,
     pub max_length: usize,
@@ -27,7 +27,13 @@ pub struct Field {
     pub start_idx: usize,
 }
 
+/// Render the Solidity contract template and write it to the default tmp path.
 pub fn create_contract(contract_data: &ContractData) -> Result<()> {
+    create_contract_at_path(contract_data, "tmp/Contract.sol")
+}
+
+/// Render the Solidity contract template and write it to the given path.
+pub fn create_contract_at_path(contract_data: &ContractData, output_path: &str) -> Result<()> {
     // Initialize Tera
     let mut tera = Tera::default();
     tera.add_template_file("./templates/template.sol.tera", Some("Contract.sol"))?;
@@ -48,8 +54,8 @@ pub fn create_contract(contract_data: &ContractData) -> Result<()> {
 
     let cleaned_contract = re.replace_all(&rendered_contract, "\n").to_string();
 
-    // Write the rendered template to a file
-    std::fs::write("tmp/Contract.sol", cleaned_contract)?;
+    // Write the rendered template to the requested file
+    std::fs::write(output_path, cleaned_contract)?;
 
     Ok(())
 }
