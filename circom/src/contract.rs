@@ -50,12 +50,8 @@ pub fn create_contract_at_path(contract_data: &ContractData, output_path: &str) 
 
     let rendered_contract = tera.render("Contract.sol", &context)?;
 
-    let re = regex::Regex::new(r"\n+").unwrap();
-
-    let cleaned_contract = re.replace_all(&rendered_contract, "\n").to_string();
-
     // Write the rendered template to the requested file
-    std::fs::write(output_path, cleaned_contract)?;
+    std::fs::write(output_path, rendered_contract)?;
 
     Ok(())
 }

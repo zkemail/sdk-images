@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
 import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
@@ -36,15 +37,12 @@ contract Contract is Ownable {
     // ============================
     uint16 public constant pack_size = 31;
     string public constant domain = "{{ sender_domain }}";
-
 {% for field in values %}
     uint16 public constant {{ field.name }}_len = {{ field.pack_size }};
-{% endfor %}
-
+{% endfor -%}
 {% for field in external_inputs %}
     uint16 public constant {{ field.name }}_len = {{ field.pack_size }};
 {% endfor %}
-
     constructor(IDKIMRegistry _dkimRegistry, IVerifier _clientProofVerifier, IVerifier _serverProofVerifier)
         Ownable(msg.sender)
     {
