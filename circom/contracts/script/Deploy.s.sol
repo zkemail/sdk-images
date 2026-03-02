@@ -5,9 +5,9 @@ import { console } from "forge-std/console.sol";
 import { Script } from "forge-std/Script.sol";
 import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IDKIMRegistry.sol";
 import { DKIMRegistry } from "@zk-email/contracts/DKIMRegistry.sol";
-import { ClientProofVerifier } from "./tmp/ClientProofVerifier.sol";
-import { ServerProofVerifier } from "./tmp/ServerProofVerifier.sol";
-import { Contract, IVerifier } from "./tmp/Contract.sol";
+import { ClientProofVerifier } from "../src/ClientProofVerifier.sol";
+import { ServerProofVerifier } from "../src/ServerProofVerifier.sol";
+import { Contract, IVerifier } from "../src/Contract.sol";
 
 contract Deploy is Script {
     IDKIMRegistry private dkimRegistry;
