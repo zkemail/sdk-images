@@ -27,11 +27,6 @@ pub struct Field {
     pub start_idx: usize,
 }
 
-/// Render the Solidity contract template and write it to the default tmp path.
-pub fn create_contract(contract_data: &ContractData) -> Result<()> {
-    create_zkemail_verifier_contract_at_path(contract_data, "tmp/Contract.sol")
-}
-
 /// Render the Solidity ZKEmailVerifier contract template and write it to the given path.
 pub fn create_zkemail_verifier_contract_at_path(
     contract_data: &ContractData,
@@ -53,7 +48,12 @@ pub fn create_zkemail_verifier_contract_at_path(
 
     let rendered_contract = tera.render("Contract.sol", &context)?;
 
-    // Write the rendered template to the requested file
+    // Ensure parent directory exists, then write
+    if let Some(parent) = Path::new(output_path).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
     std::fs::write(output_path, rendered_contract)?;
 
     Ok(())
@@ -133,13 +133,15 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     }
 }
 
+/// Generate a Groth16 verifier contract from a zkey and write it to the given output path.
+/// The contract name in the Solidity source is derived from the output filename (e.g. Groth16Verifier.sol -> Groth16Verifier).
 pub async fn generate_verifier_contract(
     tmp_dir: &str,
     snarkjs_path: &str,
     zkey_file_name: &str,
-    contract_name: &str,
+    output_path: &str,
 ) -> Result<()> {
-    // Generate the verifier contract
+    // Generate the verifier contract (snarkjs writes verifier.sol to tmp_dir)
     info!(LOG, "Generating verifier contract");
     run_command(
         snarkjs_path,
@@ -154,10 +156,14 @@ pub async fn generate_verifier_contract(
     )
     .await?;
 
-    // Path to the generated verifier
     let verifier_path = Path::new(tmp_dir).join("verifier.sol");
-    // Path to the renamed verifier
-    let renamed_path = Path::new(tmp_dir).join(format!("{}.sol", contract_name));
+    let output = Path::new(output_path);
+
+    // Derive contract name from output filename (e.g. Groth16Verifier.sol -> Groth16Verifier)
+    let contract_name = output
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("Groth16Verifier");
 
     // Read the verifier contract
     let content = fs::read_to_string(&verifier_path)?;
@@ -186,13 +192,18 @@ pub async fn generate_verifier_contract(
             &format!("contract {} {{", contract_name),
         );
 
-    // Write updated content to the new file and remove the original
-    fs::write(&renamed_path, updated_content)?;
+    // Ensure parent directory exists, then write
+    if let Some(parent) = output.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    fs::write(output, updated_content)?;
     fs::remove_file(&verifier_path)?;
 
     info!(
         LOG,
-        "Updated verifier to Solidity 0.8.13 and renamed contract to {}", contract_name
+        "Wrote verifier to {} (contract {})", output_path, contract_name
     );
 
     Ok(())
