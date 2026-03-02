@@ -12,11 +12,6 @@ solc = "0.8.34"
 evm_version = "osaka"
 ignored_warnings_from = ["node_modules"]
 
-[rpc_endpoints]
-anvil = "${ANVIL_RPC_URL}"
-sepolia = "${SEPOLIA_RPC_URL}"
-base-sepolia = "${BASE_SEPOLIA_RPC_URL}"
-
 [profile.ci]
 verbosity = 4
 

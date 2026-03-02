@@ -1,12 +1,13 @@
 {
   "name": "@zk-email/circom-contracts",
   "version": "1.0.0",
-  "description": "Contracts for the Circom onchain verifier",
+  "description": "Circom onchain verifier contracts for ZKEmail Blueprints",
   "license": "MIT",
   "scripts": {
     "build": "forge build",
-    "deploy": "forge script script/DeployZKEmailVerifier.s.sol --broadcast --non-interactive --rpc-url",
-    "deploy-mock-dkim-registry": "forge script script/DeployMockDKIMRegistry.s.sol --broadcast --non-interactive --rpc-url"
+    "deploy": "forge script script/DeployZKEmailVerifier.s.sol --broadcast --non-interactive --rpc-url ${RPC_URL}",
+    "deploy-dkim-registry": "forge script script/DeployDKIMRegistry.s.sol --broadcast --non-interactive --rpc-url ${RPC_URL}",
+    "deploy-dkim-registry-mock": "forge script script/DeployDKIMRegistryMock.s.sol --broadcast --non-interactive --rpc-url ${RPC_URL}"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.0",
