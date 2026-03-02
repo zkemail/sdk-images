@@ -116,29 +116,3 @@ pub async fn run_command_and_return_output(
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
-
-/// Runs a command and returns combined stdout+stderr and whether the command succeeded.
-/// Use when exit code should not determine success (e.g. deploy success vs verification failure).
-pub fn run_command_and_capture_output(
-    command: &str,
-    args: &[&str],
-    dir: Option<&str>,
-) -> Result<(String, bool)> {
-    let mut cmd = Command::new(command);
-    if !args.is_empty() {
-        cmd.args(args);
-    }
-    if let Some(directory) = dir {
-        cmd.current_dir(directory);
-    }
-    let output = cmd.output().expect("failed to execute process");
-    let success = output.status.success();
-    let out = String::from_utf8_lossy(&output.stdout).to_string();
-    let err = String::from_utf8_lossy(&output.stderr).to_string();
-    let combined = if err.is_empty() {
-        out
-    } else {
-        format!("{}\n{}", out, err)
-    };
-    Ok((combined, success))
-}
