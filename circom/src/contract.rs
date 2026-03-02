@@ -1,9 +1,9 @@
-use std::{collections::HashMap, env, fs, path::Path};
+use std::{collections::HashMap, fs, path::Path};
 
 use anyhow::Result;
 use regex::Regex;
 use relayer_utils::LOG;
-use sdk_utils::{run_command, run_command_and_return_output};
+use sdk_utils::{run_command, run_command_and_capture_output};
 use serde::{Deserialize, Serialize};
 use slog::info;
 use tera::{Context, Tera};
@@ -209,137 +209,83 @@ pub async fn generate_verifier_contract(
     Ok(())
 }
 
-pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
-    info!(LOG, "Building contracts");
-    run_command("yarn", &["build"], None).await?;
+const ONCHAIN_SUCCESS_MARKER: &str = "ONCHAIN EXECUTION COMPLETE & SUCCESSFUL";
+const VERIFICATION_FAILURE_MARKER: &str = "contracts were verified!";
 
-    info!(LOG, "Deploying contracts");
-    let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
+/// Parses deploy script output: returns ZK_EMAIL_VERIFIER address if onchain execution succeeded,
+/// and logs when verification failed. Used so verification failure does not fail the deploy.
+fn parse_deploy_output(output: &str) -> Result<String> {
+    if !output.contains(ONCHAIN_SUCCESS_MARKER) {
+        return Err(anyhow::anyhow!(
+            "Deploy failed: output did not contain '{}'",
+            ONCHAIN_SUCCESS_MARKER
+        ));
+    }
 
-    // Parse the output to extract addresses
+    if output.contains("Error: Not all") && output.contains(VERIFICATION_FAILURE_MARKER) {
+        info!(LOG, "Deploy successful, verification failed");
+    }
+
     let re = Regex::new(r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})")
         .unwrap();
     let mut contract_addresses = HashMap::new();
-    for cap in re.captures_iter(&output) {
+    for cap in re.captures_iter(output) {
         let contract_name = &cap[1];
         let address = &cap[2];
         contract_addresses.insert(contract_name.to_string(), address.to_string());
         info!(LOG, "{} Contract is at: {}", contract_name, address);
     }
 
-    // Write constructor arguments to a file
-    info!(LOG, "Writing constructor arguments to a file");
-    let constructor_args = run_command_and_return_output(
-        "cast",
-        &[
-            "abi-encode",
-            "constructor(address,address,address)",
-            contract_addresses.get("DKIM_REGISTRY").unwrap(),
-            contract_addresses.get("GROTH16_VERIFIER").unwrap(),
-        ],
-        None,
-    )
-    .await?;
+    contract_addresses
+        .get("ZK_EMAIL_VERIFIER")
+        .cloned()
+        .ok_or_else(|| anyhow::anyhow!("ZK_EMAIL_VERIFIER address not found in deploy output"))
+}
 
-    if let Ok(_) = env::var("ETHERSCAN_API_KEY") {
-        info!(LOG, "Verify contracts");
+pub async fn deploy_verifier_contract(_payload: Payload) -> Result<String> {
+    let contracts_dir = "tmp/contracts";
 
-        // Verify Groth16Verifier with retries
-        let mut last_error = None;
-        for attempt in 1..=3 {
-            info!(
-                LOG,
-                "Attempting to verify Groth16Verifier (attempt {}/3)", attempt
-            );
-            match run_command(
-                "forge",
-                &[
-                    "verify-contract",
-                    "--chain-id",
-                    payload.chain_id.to_string().as_str(),
-                    contract_addresses.get("GROTH16_VERIFIER").unwrap(),
-                    "tmp/contracts/src/Groth16Verifier.sol:Groth16Verifier",
-                ],
-                None,
-            )
-            .await
-            {
-                Ok(_) => {
-                    info!(LOG, "Successfully verified Groth16Verifier");
-                    last_error = None;
-                    break;
-                }
-                Err(e) => {
-                    info!(
-                        LOG,
-                        "Attempt {}/3 failed to verify Groth16Verifier: {}", attempt, e
-                    );
-                    last_error = Some(e);
-                    if attempt < 3 {
-                        info!(LOG, "Waiting 10 seconds before retry...");
-                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-                    }
-                }
-            }
-        }
-        if let Some(e) = last_error {
-            return Err(anyhow::anyhow!(
-                "Failed to verify Groth16Verifier after 3 attempts: {}",
-                e
-            ));
-        }
+    info!(LOG, "Building contracts");
+    run_command("yarn", &["build"], Some(contracts_dir)).await?;
 
-        // Delay between contract verifications
-        info!(LOG, "Waiting 5 seconds before next verification...");
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+    info!(LOG, "Deploying contracts");
+    let (output, _success) = tokio::task::spawn_blocking(|| {
+        run_command_and_capture_output("yarn", &["deploy"], Some(contracts_dir))
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("deploy task: {:?}", e))??;
 
-        // Verify ZKEmailVerifier with retries
-        let mut last_error = None;
-        for attempt in 1..=3 {
-            info!(
-                LOG,
-                "Attempting to verify ZKEmailVerifier (attempt {}/3)", attempt
-            );
-            match run_command(
-                "forge",
-                &[
-                    "verify-contract",
-                    "--chain-id",
-                    payload.chain_id.to_string().as_str(),
-                    "--constructor-args",
-                    &constructor_args,
-                    contract_addresses.get("ZK_EMAIL_VERIFIER").unwrap(),
-                    "tmp/contracts/src/ZKEmailVerifier.sol:ZKEmailVerifier",
-                ],
-                None,
-            )
-            .await
-            {
-                Ok(_) => {
-                    info!(LOG, "Successfully verified ZKEmailVerifier ");
-                    last_error = None;
-                    break;
-                }
-                Err(e) => {
-                    info!(
-                        LOG,
-                        "Attempt {}/3 failed to verify ZKEmailVerifier: {}", attempt, e
-                    );
-                    last_error = Some(e);
-                    if attempt < 3 {
-                        info!(LOG, "Waiting 10 seconds before retry...");
-                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-                    }
-                }
-            }
-        }
-        if let Some(e) = last_error {
-            return Err(anyhow::anyhow!(
-                "Failed to verify Contract after 3 attempts: {}",
-                e
-            ));
-        }
+    parse_deploy_output(&output)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_deploy_output_success_with_verification_failure() {
+        // Simulates real forge output: deploy to Anvil succeeded, Etherscan verification failed
+        let output = r#"DKIM_REGISTRY: 0xf825ac88B042e9E31Ce18bAaE18EF8c31Eae7C8f
+GROTH16_VERIFIER: 0x3e30c437DC8f92e4B631b7b0BFdE00fb30C11fD5
+ZK_EMAIL_VERIFIER: 0xE03267033B1606d2FDe825B35ec66dFD66E442AD
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+Error: Not all (0 / 2) contracts were verified!"#;
+        let addr = parse_deploy_output(output).unwrap();
+        assert_eq!(addr, "0xE03267033B1606d2FDe825B35ec66dFD66E442AD");
     }
 
-    Ok(contract_addresses.get("Contract").unwrap().to_string())
+    #[test]
+    fn parse_deploy_output_fails_without_onchain_success() {
+        let output = "Script ran but no ONCHAIN EXECUTION line";
+        assert!(parse_deploy_output(output).is_err());
+    }
+
+    #[test]
+    fn parse_deploy_output_success_without_verification_failure() {
+        let output = r#"ZK_EMAIL_VERIFIER: 0xE03267033B1606d2FDe825B35ec66dFD66E442AD
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL."#;
+        let addr = parse_deploy_output(output).unwrap();
+        assert_eq!(addr, "0xE03267033B1606d2FDe825B35ec66dFD66E442AD");
+    }
 }

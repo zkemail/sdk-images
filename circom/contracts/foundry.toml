@@ -12,6 +12,10 @@ solc = "0.8.34"
 evm_version = "osaka"
 ignored_warnings_from = ["node_modules"]
 
+[rpc_endpoints]
+rpc_url = "${RPC_URL}"
+
+
 [profile.ci]
 verbosity = 4
 
