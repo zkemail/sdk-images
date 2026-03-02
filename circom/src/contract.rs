@@ -217,15 +217,14 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
 
     // Parse the output to extract addresses
-    let re = Regex::new(
-        r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})"
-    ).unwrap();
+    let re = Regex::new(r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})")
+        .unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
         let contract_name = &cap[1];
         let address = &cap[2];
         contract_addresses.insert(contract_name.to_string(), address.to_string());
-        info!(LOG, "Deployed {} at address: {}", contract_name, address);
+        info!(LOG, "{} Contract is at: {}", contract_name, address);
     }
 
     // Write constructor arguments to a file
@@ -235,9 +234,8 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         &[
             "abi-encode",
             "constructor(address,address,address)",
-            contract_addresses.get("DKIMRegistry").unwrap(),
-            contract_addresses.get("ClientProofVerifier").unwrap(),
-            contract_addresses.get("ServerProofVerifier").unwrap(),
+            contract_addresses.get("DKIM_REGISTRY").unwrap(),
+            contract_addresses.get("GROTH16_VERIFIER").unwrap(),
         ],
         None,
     )
@@ -246,12 +244,12 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     if let Ok(_) = env::var("ETHERSCAN_API_KEY") {
         info!(LOG, "Verify contracts");
 
-        // Verify ClientProofVerifier with retries
+        // Verify Groth16Verifier with retries
         let mut last_error = None;
         for attempt in 1..=3 {
             info!(
                 LOG,
-                "Attempting to verify ClientProofVerifier (attempt {}/3)", attempt
+                "Attempting to verify Groth16Verifier (attempt {}/3)", attempt
             );
             match run_command(
                 "forge",
@@ -259,22 +257,22 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                     "verify-contract",
                     "--chain-id",
                     payload.chain_id.to_string().as_str(),
-                    contract_addresses.get("ClientProofVerifier").unwrap(),
-                    "tmp/ClientProofVerifier.sol:ClientProofVerifier",
+                    contract_addresses.get("GROTH16_VERIFIER").unwrap(),
+                    "tmp/contracts/src/Groth16Verifier.sol:Groth16Verifier",
                 ],
                 None,
             )
             .await
             {
                 Ok(_) => {
-                    info!(LOG, "Successfully verified ClientProofVerifier");
+                    info!(LOG, "Successfully verified Groth16Verifier");
                     last_error = None;
                     break;
                 }
                 Err(e) => {
                     info!(
                         LOG,
-                        "Attempt {}/3 failed to verify ClientProofVerifier: {}", attempt, e
+                        "Attempt {}/3 failed to verify Groth16Verifier: {}", attempt, e
                     );
                     last_error = Some(e);
                     if attempt < 3 {
@@ -286,7 +284,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         }
         if let Some(e) = last_error {
             return Err(anyhow::anyhow!(
-                "Failed to verify ClientProofVerifier after 3 attempts: {}",
+                "Failed to verify Groth16Verifier after 3 attempts: {}",
                 e
             ));
         }
@@ -295,59 +293,13 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         info!(LOG, "Waiting 5 seconds before next verification...");
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
-        // Verify ServerProofVerifier with retries
+        // Verify ZKEmailVerifier with retries
         let mut last_error = None;
         for attempt in 1..=3 {
             info!(
                 LOG,
-                "Attempting to verify ServerProofVerifier (attempt {}/3)", attempt
+                "Attempting to verify ZKEmailVerifier (attempt {}/3)", attempt
             );
-            match run_command(
-                "forge",
-                &[
-                    "verify-contract",
-                    "--chain-id",
-                    payload.chain_id.to_string().as_str(),
-                    contract_addresses.get("ServerProofVerifier").unwrap(),
-                    "tmp/ServerProofVerifier.sol:ServerProofVerifier",
-                ],
-                None,
-            )
-            .await
-            {
-                Ok(_) => {
-                    info!(LOG, "Successfully verified ServerProofVerifier");
-                    last_error = None;
-                    break;
-                }
-                Err(e) => {
-                    info!(
-                        LOG,
-                        "Attempt {}/3 failed to verify ServerProofVerifier: {}", attempt, e
-                    );
-                    last_error = Some(e);
-                    if attempt < 3 {
-                        info!(LOG, "Waiting 10 seconds before retry...");
-                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-                    }
-                }
-            }
-        }
-        if let Some(e) = last_error {
-            return Err(anyhow::anyhow!(
-                "Failed to verify ServerProofVerifier after 3 attempts: {}",
-                e
-            ));
-        }
-
-        // Delay between contract verifications
-        info!(LOG, "Waiting 5 seconds before next verification...");
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
-        // Verify Contract with retries
-        let mut last_error = None;
-        for attempt in 1..=3 {
-            info!(LOG, "Attempting to verify Contract (attempt {}/3)", attempt);
             match run_command(
                 "forge",
                 &[
@@ -356,22 +308,22 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                     payload.chain_id.to_string().as_str(),
                     "--constructor-args",
                     &constructor_args,
-                    contract_addresses.get("Contract").unwrap(),
-                    "tmp/Contract.sol:Contract",
+                    contract_addresses.get("ZK_EMAIL_VERIFIER").unwrap(),
+                    "tmp/contracts/src/ZKEmailVerifier.sol:ZKEmailVerifier",
                 ],
                 None,
             )
             .await
             {
                 Ok(_) => {
-                    info!(LOG, "Successfully verified Contract");
+                    info!(LOG, "Successfully verified ZKEmailVerifier ");
                     last_error = None;
                     break;
                 }
                 Err(e) => {
                     info!(
                         LOG,
-                        "Attempt {}/3 failed to verify Contract: {}", attempt, e
+                        "Attempt {}/3 failed to verify ZKEmailVerifier: {}", attempt, e
                     );
                     last_error = Some(e);
                     if attempt < 3 {
