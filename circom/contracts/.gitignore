@@ -10,7 +10,3 @@ hh-cache
 # other directories
 coverage
 node_modules
-
-# generated contracts
-src/Groth16Verifier.sol
-src/ZKEmailVerifier.sol
