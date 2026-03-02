@@ -341,5 +341,8 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         }
     }
 
-    Ok(contract_addresses.get("Contract").unwrap().to_string())
+    Ok(contract_addresses
+        .get("ZK_EMAIL_VERIFIER")
+        .unwrap()
+        .to_string())
 }
