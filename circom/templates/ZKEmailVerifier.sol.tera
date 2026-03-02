@@ -63,7 +63,10 @@ contract ZKEmailVerifier is Ownable {
     }
 
     /**
-     * @inheritdoc IZKEmailVerifier
+     * @notice Verifies a proof
+     * @param proof The proof to verify
+     * @param publicInputs The public inputs to the proof
+     * @dev Reverts if the DKIM public key hash check fails or the Groth16 proof is invalid
      */
     function verify(bytes calldata proof, bytes32[] calldata publicInputs) external view {
         require(
