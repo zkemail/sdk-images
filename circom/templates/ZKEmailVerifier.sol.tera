@@ -69,6 +69,7 @@ contract ZKEmailVerifier is Ownable {
      * @dev Reverts if the DKIM public key hash check fails or the Groth16 proof is invalid
      */
     function verify(bytes calldata proof, bytes32[] calldata publicInputs) external view {
+        require(publicInputs.length == PUBLIC_INPUTS_LENGTH, "Invalid publicInputs length");
         require(
             DKIM_REGISTRY.isKeyHashValid(DOMAIN_HASH, publicInputs[PUBLIC_KEY_HASH_OFFSET]), "RSA public key incorrect"
         );
