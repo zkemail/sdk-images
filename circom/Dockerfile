@@ -56,10 +56,10 @@ RUN git clone https://github.com/kroma-network/tachyon.git
 WORKDIR /root/tachyon
 
 # Build Circom dependencies with Bazel
-# Note: If Cargo.toml dependencies change in rules_circom, or the cargo-bazel/Rust
-# toolchain version is updated, re-add CARGO_BAZEL_REPIN=true to regenerate the lockfile:
-#   RUN cd vendors/circom && CARGO_BAZEL_REPIN=true bazel build --config opt //circomlib/build:compile_witness_generator
-RUN cd vendors/circom && bazel build --config opt //circomlib/build:compile_witness_generator
+# CARGO_BAZEL_REPIN=true is required because the lockfile digest includes toolchain
+# paths which differ inside the Docker container from where it was originally generated.
+# --experimental_scale_timeouts=10 prevents the cargo-bazel splice step from timing out.
+RUN cd vendors/circom && CARGO_BAZEL_REPIN=true bazel build --experimental_scale_timeouts=10 --config opt //circomlib/build:compile_witness_generator
 
 ENV TACHYON_DIR=/root/tachyon
 
