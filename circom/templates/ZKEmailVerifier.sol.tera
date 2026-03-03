@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.34;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IERC7969.sol";
 
 /**
@@ -28,7 +27,7 @@ interface IGroth16Verifier {
         returns (bool);
 }
 
-contract ZKEmailVerifier is Ownable {
+contract ZKEmailVerifier {
     /**
      * @notice The DKIM registry contract used to verify the public key hash
      */
@@ -64,7 +63,7 @@ contract ZKEmailVerifier is Ownable {
      * @param _dkimRegistry The IERC7969 compliant DKIM registry contract
      * @param _groth16Verifier The Groth16 verifier contract
      */
-    constructor(IDKIMRegistry _dkimRegistry, IGroth16Verifier _groth16Verifier) Ownable(msg.sender) {
+    constructor(IDKIMRegistry _dkimRegistry, IGroth16Verifier _groth16Verifier) {
         if (address(_dkimRegistry) == address(0)) revert InvalidDKIMRegistry();
         if (address(_groth16Verifier) == address(0)) revert InvalidGroth16Verifier();
         DKIM_REGISTRY = _dkimRegistry;

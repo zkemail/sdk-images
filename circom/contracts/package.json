@@ -10,7 +10,6 @@
     "deploy-dkim-registry-mock": "forge script script/DeployDKIMRegistryMock.s.sol --broadcast --non-interactive --rpc-url rpc_url"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.6.0",
     "@zk-email/zk-email-verify": "github:zkemail/zk-email-verify#abe9d839d2518ef3f3f0a5fab2283fd672672dde"
   },
   "devDependencies": {
