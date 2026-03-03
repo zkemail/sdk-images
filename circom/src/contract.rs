@@ -233,7 +233,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         "cast",
         &[
             "abi-encode",
-            "constructor(address,address,address)",
+            "constructor(address,address)",
             contract_addresses.get("DKIM_REGISTRY").unwrap(),
             contract_addresses.get("GROTH16_VERIFIER").unwrap(),
         ],
