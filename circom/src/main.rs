@@ -7,8 +7,9 @@ use std::{cmp::max, env, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
-    create_mock_groth16_verifier_at_path, create_zkemail_verifier_contract_at_path,
-    deploy_verifier_contract, generate_verifier_contract, prepare_contract_data, ContractData,
+    create_igroth16_verifier_interface_at_path, create_mock_groth16_verifier_at_path,
+    create_zkemail_verifier_contract_at_path, deploy_verifier_contract, generate_verifier_contract,
+    prepare_contract_data, ContractData,
 };
 use db::update_verifier_contract_address;
 use payload::UploadUrls;
@@ -47,11 +48,10 @@ async fn main() -> Result<()> {
             ));
         }
 
-        let zkemail_output_path = output_dir.join("ZKEmailVerifier.sol");
-
         let json = fs::read_to_string(contract_data_json_path)?;
         let contract_data: ContractData = serde_json::from_str(&json)?;
 
+        let zkemail_output_path = output_dir.join("ZKEmailVerifier.sol");
         create_zkemail_verifier_contract_at_path(
             &contract_data,
             zkemail_output_path
@@ -59,7 +59,19 @@ async fn main() -> Result<()> {
                 .ok_or_else(|| anyhow::anyhow!("Invalid ZKEmailVerifier output path"))?,
         )?;
 
-        // Also generate a mock Groth16 verifier contract in the same directory.
+        // Also generate interfaces and a mock Groth16 verifier contract in the same directory.
+        let interfaces_dir = output_dir.join("interfaces");
+        if !interfaces_dir.exists() {
+            fs::create_dir_all(&interfaces_dir)?;
+        }
+        let igroth16_interface_output_path = interfaces_dir.join("IGroth16Verifier.sol");
+        create_igroth16_verifier_interface_at_path(
+            &contract_data,
+            igroth16_interface_output_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid IGroth16Verifier output path"))?,
+        )?;
+
         let groth16_output_path = output_dir.join("Groth16Verifier.sol");
 
         create_mock_groth16_verifier_at_path(
@@ -102,6 +114,10 @@ async fn main() -> Result<()> {
     create_zkemail_verifier_contract_at_path(
         &contract_data,
         "tmp/contracts/src/ZKEmailVerifier.sol",
+    )?;
+    create_igroth16_verifier_interface_at_path(
+        &contract_data,
+        "tmp/contracts/src/interfaces/IGroth16Verifier.sol",
     )?;
 
     let chunked_snarkjs_path = "./node_modules/.bin/snarkjs";
@@ -155,8 +171,10 @@ async fn setup() -> Result<()> {
     }
     fs::create_dir_all(&regex_path)?;
 
-    // Ensure tmp/contracts/src exists for generated contract files
-    fs::create_dir_all(tmp_path.join("contracts/src"))?;
+    // Ensure tmp/contracts/src and interfaces exist for generated contract files
+    let tmp_contracts_src = tmp_path.join("contracts/src");
+    fs::create_dir_all(&tmp_contracts_src)?;
+    fs::create_dir_all(tmp_contracts_src.join("interfaces"))?;
 
     run_command("cp", &["package.json", "./tmp"], None).await?;
     Ok(())

@@ -12,6 +12,7 @@ config.json
 cache
 broadcast
 
+IGroth16Verifier.sol
 Groth16Verifier.sol
 ZKEmailVerifier.sol
 

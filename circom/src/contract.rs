@@ -59,6 +59,32 @@ pub fn create_zkemail_verifier_contract_at_path(
     Ok(())
 }
 
+/// Render the Solidity IGroth16Verifier interface template and write it to the given path.
+pub fn create_igroth16_verifier_interface_at_path(
+    contract_data: &ContractData,
+    output_path: &str,
+) -> Result<()> {
+    let mut tera = Tera::default();
+    tera.add_template_file(
+        "./templates/IGroth16Verifier.sol.tera",
+        Some("IGroth16Verifier.sol"),
+    )?;
+
+    let mut context = Context::new();
+    context.insert("signal_size", &contract_data.signal_size);
+
+    let rendered = tera.render("IGroth16Verifier.sol", &context)?;
+
+    if let Some(parent) = Path::new(output_path).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    std::fs::write(output_path, rendered)?;
+
+    Ok(())
+}
+
 /// Render the Solidity mock Groth16Verifier contract template and write it to the given path.
 pub fn create_mock_groth16_verifier_at_path(
     contract_data: &ContractData,

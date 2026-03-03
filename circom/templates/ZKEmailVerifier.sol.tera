@@ -3,30 +3,7 @@ pragma solidity ^0.8.34;
 
 import { IDKIMRegistry } from "./interfaces/IDKIMRegistry.sol";
 import { IZKEmailVerifier } from "./interfaces/IZKEmailVerifier.sol";
-
-/**
- * @title Groth16 Verifier Interface
- * @notice Interface for verifying Groth16 zk-SNARK proofs
- */
-interface IGroth16Verifier {
-    /**
-     * @notice Verifies a Groth16 proof
-     * @param pA The proof parameter A as a G1 point [Ax, Ay]
-     * @param pB The proof parameter B as a G2 point [[Bx1, Bx2], [By1, By2]]
-     * @param pC The proof parameter C as a G1 point [Cx, Cy]
-     * @param publicSignals The array of public inputs for the circuit
-     * @return isValid True if the proof is valid, false otherwise
-     */
-    function verifyProof(
-        uint256[2] calldata pA,
-        uint256[2][2] calldata pB,
-        uint256[2] calldata pC,
-        uint256[{{ signal_size }}] calldata publicSignals
-    )
-        external
-        view
-        returns (bool);
-}
+import { IGroth16Verifier } from "./interfaces/IGroth16Verifier.sol";
 
 contract ZKEmailVerifier is IZKEmailVerifier {
     /**
