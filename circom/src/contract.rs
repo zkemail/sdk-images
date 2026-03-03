@@ -177,7 +177,7 @@ pub async fn generate_verifier_contract(
                     anyhow::anyhow!(
                         "Could not find pragma solidity declaration in verifier contract"
                     )
-                })?
+                "Failed to verify ZKEmailVerifier after 3 attempts: {}",
                 .as_str(),
             &format!("pragma solidity ^{};", "0.8.34"),
         )
