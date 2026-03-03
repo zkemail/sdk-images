@@ -427,6 +427,7 @@ async fn cleanup() -> Result<()> {
 
     // Copy the Foundry contracts project into tmp/contracts
     run_command("cp", &["contracts/.env.example", "./tmp/contracts"], None).await?;
+    run_command("cp", &["contracts/README.md", "./tmp/contracts"], None).await?;
     run_command("cp", &["contracts/foundry.toml", "./tmp/contracts"], None).await?;
     run_command("cp", &["contracts/package.json", "./tmp/contracts"], None).await?;
     run_command("cp", &["contracts/remappings.txt", "./tmp/contracts"], None).await?;
@@ -655,6 +656,11 @@ mod tests {
         )
         .unwrap();
         fs::copy(
+            "contracts/README.md",
+            test_dir.join("contracts/README.md"),
+        )
+        .unwrap();
+        fs::copy(
             "contracts/foundry.toml",
             test_dir.join("contracts/foundry.toml"),
         )
@@ -749,6 +755,7 @@ mod tests {
             "package.json",
             "regex/",
             "contracts/",
+            "contracts/README.md",
             "contracts/src/",
             "contracts/src/ZKEmailVerifier.sol",
             "contracts/src/Groth16Verifier.sol",
