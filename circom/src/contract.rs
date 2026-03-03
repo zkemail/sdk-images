@@ -177,7 +177,7 @@ pub async fn generate_verifier_contract(
                     anyhow::anyhow!(
                         "Could not find pragma solidity declaration in verifier contract"
                     )
-                "Failed to verify ZKEmailVerifier after 3 attempts: {}",
+                })?
                 .as_str(),
             &format!("pragma solidity ^{};", "0.8.34"),
         )
@@ -335,7 +335,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         }
         if let Some(e) = last_error {
             return Err(anyhow::anyhow!(
-                "Failed to verify Contract after 3 attempts: {}",
+                "Failed to verify ZKEmailVerifier after 3 attempts: {}",
                 e
             ));
         }
