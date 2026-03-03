@@ -52,12 +52,21 @@ contract ZKEmailVerifier is Ownable {
     bytes32 public constant DOMAIN_HASH = keccak256(bytes("{{ sender_domain }}"));
 
     /**
+     * @notice Custom errors for the ZKEmailVerifier contract
+     */
+    error InvalidDKIMRegistry();
+    error InvalidGroth16Verifier();
+    error InvalidPublicInputsLength(uint256 expected, uint256 actual);
+    error InvalidPublicKey();
+    error InvalidProof();
+
+    /**
      * @param _dkimRegistry The IERC7969 compliant DKIM registry contract
      * @param _groth16Verifier The Groth16 verifier contract
      */
     constructor(IDKIMRegistry _dkimRegistry, IGroth16Verifier _groth16Verifier) Ownable(msg.sender) {
-        require(address(_dkimRegistry) != address(0), "Invalid DKIM registry");
-        require(address(_groth16Verifier) != address(0), "Invalid Groth16 verifier");
+        if (address(_dkimRegistry) == address(0)) revert InvalidDKIMRegistry();
+        if (address(_groth16Verifier) == address(0)) revert InvalidGroth16Verifier();
         DKIM_REGISTRY = _dkimRegistry;
         GROTH16_VERIFIER = _groth16Verifier;
     }
@@ -69,10 +78,12 @@ contract ZKEmailVerifier is Ownable {
      * @dev Reverts if the DKIM public key hash check fails or the Groth16 proof is invalid
      */
     function verify(bytes calldata proof, bytes32[] calldata publicInputs) external view {
-        require(publicInputs.length == PUBLIC_INPUTS_LENGTH, "Invalid publicInputs length");
-        require(
-            DKIM_REGISTRY.isKeyHashValid(DOMAIN_HASH, publicInputs[PUBLIC_KEY_HASH_OFFSET]), "RSA public key incorrect"
-        );
+        if (publicInputs.length != PUBLIC_INPUTS_LENGTH) {
+            revert InvalidPublicInputsLength(PUBLIC_INPUTS_LENGTH, publicInputs.length);
+        }
+        if (!DKIM_REGISTRY.isKeyHashValid(DOMAIN_HASH, publicInputs[PUBLIC_KEY_HASH_OFFSET])) {
+            revert InvalidPublicKey();
+        }
 
         (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC) =
             abi.decode(proof, (uint256[2], uint256[2][2], uint256[2]));
@@ -82,6 +93,6 @@ contract ZKEmailVerifier is Ownable {
             pubSignals[i] = uint256(publicInputs[i]);
         }
 
-        require(GROTH16_VERIFIER.verifyProof(pA, pB, pC, pubSignals), "Invalid proof");
+        if (!GROTH16_VERIFIER.verifyProof(pA, pB, pC, pubSignals)) revert InvalidProof();
     }
 }
