@@ -1,2 +1,1 @@
-@zk-email/contracts/=node_modules/@zk-email/zk-email-verify/packages/contracts/
 forge-std/=node_modules/forge-std/src

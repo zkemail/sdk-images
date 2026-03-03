@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.34;
 
-import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IERC7969.sol";
+import { IDKIMRegistry } from "./interfaces/IDKIMRegistry.sol";
 
 /**
  * @title Groth16 Verifier Interface

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.34;
 
 import { Script, console } from "forge-std/Script.sol";
-import { IDKIMRegistry } from "@zk-email/contracts/interfaces/IERC7969.sol";
+import { IDKIMRegistry } from "../src/interfaces/IDKIMRegistry.sol";
 import { Groth16Verifier } from "../src/Groth16Verifier.sol";
 import { IGroth16Verifier, ZKEmailVerifier } from "../src/ZKEmailVerifier.sol";
 

@@ -406,6 +406,10 @@ async fn cleanup() -> Result<()> {
     if !contracts_tmp_src_dir.exists() {
         fs::create_dir_all(&contracts_tmp_src_dir)?;
     }
+    let contracts_tmp_interfaces_dir = contracts_tmp_src_dir.join("interfaces");
+    if !contracts_tmp_interfaces_dir.exists() {
+        fs::create_dir_all(&contracts_tmp_interfaces_dir)?;
+    }
 
     // Copy the Foundry contracts project into tmp/contracts
     run_command("cp", &["contracts/.env.example", "./tmp/contracts"], None).await?;
@@ -413,15 +417,11 @@ async fn cleanup() -> Result<()> {
     run_command("cp", &["contracts/package.json", "./tmp/contracts"], None).await?;
     run_command("cp", &["contracts/remappings.txt", "./tmp/contracts"], None).await?;
     run_command("cp", &["contracts/yarn.lock", "./tmp/contracts"], None).await?;
-    run_command(
-        "cp",
-        &[
-            "contracts/script/DeployDKIMRegistry.s.sol",
-            "./tmp/contracts/script",
-        ],
-        None,
-    )
-    .await?;
+    // Copy the local IDKIMRegistry interface so the bundled contracts are self-contained.
+    fs::copy(
+        "contracts/src/interfaces/IDKIMRegistry.sol",
+        contracts_tmp_interfaces_dir.join("IDKIMRegistry.sol"),
+    )?;
     run_command(
         "cp",
         &[
@@ -625,7 +625,7 @@ mod tests {
 
         fs::create_dir_all(test_dir.join("regex")).unwrap();
         fs::create_dir_all(test_dir.join("contracts/script")).unwrap();
-        fs::create_dir_all(test_dir.join("contracts/src")).unwrap();
+        fs::create_dir_all(test_dir.join("contracts/src/interfaces")).unwrap();
 
         // Minimal circuit.circom and package.json
         fs::write(test_dir.join("circuit.circom"), "// test circuit").unwrap();
@@ -654,13 +654,13 @@ mod tests {
         .unwrap();
         fs::copy("contracts/yarn.lock", test_dir.join("contracts/yarn.lock")).unwrap();
         fs::copy(
-            "contracts/script/DeployDKIMRegistry.s.sol",
-            test_dir.join("contracts/script/DeployDKIMRegistry.s.sol"),
+            "contracts/script/DeployZKEmailVerifier.s.sol",
+            test_dir.join("contracts/script/DeployZKEmailVerifier.s.sol"),
         )
         .unwrap();
         fs::copy(
-            "contracts/script/DeployZKEmailVerifier.s.sol",
-            test_dir.join("contracts/script/DeployZKEmailVerifier.s.sol"),
+            "contracts/src/interfaces/IDKIMRegistry.sol",
+            test_dir.join("contracts/src/interfaces/IDKIMRegistry.sol"),
         )
         .unwrap();
 
@@ -725,8 +725,9 @@ mod tests {
             "contracts/src/",
             "contracts/src/ZKEmailVerifier.sol",
             "contracts/src/Groth16Verifier.sol",
+            "contracts/src/interfaces/",
+            "contracts/src/interfaces/IDKIMRegistry.sol",
             "contracts/script/",
-            "contracts/script/DeployDKIMRegistry.s.sol",
             "contracts/script/DeployZKEmailVerifier.s.sol",
             "contracts/foundry.toml",
             "contracts/package.json",

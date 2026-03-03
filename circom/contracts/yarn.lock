@@ -2,10 +2,6 @@
 # yarn lockfile v1
 
 
-"@zk-email/zk-email-verify@github:zkemail/zk-email-verify#abe9d839d2518ef3f3f0a5fab2283fd672672dde":
-  version "6.2.0"
-  resolved "https://codeload.github.com/zkemail/zk-email-verify/tar.gz/abe9d839d2518ef3f3f0a5fab2283fd672672dde"
-
 "forge-std@https://github.com/foundry-rs/forge-std":
   version "1.15.0"
   resolved "https://github.com/foundry-rs/forge-std#04ee608913e6c334973649b2b1a2976260647c1b"
