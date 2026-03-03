@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+import { IGroth16Verifier } from "./interfaces/IGroth16Verifier.sol";
+
+/**
+ * @title Groth16Verifier (TEST MOCK)
+ * @notice Test-only mock verifier. DO NOT deploy to production.
+ * @dev In production, this file is replaced by the real verifier generated from the zkey.
+ */
+contract Groth16Verifier is IGroth16Verifier {
+    bool public shouldValidate = true;
+
+    /**
+     * @notice Sets whether proofs should be treated as valid in this mock.
+     * @dev This is intentionally unrestricted because the contract is test-only and not intended for production deployments.
+     */
+    function setShouldValidate(bool _value) external {
+        shouldValidate = _value;
+    }
+
+    function verifyProof(
+        uint256[2] calldata,
+        uint256[2][2] calldata,
+        uint256[2] calldata,
+        uint256[{{ signal_size }}] calldata
+    )
+        external
+        view
+        override
+        returns (bool)
+    {
+        return shouldValidate;
+    }
+}
+

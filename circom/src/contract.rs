@@ -4,13 +4,13 @@ use anyhow::Result;
 use regex::Regex;
 use relayer_utils::LOG;
 use sdk_utils::{run_command, run_command_and_return_output};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use slog::info;
 use tera::{Context, Tera};
 
 use crate::payload::Payload;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ContractData {
     pub sender_domain: String,
     pub values: Vec<Field>,
@@ -19,7 +19,7 @@ pub struct ContractData {
     pub prover_eth_address_idx: usize,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Field {
     pub name: String,
     pub max_length: usize,
@@ -27,10 +27,14 @@ pub struct Field {
     pub start_idx: usize,
 }
 
-pub fn create_contract(contract_data: &ContractData) -> Result<()> {
+/// Render the Solidity ZKEmailVerifier contract template and write it to the given path.
+pub fn create_zkemail_verifier_contract_at_path(
+    contract_data: &ContractData,
+    output_path: &str,
+) -> Result<()> {
     // Initialize Tera
     let mut tera = Tera::default();
-    tera.add_template_file("./templates/template.sol.tera", Some("Contract.sol"))?;
+    tera.add_template_file("./templates/ZKEmailVerifier.sol.tera", Some("Contract.sol"))?;
 
     let mut context = Context::new();
     context.insert("sender_domain", &contract_data.sender_domain);
@@ -44,12 +48,75 @@ pub fn create_contract(contract_data: &ContractData) -> Result<()> {
 
     let rendered_contract = tera.render("Contract.sol", &context)?;
 
-    let re = regex::Regex::new(r"\n+").unwrap();
+    // Ensure parent directory exists, then write
+    if let Some(parent) = Path::new(output_path).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    std::fs::write(output_path, rendered_contract)?;
 
-    let cleaned_contract = re.replace_all(&rendered_contract, "\n").to_string();
+    Ok(())
+}
 
-    // Write the rendered template to a file
-    std::fs::write("tmp/Contract.sol", cleaned_contract)?;
+/// Render both the ZKEmailVerifier contract and IGroth16Verifier interface to the given paths.
+pub fn create_zkemail_verifier_and_interface_at_paths(
+    contract_data: &ContractData,
+    zkemail_output_path: &str,
+    igroth16_output_path: &str,
+) -> Result<()> {
+    create_zkemail_verifier_contract_at_path(contract_data, zkemail_output_path)?;
+    create_igroth16_verifier_interface_at_path(contract_data, igroth16_output_path)?;
+    Ok(())
+}
+
+/// Render the Solidity IGroth16Verifier interface template and write it to the given path.
+pub fn create_igroth16_verifier_interface_at_path(
+    contract_data: &ContractData,
+    output_path: &str,
+) -> Result<()> {
+    let mut tera = Tera::default();
+    tera.add_template_file(
+        "./templates/IGroth16Verifier.sol.tera",
+        Some("IGroth16Verifier.sol"),
+    )?;
+
+    let mut context = Context::new();
+    context.insert("signal_size", &contract_data.signal_size);
+
+    let rendered = tera.render("IGroth16Verifier.sol", &context)?;
+
+    if let Some(parent) = Path::new(output_path).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    std::fs::write(output_path, rendered)?;
+
+    Ok(())
+}
+
+/// Render the Solidity mock Groth16Verifier contract template and write it to the given path.
+pub fn create_mock_groth16_verifier_at_path(
+    contract_data: &ContractData,
+    output_path: &str,
+) -> Result<()> {
+    let mut tera = Tera::default();
+    tera.add_template_file(
+        "./templates/MockGroth16Verifier.sol.tera",
+        Some("Groth16Verifier.sol"),
+    )?;
+
+    let mut context = Context::new();
+    context.insert("signal_size", &contract_data.signal_size);
+
+    let rendered_contract = tera.render("Groth16Verifier.sol", &context)?;
+    if let Some(parent) = Path::new(output_path).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    std::fs::write(output_path, rendered_contract)?;
 
     Ok(())
 }
@@ -107,13 +174,15 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
     }
 }
 
+/// Generate a Groth16 verifier contract from a zkey and write it to the given output path.
+/// The contract name in the Solidity source is derived from the output filename (e.g. Groth16Verifier.sol -> Groth16Verifier).
 pub async fn generate_verifier_contract(
     tmp_dir: &str,
     snarkjs_path: &str,
     zkey_file_name: &str,
-    contract_name: &str,
+    output_path: &str,
 ) -> Result<()> {
-    // Generate the verifier contract
+    // Generate the verifier contract (snarkjs writes verifier.sol to tmp_dir)
     info!(LOG, "Generating verifier contract");
     run_command(
         snarkjs_path,
@@ -128,10 +197,14 @@ pub async fn generate_verifier_contract(
     )
     .await?;
 
-    // Path to the generated verifier
     let verifier_path = Path::new(tmp_dir).join("verifier.sol");
-    // Path to the renamed verifier
-    let renamed_path = Path::new(tmp_dir).join(format!("{}.sol", contract_name));
+    let output = Path::new(output_path);
+
+    // Derive contract name from output filename (e.g. Groth16Verifier.sol -> Groth16Verifier)
+    let contract_name = output
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("Groth16Verifier");
 
     // Read the verifier contract
     let content = fs::read_to_string(&verifier_path)?;
@@ -147,7 +220,7 @@ pub async fn generate_verifier_contract(
                     )
                 })?
                 .as_str(),
-            &format!("pragma solidity ^{};", "0.8.13"),
+            &format!("pragma solidity ^{};", "0.8.34"),
         )
         .replace(
             Regex::new(r"contract .*\{")
@@ -160,13 +233,18 @@ pub async fn generate_verifier_contract(
             &format!("contract {} {{", contract_name),
         );
 
-    // Write updated content to the new file and remove the original
-    fs::write(&renamed_path, updated_content)?;
+    // Ensure parent directory exists, then write
+    if let Some(parent) = output.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    fs::write(output, updated_content)?;
     fs::remove_file(&verifier_path)?;
 
     info!(
         LOG,
-        "Updated verifier to Solidity 0.8.13 and renamed contract to {}", contract_name
+        "Wrote verifier to {} (contract {})", output_path, contract_name
     );
 
     Ok(())
@@ -180,15 +258,14 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
 
     // Parse the output to extract addresses
-    let re = Regex::new(
-        r"Deployed (ClientProofVerifier|ServerProofVerifier|Contract|DKIMRegistry) at (0x[a-fA-F0-9]{40})"
-    ).unwrap();
+    let re = Regex::new(r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})")
+        .unwrap();
     let mut contract_addresses = HashMap::new();
     for cap in re.captures_iter(&output) {
         let contract_name = &cap[1];
         let address = &cap[2];
         contract_addresses.insert(contract_name.to_string(), address.to_string());
-        info!(LOG, "Deployed {} at address: {}", contract_name, address);
+        info!(LOG, "{} Contract is at: {}", contract_name, address);
     }
 
     // Write constructor arguments to a file
@@ -197,10 +274,9 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         "cast",
         &[
             "abi-encode",
-            "constructor(address,address,address)",
-            contract_addresses.get("DKIMRegistry").unwrap(),
-            contract_addresses.get("ClientProofVerifier").unwrap(),
-            contract_addresses.get("ServerProofVerifier").unwrap(),
+            "constructor(address,address)",
+            contract_addresses.get("DKIM_REGISTRY").unwrap(),
+            contract_addresses.get("GROTH16_VERIFIER").unwrap(),
         ],
         None,
     )
@@ -209,12 +285,12 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
     if let Ok(_) = env::var("ETHERSCAN_API_KEY") {
         info!(LOG, "Verify contracts");
 
-        // Verify ClientProofVerifier with retries
+        // Verify Groth16Verifier with retries
         let mut last_error = None;
         for attempt in 1..=3 {
             info!(
                 LOG,
-                "Attempting to verify ClientProofVerifier (attempt {}/3)", attempt
+                "Attempting to verify Groth16Verifier (attempt {}/3)", attempt
             );
             match run_command(
                 "forge",
@@ -222,22 +298,22 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                     "verify-contract",
                     "--chain-id",
                     payload.chain_id.to_string().as_str(),
-                    contract_addresses.get("ClientProofVerifier").unwrap(),
-                    "tmp/ClientProofVerifier.sol:ClientProofVerifier",
+                    contract_addresses.get("GROTH16_VERIFIER").unwrap(),
+                    "tmp/contracts/src/Groth16Verifier.sol:Groth16Verifier",
                 ],
                 None,
             )
             .await
             {
                 Ok(_) => {
-                    info!(LOG, "Successfully verified ClientProofVerifier");
+                    info!(LOG, "Successfully verified Groth16Verifier");
                     last_error = None;
                     break;
                 }
                 Err(e) => {
                     info!(
                         LOG,
-                        "Attempt {}/3 failed to verify ClientProofVerifier: {}", attempt, e
+                        "Attempt {}/3 failed to verify Groth16Verifier: {}", attempt, e
                     );
                     last_error = Some(e);
                     if attempt < 3 {
@@ -249,7 +325,7 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         }
         if let Some(e) = last_error {
             return Err(anyhow::anyhow!(
-                "Failed to verify ClientProofVerifier after 3 attempts: {}",
+                "Failed to verify Groth16Verifier after 3 attempts: {}",
                 e
             ));
         }
@@ -258,59 +334,13 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         info!(LOG, "Waiting 5 seconds before next verification...");
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
-        // Verify ServerProofVerifier with retries
+        // Verify ZKEmailVerifier with retries
         let mut last_error = None;
         for attempt in 1..=3 {
             info!(
                 LOG,
-                "Attempting to verify ServerProofVerifier (attempt {}/3)", attempt
+                "Attempting to verify ZKEmailVerifier (attempt {}/3)", attempt
             );
-            match run_command(
-                "forge",
-                &[
-                    "verify-contract",
-                    "--chain-id",
-                    payload.chain_id.to_string().as_str(),
-                    contract_addresses.get("ServerProofVerifier").unwrap(),
-                    "tmp/ServerProofVerifier.sol:ServerProofVerifier",
-                ],
-                None,
-            )
-            .await
-            {
-                Ok(_) => {
-                    info!(LOG, "Successfully verified ServerProofVerifier");
-                    last_error = None;
-                    break;
-                }
-                Err(e) => {
-                    info!(
-                        LOG,
-                        "Attempt {}/3 failed to verify ServerProofVerifier: {}", attempt, e
-                    );
-                    last_error = Some(e);
-                    if attempt < 3 {
-                        info!(LOG, "Waiting 10 seconds before retry...");
-                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-                    }
-                }
-            }
-        }
-        if let Some(e) = last_error {
-            return Err(anyhow::anyhow!(
-                "Failed to verify ServerProofVerifier after 3 attempts: {}",
-                e
-            ));
-        }
-
-        // Delay between contract verifications
-        info!(LOG, "Waiting 5 seconds before next verification...");
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
-        // Verify Contract with retries
-        let mut last_error = None;
-        for attempt in 1..=3 {
-            info!(LOG, "Attempting to verify Contract (attempt {}/3)", attempt);
             match run_command(
                 "forge",
                 &[
@@ -319,22 +349,22 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
                     payload.chain_id.to_string().as_str(),
                     "--constructor-args",
                     &constructor_args,
-                    contract_addresses.get("Contract").unwrap(),
-                    "tmp/Contract.sol:Contract",
+                    contract_addresses.get("ZK_EMAIL_VERIFIER").unwrap(),
+                    "tmp/contracts/src/ZKEmailVerifier.sol:ZKEmailVerifier",
                 ],
                 None,
             )
             .await
             {
                 Ok(_) => {
-                    info!(LOG, "Successfully verified Contract");
+                    info!(LOG, "Successfully verified ZKEmailVerifier ");
                     last_error = None;
                     break;
                 }
                 Err(e) => {
                     info!(
                         LOG,
-                        "Attempt {}/3 failed to verify Contract: {}", attempt, e
+                        "Attempt {}/3 failed to verify ZKEmailVerifier: {}", attempt, e
                     );
                     last_error = Some(e);
                     if attempt < 3 {
@@ -346,11 +376,14 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         }
         if let Some(e) = last_error {
             return Err(anyhow::anyhow!(
-                "Failed to verify Contract after 3 attempts: {}",
+                "Failed to verify ZKEmailVerifier after 3 attempts: {}",
                 e
             ));
         }
     }
 
-    Ok(contract_addresses.get("Contract").unwrap().to_string())
+    Ok(contract_addresses
+        .get("ZK_EMAIL_VERIFIER")
+        .unwrap()
+        .to_string())
 }

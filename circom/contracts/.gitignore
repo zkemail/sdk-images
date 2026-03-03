@@ -1,0 +1,13 @@
+# foundry directories
+broadcast
+cache
+out
+
+# other directories
+coverage
+node_modules
+
+# .env files
+.env
+.env.*
+!.env.example

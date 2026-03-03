@@ -12,8 +12,9 @@ config.json
 cache
 broadcast
 
-contract.sol
-verifier.sol
+IGroth16Verifier.sol
+Groth16Verifier.sol
+ZKEmailVerifier.sol
 
 nohup.out
 
