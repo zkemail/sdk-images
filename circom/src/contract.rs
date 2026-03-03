@@ -100,7 +100,11 @@ pub fn create_mock_groth16_verifier_at_path(
     context.insert("signal_size", &contract_data.signal_size);
 
     let rendered_contract = tera.render("Groth16Verifier.sol", &context)?;
-
+    if let Some(parent) = Path::new(output_path).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
     std::fs::write(output_path, rendered_contract)?;
 
     Ok(())
