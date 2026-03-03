@@ -2,9 +2,14 @@
 pragma solidity ^0.8.34;
 
 import { IDKIMRegistry } from "./interfaces/IDKIMRegistry.sol";
-import { IZKEmailVerifier } from "./interfaces/IZKEmailVerifier.sol";
 import { IGroth16Verifier } from "./interfaces/IGroth16Verifier.sol";
+import { IZKEmailVerifier } from "./interfaces/IZKEmailVerifier.sol";
 
+/**
+ * @title ZKEmailVerifier
+ * @notice Concrete implementation of {IZKEmailVerifier} that verifies Groth16 proofs and DKIM public key hashes
+ * @dev See {IZKEmailVerifier} for the interface-level documentation.
+ */
 contract ZKEmailVerifier is IZKEmailVerifier {
     /**
      * @notice The DKIM registry contract used to verify the public key hash
@@ -29,15 +34,6 @@ contract ZKEmailVerifier is IZKEmailVerifier {
     bytes32 public constant DOMAIN_HASH = keccak256(bytes("{{ sender_domain }}"));
 
     /**
-     * @notice Custom errors for the ZKEmailVerifier contract
-     */
-    error InvalidDKIMRegistry();
-    error InvalidGroth16Verifier();
-    error InvalidPublicInputsLength(uint256 expected, uint256 actual);
-    error InvalidPublicKey();
-    error InvalidProof();
-
-    /**
      * @param _dkimRegistry The IERC7969 compliant DKIM registry contract
      * @param _groth16Verifier The Groth16 verifier contract
      */
@@ -49,10 +45,7 @@ contract ZKEmailVerifier is IZKEmailVerifier {
     }
 
     /**
-     * @notice Verifies a proof
-     * @param proof The proof to verify
-     * @param publicInputs The public inputs to the proof
-     * @dev Reverts if the DKIM public key hash check fails or the Groth16 proof is invalid
+     * @inheritdoc IZKEmailVerifier
      */
     function verify(bytes calldata proof, bytes32[] calldata publicInputs) external view {
         if (publicInputs.length != PUBLIC_INPUTS_LENGTH) {
