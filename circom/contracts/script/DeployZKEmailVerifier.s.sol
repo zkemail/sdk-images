@@ -35,7 +35,6 @@ contract DeployZKEmailVerifierScript is Script {
         vm.stopBroadcast();
 
         console.log("\n=== Deployment Complete ===");
-        console.log("DKIM_REGISTRY:", dkimRegistryAddr);
         console.log("GROTH16_VERIFIER:", address(groth16Verifier));
         console.log("ZK_EMAIL_VERIFIER:", address(zkEmailVerifier));
     }
