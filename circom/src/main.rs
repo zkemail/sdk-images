@@ -417,10 +417,13 @@ async fn cleanup() -> Result<()> {
     run_command("cp", &["contracts/package.json", "./tmp/contracts"], None).await?;
     run_command("cp", &["contracts/remappings.txt", "./tmp/contracts"], None).await?;
     run_command("cp", &["contracts/yarn.lock", "./tmp/contracts"], None).await?;
-    // Copy the local IDKIMRegistry interface so the bundled contracts are self-contained.
     fs::copy(
         "contracts/src/interfaces/IDKIMRegistry.sol",
         contracts_tmp_interfaces_dir.join("IDKIMRegistry.sol"),
+    )?;
+    fs::copy(
+        "contracts/src/interfaces/IZKEmailVerifier.sol",
+        contracts_tmp_interfaces_dir.join("IZKEmailVerifier.sol"),
     )?;
     run_command(
         "cp",
@@ -663,6 +666,11 @@ mod tests {
             test_dir.join("contracts/src/interfaces/IDKIMRegistry.sol"),
         )
         .unwrap();
+        fs::copy(
+            "contracts/src/interfaces/IZKEmailVerifier.sol",
+            test_dir.join("contracts/src/interfaces/IZKEmailVerifier.sol"),
+        )
+        .unwrap();
 
         // Generate ZKEmailVerifier.sol from template (no compilation needed)
         let contract_data = ContractData {
@@ -727,6 +735,7 @@ mod tests {
             "contracts/src/Groth16Verifier.sol",
             "contracts/src/interfaces/",
             "contracts/src/interfaces/IDKIMRegistry.sol",
+            "contracts/src/interfaces/IZKEmailVerifier.sol",
             "contracts/script/",
             "contracts/script/DeployZKEmailVerifier.s.sol",
             "contracts/foundry.toml",

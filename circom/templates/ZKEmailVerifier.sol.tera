@@ -2,6 +2,7 @@
 pragma solidity ^0.8.34;
 
 import { IDKIMRegistry } from "./interfaces/IDKIMRegistry.sol";
+import { IZKEmailVerifier } from "./interfaces/IZKEmailVerifier.sol";
 
 /**
  * @title Groth16 Verifier Interface
@@ -27,7 +28,7 @@ interface IGroth16Verifier {
         returns (bool);
 }
 
-contract ZKEmailVerifier {
+contract ZKEmailVerifier is IZKEmailVerifier {
     /**
      * @notice The DKIM registry contract used to verify the public key hash
      */
