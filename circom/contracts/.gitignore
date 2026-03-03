@@ -3,10 +3,6 @@ broadcast
 cache
 out
 
-# hardhat directories
-hh-artifacts
-hh-cache
-
 # other directories
 coverage
 node_modules

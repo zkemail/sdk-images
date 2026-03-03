@@ -29,8 +29,7 @@ contract DeployZKEmailVerifierScript is Script {
 
         console.log("\n=== Step 1: Deploy ZKEmailVerifier ===");
         console.log("Deploying ZKEmailVerifier with DKIMRegistry:", address(dkimRegistry));
-        ZKEmailVerifier zkEmailVerifier =
-            new ZKEmailVerifier(dkimRegistry, IGroth16Verifier(address(groth16Verifier)));
+        ZKEmailVerifier zkEmailVerifier = new ZKEmailVerifier(dkimRegistry, IGroth16Verifier(address(groth16Verifier)));
         console.log("ZKEmailVerifier deployed at:", address(zkEmailVerifier));
 
         vm.stopBroadcast();
