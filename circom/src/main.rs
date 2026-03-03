@@ -7,9 +7,12 @@ use std::{cmp::max, env, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
-    create_igroth16_verifier_interface_at_path, create_mock_groth16_verifier_at_path,
-    create_zkemail_verifier_contract_at_path, deploy_verifier_contract, generate_verifier_contract,
-    prepare_contract_data, ContractData,
+    create_mock_groth16_verifier_at_path,
+    create_zkemail_verifier_and_interface_at_paths,
+    deploy_verifier_contract,
+    generate_verifier_contract,
+    prepare_contract_data,
+    ContractData,
 };
 use db::update_verifier_contract_address;
 use payload::UploadUrls;
@@ -51,22 +54,18 @@ async fn main() -> Result<()> {
         let json = fs::read_to_string(contract_data_json_path)?;
         let contract_data: ContractData = serde_json::from_str(&json)?;
 
+        // Generate ZKEmailVerifier and IGroth16Verifier interface side by side.
         let zkemail_output_path = output_dir.join("ZKEmailVerifier.sol");
-        create_zkemail_verifier_contract_at_path(
-            &contract_data,
-            zkemail_output_path
-                .to_str()
-                .ok_or_else(|| anyhow::anyhow!("Invalid ZKEmailVerifier output path"))?,
-        )?;
-
-        // Also generate interfaces and a mock Groth16 verifier contract in the same directory.
         let interfaces_dir = output_dir.join("interfaces");
         if !interfaces_dir.exists() {
             fs::create_dir_all(&interfaces_dir)?;
         }
         let igroth16_interface_output_path = interfaces_dir.join("IGroth16Verifier.sol");
-        create_igroth16_verifier_interface_at_path(
+        create_zkemail_verifier_and_interface_at_paths(
             &contract_data,
+            zkemail_output_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid ZKEmailVerifier output path"))?,
             igroth16_interface_output_path
                 .to_str()
                 .ok_or_else(|| anyhow::anyhow!("Invalid IGroth16Verifier output path"))?,
@@ -111,12 +110,9 @@ async fn main() -> Result<()> {
 
     let contract_data = prepare_contract_data(&payload);
 
-    create_zkemail_verifier_contract_at_path(
+    create_zkemail_verifier_and_interface_at_paths(
         &contract_data,
         "tmp/contracts/src/ZKEmailVerifier.sol",
-    )?;
-    create_igroth16_verifier_interface_at_path(
-        &contract_data,
         "tmp/contracts/src/interfaces/IGroth16Verifier.sol",
     )?;
 
@@ -698,14 +694,19 @@ mod tests {
             signal_size: 8,
             prover_eth_address_idx: 4,
         };
-        create_zkemail_verifier_contract_at_path(
+        create_zkemail_verifier_and_interface_at_paths(
             &contract_data,
             test_dir
                 .join("contracts/src/ZKEmailVerifier.sol")
                 .to_str()
                 .unwrap(),
+            test_dir
+                .join("contracts/src/interfaces/IGroth16Verifier.sol")
+                .to_str()
+                .unwrap(),
         )
         .unwrap();
+
 
         // Generate Groth16Verifier.sol from the mock template (no snarkjs needed)
         create_mock_groth16_verifier_at_path(
@@ -754,6 +755,7 @@ mod tests {
             "contracts/src/interfaces/",
             "contracts/src/interfaces/IDKIMRegistry.sol",
             "contracts/src/interfaces/IZKEmailVerifier.sol",
+            "contracts/src/interfaces/IGroth16Verifier.sol",
             "contracts/script/",
             "contracts/script/DeployZKEmailVerifier.s.sol",
             "contracts/foundry.toml",

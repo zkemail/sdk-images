@@ -59,6 +59,17 @@ pub fn create_zkemail_verifier_contract_at_path(
     Ok(())
 }
 
+/// Render both the ZKEmailVerifier contract and IGroth16Verifier interface to the given paths.
+pub fn create_zkemail_verifier_and_interface_at_paths(
+    contract_data: &ContractData,
+    zkemail_output_path: &str,
+    igroth16_output_path: &str,
+) -> Result<()> {
+    create_zkemail_verifier_contract_at_path(contract_data, zkemail_output_path)?;
+    create_igroth16_verifier_interface_at_path(contract_data, igroth16_output_path)?;
+    Ok(())
+}
+
 /// Render the Solidity IGroth16Verifier interface template and write it to the given path.
 pub fn create_igroth16_verifier_interface_at_path(
     contract_data: &ContractData,
