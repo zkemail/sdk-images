@@ -54,7 +54,7 @@ pub async fn setup(tmp_dir: &Path) -> Result<()> {
 }
 
 /// Internal helper to set up a circuit-specific tmp directory like `holder_dir/1024` or `holder_dir/2048`.
-/// Each directory gets its own `src` subfolder and `Nargo.toml`.
+/// Each directory gets its own Noir project under `noir/` with `src` and `Nargo.toml`.
 pub async fn setup_circuit_dir(holder_dir: &Path, subdir: &str) -> Result<()> {
     let base_path = holder_dir.join(subdir);
 
@@ -64,13 +64,14 @@ pub async fn setup_circuit_dir(holder_dir: &Path, subdir: &str) -> Result<()> {
     }
     fs::create_dir_all(&base_path)?;
 
-    // Create the src directory inside this circuit-specific tmp
-    let src_path = base_path.join("src");
+    // Create the Noir project root and its src directory (e.g. holder_dir/1024/noir/src)
+    let noir_root = base_path.join("noir");
+    let src_path = noir_root.join("src");
     fs::create_dir_all(&src_path)?;
 
-    // Copy Nargo.toml into the circuit-specific tmp
+    // Copy Nargo.toml into the Noir project root (holder_dir/1024/noir/Nargo.toml)
     let nargo_toml_path = Path::new("./Nargo.toml.txt");
-    fs::copy(nargo_toml_path, base_path.join("Nargo.toml"))?;
+    fs::copy(nargo_toml_path, noir_root.join("Nargo.toml"))?;
 
     Ok(())
 }
@@ -85,28 +86,28 @@ pub async fn compile_circuit(cwd: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Zips a single circuit project by archiving its `src` and `Nargo.toml` into
-/// `zip_name` placed in the parent directory of `circuit_dir`.
-/// Returns the full path to the created zip file.
+/// Zips the Noir project at `circuit_dir` into `zip_name` under the shared tmp dir and returns the full path to the created zip file.
 pub async fn zip_circuit_dir(circuit_dir: &Path, zip_name: &str) -> Result<std::path::PathBuf> {
-    let circuit_dir_str = circuit_dir
-        .to_str()
-        .ok_or_else(|| anyhow!("cleanup_circuit_dir path must be valid UTF-8"))?;
-
-    let parent = circuit_dir
+    // circuit_dir = e.g. tmp/1024/noir (Noir project root)
+    let key_dir = circuit_dir
         .parent()
         .ok_or_else(|| anyhow!("circuit_dir must have a parent directory"))?;
+    // key_dir = tmp/1024 (directory for this key size; we run zip from here)
 
-    let zip_rel = format!("../{}", zip_name);
-    let zip_path = parent.join(zip_name);
+    let tmp_dir = key_dir
+        .parent()
+        .ok_or_else(|| anyhow!("key_dir must have a parent directory"))?;
+    // tmp_dir = tmp (zip file is written here)
 
-    info!(LOG, "Zipping circuit to {}", zip_name);
-    run_command(
-        "zip",
-        &["-r", &zip_rel, "src", "Nargo.toml"],
-        Some(circuit_dir_str),
-    )
-    .await?;
+    let cwd = key_dir
+        .to_str()
+        .ok_or_else(|| anyhow!("key_dir path must be valid UTF-8"))?;
+
+    let zip_path = tmp_dir.join(zip_name);
+    let zip_arg = format!("../{}", zip_name); // relative to cwd (key_dir)
+
+    info!(LOG, "Zipping circuit Noir project to {}", zip_name);
+    run_command("zip", &["-r", &zip_arg, "noir"], Some(cwd)).await?;
 
     Ok(zip_path)
 }
