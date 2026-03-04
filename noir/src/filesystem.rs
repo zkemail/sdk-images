@@ -1,64 +1,38 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
 use sdk_utils::{run_command, upload_to_url};
 use slog::info;
 use std::{fs, path::Path};
 
-use crate::handlers::UploadUrls;
-
 #[cfg_attr(test, mockall::automock)]
 pub trait FileUploader {
-    fn upload_files(&self, upload_urls: UploadUrls) -> impl Future<Output = Result<()>> + Send;
+    fn upload_files(&self, targets: Vec<UploadTarget>) -> impl Future<Output = Result<()>> + Send;
+}
+
+/// Describes a single file upload: where to upload (`url`), which local file
+/// to read (`path`), and the HTTP content type to use (`content_type`).
+#[derive(Debug, Clone)]
+pub struct UploadTarget {
+    pub url: String,
+    pub path: String,
+    pub content_type: String,
 }
 
 pub struct ProductionFileUploader;
 
 impl FileUploader for ProductionFileUploader {
-    async fn upload_files(&self, upload_urls: UploadUrls) -> Result<()> {
-        // 1024-bit artifacts
-        upload_to_url(
-            &upload_urls.circuit_1024,
-            "./tmp/circuit_1024.zip",
-            "application/zip",
-        )
-        .await?;
-        upload_to_url(
-            &upload_urls.circuit_json_1024,
-            "./tmp/target/sdk_noir_1024.json",
-            "application/json",
-        )
-        .await?;
-
-        // 2048-bit artifacts
-        upload_to_url(
-            &upload_urls.circuit_2048,
-            "./tmp/circuit_2048.zip",
-            "application/zip",
-        )
-        .await?;
-        upload_to_url(
-            &upload_urls.circuit_json_2048,
-            "./tmp/target/sdk_noir_2048.json",
-            "application/json",
-        )
-        .await?;
-
-        // Shared regex graphs
-        upload_to_url(
-            &upload_urls.regex_graphs,
-            "./tmp/regex_graphs.zip",
-            "application/zip",
-        )
-        .await?;
+    async fn upload_files(&self, targets: Vec<UploadTarget>) -> Result<()> {
+        for target in targets {
+            upload_to_url(&target.url, &target.path, &target.content_type).await?;
+        }
 
         Ok(())
     }
 }
 
 /// Sets up the temporary directory structure for circuit compilation
-pub async fn setup() -> Result<()> {
-    // Define the tmp path
-    let tmp_path = Path::new("./tmp");
+pub async fn setup(tmp_dir: &Path) -> Result<()> {
+    let tmp_path = tmp_dir;
 
     // If tmp exists, remove its contents
     if tmp_path.exists() {
@@ -76,64 +50,81 @@ pub async fn setup() -> Result<()> {
         fs::create_dir_all(tmp_path)?;
     }
 
-    // Ensure src directory exists inside tmp
-    let src_path = tmp_path.join("src");
+    Ok(())
+}
 
-    if src_path.exists() {
-        fs::remove_dir_all(&src_path)?;
+/// Internal helper to set up a circuit-specific tmp directory like `holder_dir/1024` or `holder_dir/2048`.
+/// Each directory gets its own `src` subfolder and `Nargo.toml`.
+pub async fn setup_circuit_dir(holder_dir: &Path, subdir: &str) -> Result<()> {
+    let base_path = holder_dir.join(subdir);
+
+    // Recreate the base directory
+    if base_path.exists() {
+        fs::remove_dir_all(&base_path)?;
     }
+    fs::create_dir_all(&base_path)?;
+
+    // Create the src directory inside this circuit-specific tmp
+    let src_path = base_path.join("src");
     fs::create_dir_all(&src_path)?;
 
-    // Copy Nargo.toml to the tmp folder
+    // Copy Nargo.toml into the circuit-specific tmp
     let nargo_toml_path = Path::new("./Nargo.toml.txt");
-
-    fs::copy(nargo_toml_path, tmp_path.join("Nargo.toml"))?;
-
-    Ok(())
-}
-
-/// Compiles the circuit using nargo and generates the verification key
-pub async fn compile_circuit() -> Result<()> {
-    // Compile the circuit
-    info!(LOG, "Compiling circuit");
-    run_command("nargo", &["compile"], Some("tmp")).await?;
+    fs::copy(nargo_toml_path, base_path.join("Nargo.toml"))?;
 
     Ok(())
 }
 
-/// Cleans up after multi-key compilation and zips both circuit variants
-/// Takes the circuit source code for each key size to create separate zips
-pub async fn cleanup_multi_key(circuit_1024: &str, circuit_2048: &str) -> Result<()> {
-    info!(LOG, "Cleaning up multi-key compilation");
+/// Compiles the circuit using nargo in the provided working directory.
+pub async fn compile_circuit(cwd: &Path) -> Result<()> {
+    let cwd_str = cwd
+        .to_str()
+        .ok_or_else(|| anyhow!("compile_circuit cwd must be valid UTF-8"))?;
+    info!(LOG, "Compiling circuit in {}", cwd_str);
+    run_command("nargo", &["compile"], Some(cwd_str)).await?;
+    Ok(())
+}
 
-    // Write 1024-bit circuit and zip it
-    info!(LOG, "Zipping 1024-bit circuit");
-    std::fs::write("./tmp/src/main.nr", circuit_1024)?;
+/// Zips a single circuit project by archiving its `src` and `Nargo.toml` into
+/// `zip_name` placed in the parent directory of `circuit_dir`.
+/// Returns the full path to the created zip file.
+pub async fn zip_circuit_dir(circuit_dir: &Path, zip_name: &str) -> Result<std::path::PathBuf> {
+    let circuit_dir_str = circuit_dir
+        .to_str()
+        .ok_or_else(|| anyhow!("cleanup_circuit_dir path must be valid UTF-8"))?;
+
+    let parent = circuit_dir
+        .parent()
+        .ok_or_else(|| anyhow!("circuit_dir must have a parent directory"))?;
+
+    let zip_rel = format!("../{}", zip_name);
+    let zip_path = parent.join(zip_name);
+
+    info!(LOG, "Zipping circuit to {}", zip_name);
     run_command(
         "zip",
-        &["-r", "circuit_1024.zip", "src", "Nargo.toml"],
-        Some("tmp"),
+        &["-r", &zip_rel, "src", "Nargo.toml"],
+        Some(circuit_dir_str),
     )
     .await?;
 
-    // Write 2048-bit circuit and zip it
-    info!(LOG, "Zipping 2048-bit circuit");
-    std::fs::write("./tmp/src/main.nr", circuit_2048)?;
-    run_command(
-        "zip",
-        &["-r", "circuit_2048.zip", "src", "Nargo.toml"],
-        Some("tmp"),
-    )
-    .await?;
+    Ok(zip_path)
+}
 
+/// Zips regex graphs into `zip_name` under `holder_dir` and returns
+/// the full path to the created zip file.
+pub async fn zip_regex_graphs(holder_dir: &Path, zip_name: &str) -> Result<std::path::PathBuf> {
     // Zip regex graphs (shared)
     info!(LOG, "Zipping regex graphs");
+    let holder_dir_str = holder_dir
+        .to_str()
+        .ok_or_else(|| anyhow!("holder_dir path must be valid UTF-8"))?;
     run_command(
         "zip",
-        &["-r", "regex_graphs.zip", ".", "-i", "*_regex.json"],
-        Some("tmp"),
+        &["-r", zip_name, ".", "-i", "*_regex.json"],
+        Some(holder_dir_str),
     )
     .await?;
 
-    Ok(())
+    Ok(holder_dir.join(zip_name))
 }
