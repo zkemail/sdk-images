@@ -11,9 +11,9 @@ interface IZKEmailVerifier {
      */
     error InvalidDKIMRegistry();
     /**
-     * @notice Thrown when the Groth16 verifier address is zero or otherwise invalid
+     * @notice Thrown when the proof verifier address is zero or otherwise invalid
      */
-    error InvalidGroth16Verifier();
+    error InvalidProofVerifier();
     /**
      * @notice Thrown when the public inputs array length does not match the circuit's expected length
      */
@@ -23,7 +23,7 @@ interface IZKEmailVerifier {
      */
     error InvalidPublicKey();
     /**
-     * @notice Thrown when the Groth16 verifier reports the proof as invalid
+     * @notice Thrown when the proof verifier reports the proof as invalid
      */
     error InvalidProof();
 
