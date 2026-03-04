@@ -27,7 +27,7 @@ contract ZKEmailVerifier is IZKEmailVerifier {
     /**
      * @notice Public inputs length (number of public inputs for the circuit)
      */
-    uint256 public constant PUBLIC_INPUTS_LENGTH = {{ signal_size }};
+    uint256 public constant PUBLIC_INPUTS_LENGTH = {{ public_inputs_length }};
     /**
      * @notice Constant domain hash for dkim verification
      */

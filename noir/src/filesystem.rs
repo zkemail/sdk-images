@@ -1,8 +1,13 @@
 use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
-use sdk_utils::{run_command, upload_to_url};
+use sdk_utils::{proto_types::proto_blueprint::Blueprint, run_command, upload_to_url};
 use slog::info;
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+use tera::{Context, Tera};
+use regex::Regex;
 
 #[cfg_attr(test, mockall::automock)]
 pub trait FileUploader {
@@ -28,6 +33,15 @@ impl FileUploader for ProductionFileUploader {
 
         Ok(())
     }
+}
+
+/// Holds key paths under a circuit's `contracts` subtree that callers might
+/// want to reference (even if they're not all used immediately).
+#[derive(Debug, Clone)]
+pub struct ContractsPaths {
+    pub root: PathBuf,
+    pub honk_verifier: PathBuf,
+    pub zkemail_verifier: PathBuf,
 }
 
 /// Sets up the temporary directory structure for circuit compilation
@@ -162,4 +176,171 @@ pub async fn zip_regex_graphs(holder_dir: &Path, zip_name: &str) -> Result<std::
     .await?;
 
     Ok(holder_dir.join(zip_name))
+}
+
+/// Internal helper to derive the public inputs length from the generated
+/// Honk verifier contract. We read `NUMBER_OF_PUBLIC_INPUTS` from
+/// `<circuit_dir>/target/HonkVerifier.sol` and use that as
+/// `public_inputs_length` for the ZKEmailVerifier template.
+fn derive_public_inputs_length(circuit_dir: &Path) -> Result<u64> {
+    let honk_path = circuit_dir.join("target").join("HonkVerifier.sol");
+    let contents = fs::read_to_string(&honk_path).map_err(|e| {
+        anyhow!(
+            "Failed to read HonkVerifier at {}: {}",
+            honk_path.display(),
+            e
+        )
+    })?;
+
+    let re =
+        Regex::new(r"NUMBER_OF_PUBLIC_INPUTS\s*=\s*(\d+)\s*;").map_err(|e| {
+            anyhow!("Failed to compile NUMBER_OF_PUBLIC_INPUTS regex: {}", e)
+        })?;
+
+    let caps = re
+        .captures(&contents)
+        .ok_or_else(|| anyhow!("NUMBER_OF_PUBLIC_INPUTS constant not found in HonkVerifier"))?;
+
+    let value_str = caps
+        .get(1)
+        .ok_or_else(|| anyhow!("NUMBER_OF_PUBLIC_INPUTS capture group missing"))?
+        .as_str();
+
+    let value = value_str.parse::<u64>().map_err(|e| {
+        anyhow!(
+            "Failed to parse NUMBER_OF_PUBLIC_INPUTS value '{}' as u64: {}",
+            value_str,
+            e
+        )
+    })?;
+
+    Ok(value)
+}
+
+/// Scaffolds a Foundry-compatible contracts package for a single circuit under
+/// `<circuit_dir>/contracts`.
+///
+/// Layout:
+/// - contracts/
+///   - .env.example
+///   - README.md
+///   - foundry.toml
+///   - package.json
+///   - remappings.txt
+///   - yarn.lock
+///   - src/
+///     - interfaces/
+///       - IDKIMRegistry.sol
+///       - IHonkVerifier.sol
+///       - IZKEmailVerifier.sol
+///     - HonkVerifier.sol         (copied from `<circuit_dir>/target/HonkVerifier.sol`)
+///     - ZKEmailVerifier.sol      (rendered from Tera template)
+///   - script/
+///     - DeployZKEmailVerifier.s.sol
+pub fn scaffold_contracts_for_circuit(
+    circuit_dir: &Path,
+    blueprint: &Blueprint,
+) -> Result<ContractsPaths> {
+    let contracts_root = circuit_dir.join("contracts");
+    let contracts_src = contracts_root.join("src");
+    let contracts_interfaces = contracts_src.join("interfaces");
+    let contracts_script = contracts_root.join("script");
+
+    // Create directory structure
+    fs::create_dir_all(&contracts_interfaces)?;
+    fs::create_dir_all(&contracts_script)?;
+
+    // Helper to copy a single file from repo-relative `src` into `dest_dir`.
+    fn copy_into(src: &Path, dest_dir: &Path) -> Result<()> {
+        let file_name = src
+            .file_name()
+            .ok_or_else(|| anyhow!("Source path '{}' has no file name", src.display()))?;
+        let dest = dest_dir.join(file_name);
+        fs::copy(src, &dest).map_err(|e| {
+            anyhow!(
+                "Failed to copy '{}' to '{}': {}",
+                src.display(),
+                dest.display(),
+                e
+            )
+        })?;
+        Ok(())
+    }
+
+    // Base path for the mono-repo contracts package (relative to the Noir crate root).
+    let repo_contracts_root = Path::new("./contracts");
+
+    // Copy top-level config/metadata files.
+    for name in [
+        ".env.example",
+        "README.md",
+        "foundry.toml",
+        "package.json",
+        "remappings.txt",
+        "yarn.lock",
+    ] {
+        let src = repo_contracts_root.join(name);
+        copy_into(&src, &contracts_root)?;
+    }
+
+    // Copy core interfaces.
+    let repo_interfaces_root = repo_contracts_root.join("src").join("interfaces");
+    for name in ["IDKIMRegistry.sol", "IHonkVerifier.sol", "IZKEmailVerifier.sol"] {
+        let src = repo_interfaces_root.join(name);
+        copy_into(&src, &contracts_interfaces)?;
+    }
+
+    // Copy deploy script.
+    let repo_script_root = repo_contracts_root.join("script");
+    let deploy_script = repo_script_root.join("DeployZKEmailVerifier.s.sol");
+    copy_into(&deploy_script, &contracts_script)?;
+
+    // Copy generated HonkVerifier.sol from the circuit's target dir into contracts/src.
+    let honk_source = circuit_dir.join("target").join("HonkVerifier.sol");
+    if !honk_source.exists() {
+        return Err(anyhow!(
+            "Expected HonkVerifier at '{}' but it does not exist",
+            honk_source.display()
+        ));
+    }
+    let honk_dest = contracts_src.join("HonkVerifier.sol");
+    fs::copy(&honk_source, &honk_dest).map_err(|e| {
+        anyhow!(
+            "Failed to copy HonkVerifier from '{}' to '{}': {}",
+            honk_source.display(),
+            honk_dest.display(),
+            e
+        )
+    })?;
+
+    // Compute public_inputs_length from the generated Honk verifier so the
+    // Solidity verifier stays in sync with the circuit.
+    let public_inputs_length = derive_public_inputs_length(circuit_dir)?;
+
+    // Render ZKEmailVerifier.sol from the Tera template.
+    let mut tera = Tera::default();
+    tera.add_template_file(
+        "./templates/ZKEmailVerifier.sol.tera",
+        Some("ZKEmailVerifier.sol.tera"),
+    )?;
+
+    let mut context = Context::new();
+    context.insert("public_inputs_length", &public_inputs_length);
+    context.insert("sender_domain", &blueprint.sender_domain);
+
+    let rendered = tera.render("ZKEmailVerifier.sol.tera", &context)?;
+    let zkemail_dest = contracts_src.join("ZKEmailVerifier.sol");
+    fs::write(&zkemail_dest, rendered).map_err(|e| {
+        anyhow!(
+            "Failed to write ZKEmailVerifier to '{}': {}",
+            zkemail_dest.display(),
+            e
+        )
+    })?;
+
+    Ok(ContractsPaths {
+        root: contracts_root,
+        honk_verifier: honk_dest,
+        zkemail_verifier: zkemail_dest,
+    })
 }

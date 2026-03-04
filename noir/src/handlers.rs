@@ -8,8 +8,8 @@ use slog::info;
 // Import from the crate root
 use crate::circuit_generator::generate_circuit;
 use crate::filesystem::{
-    FileUploader, ProductionFileUploader, UploadTarget, compile_circuit, setup, setup_circuit_dir,
-    zip_circuit_dir, zip_regex_graphs,
+    FileUploader, ProductionFileUploader, UploadTarget, compile_circuit, scaffold_contracts_for_circuit,
+    setup, setup_circuit_dir, zip_circuit_dir, zip_regex_graphs,
 };
 use crate::models::CircuitTemplateInputs;
 use crate::regex_generator::generate_regex_circuits;
@@ -167,6 +167,10 @@ async fn process_circuit(
 
     compile_circuit(&circuit_dir).await?;
 
+    // After successful compilation (and Honk verifier generation), scaffold the
+    // Foundry contracts package for this circuit.
+    scaffold_contracts_for_circuit(&circuit_dir, blueprint)?;
+
     Ok(circuit_dir)
 }
 
@@ -289,6 +293,93 @@ mod tests {
         assert!(
             honk_2048.exists(),
             "HonkVerifier.sol should be generated for 2048-bit circuit"
+        );
+
+        // Verify contracts scaffolding exists for both key sizes.
+        for key_dir in ["1024", "2048"] {
+            let base = std::path::Path::new("./tmp").join(key_dir).join("contracts");
+
+            // Top-level config files
+            for name in [
+                ".env.example",
+                "README.md",
+                "foundry.toml",
+                "package.json",
+                "remappings.txt",
+                "yarn.lock",
+            ] {
+                let path = base.join(name);
+                assert!(
+                    path.exists(),
+                    "Expected contracts config file to exist: {}",
+                    path.display()
+                );
+            }
+
+            // Interfaces
+            for name in [
+                "IDKIMRegistry.sol",
+                "IHonkVerifier.sol",
+                "IZKEmailVerifier.sol",
+            ] {
+                let path = base.join("src").join("interfaces").join(name);
+                assert!(
+                    path.exists(),
+                    "Expected contracts interface file to exist: {}",
+                    path.display()
+                );
+            }
+
+            // Deploy script
+            let deploy_script =
+                base.join("script").join("DeployZKEmailVerifier.s.sol");
+            assert!(
+                deploy_script.exists(),
+                "Expected deploy script to exist: {}",
+                deploy_script.display()
+            );
+
+            // HonkVerifier copied under contracts/src
+            let honk_under_contracts = base.join("src").join("HonkVerifier.sol");
+            assert!(
+                honk_under_contracts.exists(),
+                "Expected HonkVerifier under contracts/src: {}",
+                honk_under_contracts.display()
+            );
+
+            // ZKEmailVerifier rendered
+            let zkemail = base.join("src").join("ZKEmailVerifier.sol");
+            assert!(
+                zkemail.exists(),
+                "Expected ZKEmailVerifier to exist: {}",
+                zkemail.display()
+            );
+
+            let zkemail_code = std::fs::read_to_string(&zkemail)
+                .unwrap_or_else(|_| panic!("Failed to read {}", zkemail.display()));
+
+            assert!(
+                zkemail_code.contains("contract ZKEmailVerifier"),
+                "ZKEmailVerifier should define the contract in {}",
+                zkemail.display()
+            );
+
+            assert!(
+                zkemail_code.contains("IHonkVerifier"),
+                "ZKEmailVerifier should reference IHonkVerifier in {}",
+                zkemail.display()
+            );
+        }
+
+        // Additionally, ensure the sender domain from the blueprint is wired
+        // into at least the 1024-bit ZKEmailVerifier.
+        let zkemail_1024 =
+            std::path::Path::new("./tmp/1024/contracts/src/ZKEmailVerifier.sol");
+        let zkemail_1024_code = std::fs::read_to_string(zkemail_1024)
+            .expect("ZKEmailVerifier for 1024-bit circuit must exist");
+        assert!(
+            zkemail_1024_code.contains("x.com"),
+            "ZKEmailVerifier for 1024-bit circuit should embed the sender domain 'x.com'"
         );
     }
 
