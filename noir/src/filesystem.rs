@@ -134,7 +134,9 @@ pub async fn compile_circuit(cwd: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Zips the Noir project at `circuit_dir` into `zip_name` under the shared tmp dir and returns the full path to the created zip file.
+/// Zips the Noir project at `circuit_dir` (and its sibling `contracts` folder)
+/// into `zip_name` under the shared tmp dir and returns the full path to the
+/// created zip file.
 pub async fn zip_circuit_dir(circuit_dir: &Path, zip_name: &str) -> Result<std::path::PathBuf> {
     // circuit_dir = e.g. tmp/1024/noir (Noir project root)
     let key_dir = circuit_dir
@@ -154,8 +156,12 @@ pub async fn zip_circuit_dir(circuit_dir: &Path, zip_name: &str) -> Result<std::
     let zip_path = tmp_dir.join(zip_name);
     let zip_arg = format!("../{}", zip_name); // relative to cwd (key_dir)
 
-    info!(LOG, "Zipping circuit Noir project to {}", zip_name);
-    run_command("zip", &["-r", &zip_arg, "noir"], Some(cwd)).await?;
+    info!(LOG, "Zipping circuit Noir project (noir + contracts) to {}", zip_name);
+    // From within the key-specific directory (e.g. tmp/1024), zip both the Noir
+    // project and its sibling contracts directory so the archive contains:
+    //   noir/...
+    //   contracts/...
+    run_command("zip", &["-r", &zip_arg, "noir", "contracts"], Some(cwd)).await?;
 
     Ok(zip_path)
 }
@@ -217,8 +223,8 @@ fn derive_public_inputs_length(circuit_dir: &Path) -> Result<u64> {
     Ok(value)
 }
 
-/// Scaffolds a Foundry-compatible contracts package for a single circuit under
-/// `<circuit_dir>/contracts`.
+/// Scaffolds a Foundry-compatible contracts package for a single circuit,
+/// reading artifacts from `circuit_dir` and writing into `contracts_root`.
 ///
 /// Layout:
 /// - contracts/
@@ -239,9 +245,9 @@ fn derive_public_inputs_length(circuit_dir: &Path) -> Result<u64> {
 ///     - DeployZKEmailVerifier.s.sol
 pub fn scaffold_contracts_for_circuit(
     circuit_dir: &Path,
+    contracts_root: &Path,
     blueprint: &Blueprint,
 ) -> Result<ContractsPaths> {
-    let contracts_root = circuit_dir.join("contracts");
     let contracts_src = contracts_root.join("src");
     let contracts_interfaces = contracts_src.join("interfaces");
     let contracts_script = contracts_root.join("script");
@@ -339,7 +345,7 @@ pub fn scaffold_contracts_for_circuit(
     })?;
 
     Ok(ContractsPaths {
-        root: contracts_root,
+        root: contracts_root.to_path_buf(),
         honk_verifier: honk_dest,
         zkemail_verifier: zkemail_dest,
     })

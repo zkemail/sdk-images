@@ -135,7 +135,8 @@ async fn process_circuits(mut payload: Payload, uploader: impl FileUploader) -> 
 }
 
 /// Optionally deploys the Foundry contracts package for a single circuit
-/// directory by running `yarn deploy` inside `<circuit_dir>/contracts`.
+/// directory by running `yarn deploy` inside the sibling
+/// `<circuit_dir_parent>/contracts` directory.
 ///
 /// Deployment is skipped unless all of the following payload fields are
 /// non-empty:
@@ -162,7 +163,12 @@ async fn maybe_deploy_contracts_for_circuit(
         return Ok(());
     }
 
-    let contracts_root = circuit_dir.join("contracts");
+    // `circuit_dir` is the Noir project root (e.g. tmp/1024/noir). Contracts
+    // live alongside it in a sibling directory (e.g. tmp/1024/contracts).
+    let key_dir = circuit_dir
+        .parent()
+        .ok_or_else(|| anyhow!("circuit_dir must have a parent directory"))?;
+    let contracts_root = key_dir.join("contracts");
     if !contracts_root.exists() {
         return Err(anyhow!(
             "Expected contracts directory at '{}' but it does not exist",
@@ -214,9 +220,10 @@ async fn process_circuit(
 
     // Ensure the circuit-specific tmp directory exists and has `noir/src` + `noir/Nargo.toml`
     let subdir = key_size_bits.to_string();
+    let key_dir = tmp_dir.join(&subdir);
     setup_circuit_dir(tmp_dir, &subdir).await?;
 
-    let circuit_dir = tmp_dir.join(&subdir).join("noir");
+    let circuit_dir = key_dir.join("noir");
 
     // Copy shared regex Noir modules into this circuit's src dir
     if regex_graphs_dir.exists() {
@@ -243,8 +250,10 @@ async fn process_circuit(
     compile_circuit(&circuit_dir).await?;
 
     // After successful compilation (and Honk verifier generation), scaffold the
-    // Foundry contracts package for this circuit.
-    scaffold_contracts_for_circuit(&circuit_dir, blueprint)?;
+    // Foundry contracts package for this circuit. Contracts live alongside the
+    // Noir project in a sibling `contracts` directory (e.g. tmp/1024/contracts).
+    let contracts_root = key_dir.join("contracts");
+    scaffold_contracts_for_circuit(&circuit_dir, &contracts_root, blueprint)?;
 
     Ok(circuit_dir)
 }
@@ -357,21 +366,19 @@ mod tests {
         // Assert the result
         assert!(result.is_ok());
 
-        // Verify HonkVerifier.sol is generated for both key sizes
-        let honk_1024 = std::path::Path::new("./tmp/1024/target/HonkVerifier.sol");
-        assert!(
-            honk_1024.exists(),
-            "HonkVerifier.sol should be generated for 1024-bit circuit"
-        );
-
-        let honk_2048 = std::path::Path::new("./tmp/2048/target/HonkVerifier.sol");
-        assert!(
-            honk_2048.exists(),
-            "HonkVerifier.sol should be generated for 2048-bit circuit"
-        );
-
-        // Verify contracts scaffolding exists for both key sizes.
+        // Verify HonkVerifier.sol and contracts scaffolding exist for both key sizes.
         for key_dir in ["1024", "2048"] {
+            let honk = std::path::Path::new("./tmp")
+                .join(key_dir)
+                .join("noir")
+                .join("target")
+                .join("HonkVerifier.sol");
+            assert!(
+                honk.exists(),
+                "HonkVerifier.sol should be generated for {}-bit circuit",
+                key_dir
+            );
+
             let base = std::path::Path::new("./tmp").join(key_dir).join("contracts");
 
             // Top-level config files
