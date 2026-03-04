@@ -1,9 +1,10 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use relayer_utils::LOG;
-use sdk_utils::proto_types::proto_blueprint::Blueprint;
+use sdk_utils::{proto_types::proto_blueprint::Blueprint, run_command};
 use serde::Deserialize;
 use slog::info;
+use std::fs;
 
 // Import from the crate root
 use crate::circuit_generator::generate_circuit;
@@ -52,13 +53,15 @@ pub async fn compile_circuit_handler(
     }
 }
 
-async fn process_circuits(payload: Payload, uploader: impl FileUploader) -> Result<()> {
+async fn process_circuits(mut payload: Payload, uploader: impl FileUploader) -> Result<()> {
     // Setup filesystem
     let tmp_dir = std::path::Path::new("./tmp");
     setup(tmp_dir).await?;
 
-    // Extract blueprint
-    let blueprint = payload.blueprint;
+    // Extract blueprint and upload URLs so we can still use the remaining
+    // payload fields for deployment configuration later.
+    let blueprint = payload.blueprint.clone();
+    let upload_urls = payload.upload_urls.clone();
 
     // Generate regex circuits (shared between both key sizes) under this tmp dir
     let regex_graphs_dir = generate_regex_circuits(tmp_dir, &blueprint.decomposed_regexes)?;
@@ -94,33 +97,105 @@ async fn process_circuits(payload: Payload, uploader: impl FileUploader) -> Resu
 
     let upload_targets = vec![
         UploadTarget {
-            url: payload.upload_urls.circuit_1024,
+            url: upload_urls.circuit_1024,
             path: to_string(&circuit_1024_zip),
             content_type: "application/zip".to_string(),
         },
         UploadTarget {
-            url: payload.upload_urls.circuit_2048,
+            url: upload_urls.circuit_2048,
             path: to_string(&circuit_2048_zip),
             content_type: "application/zip".to_string(),
         },
         UploadTarget {
-            url: payload.upload_urls.circuit_json_1024,
+            url: upload_urls.circuit_json_1024,
             path: to_string(&bytecode_1024),
             content_type: "application/json".to_string(),
         },
         UploadTarget {
-            url: payload.upload_urls.circuit_json_2048,
+            url: upload_urls.circuit_json_2048,
             path: to_string(&bytecode_2048),
             content_type: "application/json".to_string(),
         },
         UploadTarget {
-            url: payload.upload_urls.regex_graphs,
+            url: upload_urls.regex_graphs,
             path: to_string(&regex_graphs_zip),
             content_type: "application/zip".to_string(),
         },
     ];
 
     uploader.upload_files(upload_targets).await?;
+
+    // After successful uploads, optionally deploy the contracts for each circuit
+    // size. Deployment is treated as a best-effort final step; if the payload
+    // does not contain the required configuration, we skip it.
+    maybe_deploy_contracts_for_circuit(&circuit_1024_dir, &payload).await?;
+    maybe_deploy_contracts_for_circuit(&circuit_2048_dir, &payload).await?;
+
+    Ok(())
+}
+
+/// Optionally deploys the Foundry contracts package for a single circuit
+/// directory by running `yarn deploy` inside `<circuit_dir>/contracts`.
+///
+/// Deployment is skipped unless all of the following payload fields are
+/// non-empty:
+/// - `private_key`  -> `PRIVATE_KEY`
+/// - `rpc_url`      -> `RPC_URL`
+/// - `dkim_registry_address` -> `DKIM_REGISTRY`
+///
+/// `etherscan_api_key` is passed through as `ETHERSCAN_API_KEY` but may be
+/// empty if verification is not required.
+async fn maybe_deploy_contracts_for_circuit(
+    circuit_dir: &std::path::Path,
+    payload: &Payload,
+) -> Result<()> {
+    // Only attempt deployment when we have all required config values.
+    if payload.private_key.trim().is_empty()
+        || payload.rpc_url.trim().is_empty()
+        || payload.dkim_registry_address.trim().is_empty()
+    {
+        info!(
+            LOG,
+            "Skipping contract deployment for {:?}: missing required deployment config",
+            circuit_dir
+        );
+        return Ok(());
+    }
+
+    let contracts_root = circuit_dir.join("contracts");
+    if !contracts_root.exists() {
+        return Err(anyhow!(
+            "Expected contracts directory at '{}' but it does not exist",
+            contracts_root.display()
+        ));
+    }
+
+    // Build .env contents mirroring noir/contracts/.env.example, but populated
+    // from the handler payload.
+    let env_contents = format!(
+        "DKIM_REGISTRY={}\nETHERSCAN_API_KEY={}\nPRIVATE_KEY={}\nRPC_URL={}\n",
+        payload.dkim_registry_address,
+        payload.etherscan_api_key,
+        payload.private_key,
+        payload.rpc_url,
+    );
+
+    let env_path = contracts_root.join(".env");
+    fs::write(&env_path, env_contents)?;
+
+    let contracts_root_str = contracts_root.to_str().ok_or_else(|| {
+        anyhow!(
+            "Contracts directory path '{}' is not valid UTF-8",
+            contracts_root.display()
+        )
+    })?;
+
+    info!(
+        LOG,
+        "Deploying contracts from {} using yarn deploy",
+        contracts_root_str
+    );
+    run_command("yarn", &["deploy"], Some(contracts_root_str)).await?;
 
     Ok(())
 }
