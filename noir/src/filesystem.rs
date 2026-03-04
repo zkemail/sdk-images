@@ -1,6 +1,7 @@
 use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
 use sdk_utils::{proto_types::proto_blueprint::Blueprint, run_command, upload_to_url};
+use serde::Deserialize;
 use slog::info;
 use std::{
     fs,
@@ -8,6 +9,15 @@ use std::{
 };
 use tera::{Context, Tera};
 use regex::Regex;
+
+/// Contract data for generating example HonkVerifier and ZKEmailVerifier without a compiled circuit.
+/// Used by the `generate-example-contracts` CLI; load from JSON.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExampleContractData {
+    pub sender_domain: String,
+    pub public_inputs_length: u64,
+}
 
 #[cfg_attr(test, mockall::automock)]
 pub trait FileUploader {
@@ -325,8 +335,10 @@ pub fn scaffold_contracts_for_circuit(
 
     // Render ZKEmailVerifier.sol from the Tera template.
     let mut tera = Tera::default();
+    let templates_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("templates");
+    let zkemail_template = templates_root.join("ZKEmailVerifier.sol.tera");
     tera.add_template_file(
-        "./templates/ZKEmailVerifier.sol.tera",
+        &zkemail_template,
         Some("ZKEmailVerifier.sol.tera"),
     )?;
 
@@ -349,4 +361,81 @@ pub fn scaffold_contracts_for_circuit(
         honk_verifier: honk_dest,
         zkemail_verifier: zkemail_dest,
     })
+}
+
+/// Render the Solidity mock HonkVerifier contract template and write it to the given path.
+/// This is intended for local development only to make `yarn build` pass inside
+/// the mono-repo `noir/contracts` package without having to generate a real
+/// verifier from a compiled circuit.
+pub fn create_mock_honk_verifier_at_path(output_path: &Path) -> Result<()> {
+    let mut tera = Tera::default();
+    let templates_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("templates");
+    let mock_template = templates_root.join("MockHonkVerifier.sol.tera");
+    tera.add_template_file(&mock_template, Some("HonkVerifier.sol"))?;
+
+    let context = Context::new();
+    let rendered_contract = tera.render("HonkVerifier.sol", &context)?;
+
+    if let Some(parent) = output_path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+
+    fs::write(output_path, rendered_contract).map_err(|e| {
+        anyhow!(
+            "Failed to write mock HonkVerifier to '{}': {}",
+            output_path.display(),
+            e
+        )
+    })?;
+
+    Ok(())
+}
+
+/// Generate both HonkVerifier.sol (mock) and ZKEmailVerifier.sol from Tera templates into
+/// `output_dir`. Used by the `generate-example-contracts` CLI so that `yarn build` passes
+/// without compiling a circuit.
+pub fn create_example_contracts_at_path(
+    contract_data: &ExampleContractData,
+    output_dir: &Path,
+) -> Result<()> {
+    let templates_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("templates");
+
+    if !output_dir.exists() {
+        fs::create_dir_all(output_dir)?;
+    }
+
+    // HonkVerifier.sol (mock)
+    let mut tera = Tera::default();
+    let mock_template = templates_root.join("MockHonkVerifier.sol.tera");
+    tera.add_template_file(&mock_template, Some("HonkVerifier.sol"))?;
+    let honk_rendered = tera.render("HonkVerifier.sol", &Context::new())?;
+    let honk_path = output_dir.join("HonkVerifier.sol");
+    fs::write(&honk_path, honk_rendered).map_err(|e| {
+        anyhow!(
+            "Failed to write mock HonkVerifier to '{}': {}",
+            honk_path.display(),
+            e
+        )
+    })?;
+
+    // ZKEmailVerifier.sol
+    let mut tera = Tera::default();
+    let zkemail_template = templates_root.join("ZKEmailVerifier.sol.tera");
+    tera.add_template_file(&zkemail_template, Some("ZKEmailVerifier.sol.tera"))?;
+    let mut context = Context::new();
+    context.insert("public_inputs_length", &contract_data.public_inputs_length);
+    context.insert("sender_domain", &contract_data.sender_domain);
+    let zkemail_rendered = tera.render("ZKEmailVerifier.sol.tera", &context)?;
+    let zkemail_path = output_dir.join("ZKEmailVerifier.sol");
+    fs::write(&zkemail_path, zkemail_rendered).map_err(|e| {
+        anyhow!(
+            "Failed to write ZKEmailVerifier to '{}': {}",
+            zkemail_path.display(),
+            e
+        )
+    })?;
+
+    Ok(())
 }

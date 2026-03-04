@@ -1,4 +1,5 @@
 pub mod circuit_generator;
+pub mod cli;
 pub mod db;
 pub mod filesystem;
 pub mod handlers;

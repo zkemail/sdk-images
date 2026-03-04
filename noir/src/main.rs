@@ -15,6 +15,11 @@ struct AppState {
 async fn main() -> Result<()> {
     dotenv().ok();
 
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(result) = noir::cli::run_if_cli(&args) {
+        return result;
+    }
+
     let state = AppState {
         api_key: std::env::var("ZKEMAIL_API_KEY").expect("ZKEMAIL_API_KEY must be set"),
     };
