@@ -7,7 +7,10 @@ use slog::info;
 
 // Import from the crate root
 use crate::circuit_generator::generate_circuit;
-use crate::filesystem::{FileUploader, ProductionFileUploader, cleanup_multi_key, compile_circuit, setup};
+use crate::filesystem::{
+    FileUploader, ProductionFileUploader, UploadTarget, compile_circuit, setup, setup_circuit_dir,
+    zip_circuit_dir, zip_regex_graphs,
+};
 use crate::models::CircuitTemplateInputs;
 use crate::regex_generator::generate_regex_circuits;
 
@@ -40,7 +43,7 @@ pub async fn compile_circuit_handler(
     info!(LOG, "Received payload: {:?}", payload);
 
     // Process the request
-    match process_circuit(payload, ProductionFileUploader).await {
+    match process_circuits(payload, ProductionFileUploader).await {
         Ok(_) => Ok(StatusCode::OK),
         Err(e) => {
             println!("e while compiling: {:?}", e);
@@ -49,15 +52,16 @@ pub async fn compile_circuit_handler(
     }
 }
 
-async fn process_circuit(payload: Payload, uploader: impl FileUploader) -> Result<()> {
+async fn process_circuits(payload: Payload, uploader: impl FileUploader) -> Result<()> {
     // Setup filesystem
-    setup().await?;
+    let tmp_dir = std::path::Path::new("./tmp");
+    setup(tmp_dir).await?;
 
     // Extract blueprint
     let blueprint = payload.blueprint;
 
-    // Generate regex circuits (shared between both key sizes)
-    generate_regex_circuits(&blueprint.decomposed_regexes)?;
+    // Generate regex circuits (shared between both key sizes) under this tmp dir
+    let regex_graphs_dir = generate_regex_circuits(tmp_dir, &blueprint.decomposed_regexes)?;
 
     // Generate separate circuits for 1024-bit and 2048-bit RSA keys.
     //
@@ -71,39 +75,99 @@ async fn process_circuit(payload: Payload, uploader: impl FileUploader) -> Resul
     // - This approach lets provers select the appropriate circuit based on the
     //   actual DKIM key size of the email they're proving
 
-    // Generate and compile 1024-bit circuit
-    info!(LOG, "Generating 1024-bit circuit");
-    let inputs_1024 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 1024);
-    let circuit_1024 = generate_circuit(inputs_1024)?;
-    std::fs::write("./tmp/src/main.nr", &circuit_1024)?;
-    compile_circuit().await?;
+    // Generate and compile 1024-bit and 2048-bit circuits, capturing their circuit directories.
+    let circuit_1024_dir = process_circuit(&blueprint, 1024, tmp_dir, &regex_graphs_dir).await?;
+    let circuit_2048_dir = process_circuit(&blueprint, 2048, tmp_dir, &regex_graphs_dir).await?;
 
-    // Move 1024-bit artifacts to specific names
-    std::fs::rename(
-        "./tmp/target/sdk_noir.json",
-        "./tmp/target/sdk_noir_1024.json",
-    )?;
+    // Derive bytecode JSON paths from the circuit directories
+    let bytecode_1024 = circuit_1024_dir.join("target").join("sdk_noir.json");
+    let bytecode_2048 = circuit_2048_dir.join("target").join("sdk_noir.json");
 
-    // Generate and compile 2048-bit circuit
-    info!(LOG, "Generating 2048-bit circuit");
-    let inputs_2048 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 2048);
-    let circuit_2048 = generate_circuit(inputs_2048)?;
-    std::fs::write("./tmp/src/main.nr", &circuit_2048)?;
-    compile_circuit().await?;
+    // Zip each circuit and capture the resulting zip paths
+    let circuit_1024_zip = zip_circuit_dir(&circuit_1024_dir, "circuit_1024.zip").await?;
+    let circuit_2048_zip = zip_circuit_dir(&circuit_2048_dir, "circuit_2048.zip").await?;
 
-    // Move 2048-bit artifacts to specific names
-    std::fs::rename(
-        "./tmp/target/sdk_noir.json",
-        "./tmp/target/sdk_noir_2048.json",
-    )?;
+    // Zip regex graphs (from their holder dir) and capture the zip path
+    let regex_graphs_zip = zip_regex_graphs(&regex_graphs_dir, "regex_graphs.zip").await?;
 
-    // Cleanup and zip both circuits
-    cleanup_multi_key(&circuit_1024, &circuit_2048).await?;
+    let to_string = |p: &std::path::Path| p.to_string_lossy().into_owned();
 
-    // Upload files
-    uploader.upload_files(payload.upload_urls).await?;
+    let upload_targets = vec![
+        UploadTarget {
+            url: payload.upload_urls.circuit_1024,
+            path: to_string(&circuit_1024_zip),
+            content_type: "application/zip".to_string(),
+        },
+        UploadTarget {
+            url: payload.upload_urls.circuit_2048,
+            path: to_string(&circuit_2048_zip),
+            content_type: "application/zip".to_string(),
+        },
+        UploadTarget {
+            url: payload.upload_urls.circuit_json_1024,
+            path: to_string(&bytecode_1024),
+            content_type: "application/json".to_string(),
+        },
+        UploadTarget {
+            url: payload.upload_urls.circuit_json_2048,
+            path: to_string(&bytecode_2048),
+            content_type: "application/json".to_string(),
+        },
+        UploadTarget {
+            url: payload.upload_urls.regex_graphs,
+            path: to_string(&regex_graphs_zip),
+            content_type: "application/zip".to_string(),
+        },
+    ];
+
+    uploader.upload_files(upload_targets).await?;
 
     Ok(())
+}
+
+/// Generates a Noir circuit for the given key size, prepares its circuit-specific
+/// directory under `tmp_dir`, copies in the shared regex Noir modules from
+/// `regex_graphs_dir`, writes `main.nr`, and compiles it with `nargo`.
+/// Returns the circuit-specific directory path (`<tmp_dir>/<key_size_bits>`).
+async fn process_circuit(
+    blueprint: &Blueprint,
+    key_size_bits: u32,
+    tmp_dir: &std::path::Path,
+    regex_graphs_dir: &std::path::Path,
+) -> Result<std::path::PathBuf> {
+    info!(LOG, "Generating {}-bit circuit", key_size_bits);
+
+    // Ensure the circuit-specific tmp directory exists and has src + Nargo.toml
+    let subdir = key_size_bits.to_string();
+    setup_circuit_dir(tmp_dir, &subdir).await?;
+
+    let circuit_dir = tmp_dir.join(&subdir);
+
+    // Copy shared regex Noir modules into this circuit's src dir
+    if regex_graphs_dir.exists() {
+        let src_dir = circuit_dir.join("src");
+        for entry in std::fs::read_dir(regex_graphs_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if let Some(ext) = path.extension() {
+                if ext == "nr" {
+                    let file_name = entry.file_name();
+                    let dest = src_dir.join(file_name);
+                    std::fs::copy(&path, dest)?;
+                }
+            }
+        }
+    }
+
+    let inputs = CircuitTemplateInputs::from_blueprint_with_key_size(blueprint, key_size_bits);
+    let circuit = generate_circuit(inputs)?;
+
+    let main_path = circuit_dir.join("src").join("main.nr");
+    std::fs::write(&main_path, &circuit)?;
+
+    compile_circuit(&circuit_dir).await?;
+
+    Ok(circuit_dir)
 }
 
 #[cfg(test)]
@@ -205,7 +269,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let result = process_circuits(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -243,9 +307,9 @@ mod tests {
             email_body_max_length: 2048, // Set a valid body length for body masking
             sender_domain: "email.apple.com".to_string(),
             enable_header_masking: true, // Enable header masking for testing
-            enable_body_masking: true, // Enable body masking for testing
-            client_zk_framework: 3, // Noir
-            server_zk_framework: 0, // None
+            enable_body_masking: true,   // Enable body masking for testing
+            client_zk_framework: 3,      // Noir
+            server_zk_framework: 0,      // None
             verifier_contract_chain: 84532,
             verifier_contract_address: "0x1E8AbE8B8551E73d25239004EffccA2d077eF146".to_string(),
             is_public: true,
@@ -319,7 +383,7 @@ mod tests {
         println!("calling process_circuit");
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let result = process_circuits(payload, mock_uploader).await;
 
         println!("Got a result");
 
@@ -330,36 +394,36 @@ mod tests {
         // Assert the result
         assert!(result.is_ok());
 
-        // Verify body_mask is generated as a function input parameter
-        let circuit_path = "./tmp/src/main.nr";
-        if std::path::Path::new(circuit_path).exists() {
-            let circuit_code = std::fs::read_to_string(circuit_path)
-                .expect("Failed to read generated circuit");
+        // Verify body_mask is generated as a function input parameter in the 1024-bit circuit
+        let circuit_path = std::path::Path::new("./tmp/1024/src/main.nr");
+        let circuit_code = std::fs::read_to_string(circuit_path)
+            .expect("Generated 1024-bit circuit main.nr must exist");
 
-            // Verify header_mask is a function input parameter
-            assert!(
-                circuit_code.contains("header_mask: [bool;"),
-                "Generated circuit should have 'header_mask' as a function input parameter when enable_header_masking is true"
-            );
+        // Verify header_mask is a function input parameter
+        assert!(
+            circuit_code.contains("header_mask: [bool;"),
+            "Generated circuit should have 'header_mask' as a function input parameter when enable_header_masking is true"
+        );
 
-            // Verify body_mask is a function input parameter
-            assert!(
-                circuit_code.contains("body_mask: [bool;"),
-                "Generated circuit should have 'body_mask' as a function input parameter when enable_body_masking is true"
-            );
+        // Verify body_mask is a function input parameter
+        assert!(
+            circuit_code.contains("body_mask: [bool;"),
+            "Generated circuit should have 'body_mask' as a function input parameter when enable_body_masking is true"
+        );
 
-            // Verify masked outputs are present
-            assert!(
-                circuit_code.contains("masked_header"),
-                "Generated circuit should contain 'masked_header' output"
-            );
-            assert!(
-                circuit_code.contains("masked_body"),
-                "Generated circuit should contain 'masked_body' output"
-            );
+        // Verify masked outputs are present
+        assert!(
+            circuit_code.contains("masked_header"),
+            "Generated circuit should contain 'masked_header' output"
+        );
+        assert!(
+            circuit_code.contains("masked_body"),
+            "Generated circuit should contain 'masked_body' output"
+        );
 
-            println!("✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter");
-        }
+        println!(
+            "✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter"
+        );
     }
 
     #[tokio::test]
@@ -454,7 +518,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let result = process_circuits(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -554,7 +618,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let result = process_circuits(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -656,7 +720,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let result = process_circuits(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
