@@ -277,6 +277,19 @@ mod tests {
 
         // Assert the result
         assert!(result.is_ok());
+
+        // Verify HonkVerifier.sol is generated for both key sizes
+        let honk_1024 = std::path::Path::new("./tmp/1024/target/HonkVerifier.sol");
+        assert!(
+            honk_1024.exists(),
+            "HonkVerifier.sol should be generated for 1024-bit circuit"
+        );
+
+        let honk_2048 = std::path::Path::new("./tmp/2048/target/HonkVerifier.sol");
+        assert!(
+            honk_2048.exists(),
+            "HonkVerifier.sol should be generated for 2048-bit circuit"
+        );
     }
 
     #[tokio::test]

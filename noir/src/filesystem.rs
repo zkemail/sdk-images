@@ -83,6 +83,40 @@ pub async fn compile_circuit(cwd: &Path) -> Result<()> {
         .ok_or_else(|| anyhow!("compile_circuit cwd must be valid UTF-8"))?;
     info!(LOG, "Compiling circuit in {}", cwd_str);
     run_command("nargo", &["compile"], Some(cwd_str)).await?;
+
+    // Derive the verification key and Solidity Honk verifier for this circuit.
+    // These commands are run in the same working directory so their relative
+    // paths (./target/...) resolve correctly.
+    info!(LOG, "Writing verification key");
+    run_command(
+        "bb",
+        &[
+            "write_vk",
+            "--bytecode_path",
+            "./target/sdk_noir.json",
+            "--output_path",
+            "./target",
+            "--oracle_hash",
+            "keccak",
+        ],
+        Some(cwd_str),
+    )
+    .await?;
+
+    info!(LOG, "Writing Solidity Honk verifier");
+    run_command(
+        "bb",
+        &[
+            "write_solidity_verifier",
+            "--vk_path",
+            "./target/vk",
+            "--output_path",
+            "./target/HonkVerifier.sol",
+        ],
+        Some(cwd_str),
+    )
+    .await?;
+
     Ok(())
 }
 
