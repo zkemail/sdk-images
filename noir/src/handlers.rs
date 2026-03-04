@@ -128,7 +128,7 @@ async fn process_circuits(payload: Payload, uploader: impl FileUploader) -> Resu
 /// Generates a Noir circuit for the given key size, prepares its circuit-specific
 /// directory under `tmp_dir`, copies in the shared regex Noir modules from
 /// `regex_graphs_dir`, writes `main.nr`, and compiles it with `nargo`.
-/// Returns the circuit-specific directory path (`<tmp_dir>/<key_size_bits>`).
+/// Returns the Noir project root directory path (`<tmp_dir>/<key_size_bits>/noir`).
 async fn process_circuit(
     blueprint: &Blueprint,
     key_size_bits: u32,
@@ -137,11 +137,11 @@ async fn process_circuit(
 ) -> Result<std::path::PathBuf> {
     info!(LOG, "Generating {}-bit circuit", key_size_bits);
 
-    // Ensure the circuit-specific tmp directory exists and has src + Nargo.toml
+    // Ensure the circuit-specific tmp directory exists and has `noir/src` + `noir/Nargo.toml`
     let subdir = key_size_bits.to_string();
     setup_circuit_dir(tmp_dir, &subdir).await?;
 
-    let circuit_dir = tmp_dir.join(&subdir);
+    let circuit_dir = tmp_dir.join(&subdir).join("noir");
 
     // Copy shared regex Noir modules into this circuit's src dir
     if regex_graphs_dir.exists() {
@@ -395,7 +395,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify body_mask is generated as a function input parameter in the 1024-bit circuit
-        let circuit_path = std::path::Path::new("./tmp/1024/src/main.nr");
+        let circuit_path = std::path::Path::new("./tmp/1024/noir/src/main.nr");
         let circuit_code = std::fs::read_to_string(circuit_path)
             .expect("Generated 1024-bit circuit main.nr must exist");
 
