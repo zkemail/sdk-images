@@ -1,11 +1,12 @@
 use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
-use sdk_utils::{proto_types::proto_blueprint::Blueprint, run_command_with_env};
+use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Deserialize;
 use slog::info;
 use std::path::{Path, PathBuf};
 
 use crate::circuit_pipeline::{CompiledCircuit, build_circuit_artifacts};
+use crate::external_command::{run_yarn_deploy, run_yarn_deploy_polka};
 use crate::filesystem::{FileUploader, UploadTarget, zip_circuit_dir, zip_regex_graphs};
 use crate::regex_generator::generate_regex_circuits;
 
@@ -59,7 +60,9 @@ pub struct PackagedBlueprint {
 /// - `tmp/regex_graphs`
 /// - `tmp/1024`
 /// - `tmp/2048`
-fn compile_blueprint_setup(tmp_dir: &std::path::Path) -> Result<(PathBuf, PathBuf, PathBuf, PathBuf)> {
+fn compile_blueprint_setup(
+    tmp_dir: &std::path::Path,
+) -> Result<(PathBuf, PathBuf, PathBuf, PathBuf)> {
     if tmp_dir.exists() {
         for entry in std::fs::read_dir(tmp_dir)? {
             let entry = entry?;
@@ -205,9 +208,10 @@ pub async fn deploy_blueprint_contracts(
     Ok(())
 }
 
-/// Optionally deploys the Foundry contracts package for a single circuit
-/// directory by running `yarn deploy` inside the sibling
-/// `<circuit_dir_parent>/contracts` directory.
+/// Optionally deploys the contracts package for a single circuit directory by
+/// running `yarn deploy` (EVM) or `yarn deploy:polka` (Polkadot) inside the
+/// `<circuit_dir_parent>/contracts` directory. The script is chosen based on
+/// `rpc_url`: when it equals "POLKA" (case-insensitive), `deploy:polka` is used.
 ///
 /// Deployment is skipped unless all of the following payload fields are
 /// non-empty:
@@ -250,17 +254,21 @@ async fn maybe_deploy_contracts_for_circuit(
         )
     })?;
 
-    info!(
-        LOG,
-        "Deploying contracts from {} using yarn deploy", contracts_dir_str
-    );
-    let envs = [
-        ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
-        ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
-        ("PRIVATE_KEY", payload.private_key.as_str()),
-        ("RPC_URL", payload.rpc_url.as_str()),
-    ];
-    run_command_with_env("yarn", &["deploy"], Some(contracts_dir_str), &envs).await?;
+    if payload.rpc_url.trim().eq_ignore_ascii_case("POLKA") {
+        let envs = [
+            ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
+            ("PRIVATE_KEY", payload.private_key.as_str()),
+        ];
+        run_yarn_deploy_polka(contracts_dir_str, &envs).await?;
+    } else {
+        let envs = [
+            ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
+            ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
+            ("PRIVATE_KEY", payload.private_key.as_str()),
+            ("RPC_URL", payload.rpc_url.as_str()),
+        ];
+        run_yarn_deploy(contracts_dir_str, &envs).await?;
+    }
 
     Ok(())
 }

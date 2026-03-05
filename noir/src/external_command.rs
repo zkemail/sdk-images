@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
-use sdk_utils::run_command;
+use sdk_utils::{run_command, run_command_with_env};
 use slog::info;
 use std::path::Path;
 
@@ -153,5 +153,28 @@ pub async fn run_bb_write_solidity_verifier(
     }
 
     Ok(output_file_path.to_path_buf())
+}
+
+/// Runs `yarn deploy` in the given contracts directory with the provided
+/// environment variables (EVM / Foundry deployment).
+pub async fn run_yarn_deploy(
+    contracts_dir: &str,
+    envs: &[(&str, &str)],
+) -> Result<()> {
+    info!(LOG, "Deploying contracts from {} using yarn deploy", contracts_dir);
+    run_command_with_env("yarn", &["deploy"], Some(contracts_dir), envs).await
+}
+
+/// Runs `yarn deploy:polka` in the given contracts directory with the provided
+/// environment variables (Polkadot deployment).
+pub async fn run_yarn_deploy_polka(
+    contracts_dir: &str,
+    envs: &[(&str, &str)],
+) -> Result<()> {
+    info!(
+        LOG,
+        "Deploying contracts from {} using yarn deploy:polka", contracts_dir
+    );
+    run_command_with_env("yarn", &["deploy:polka"], Some(contracts_dir), envs).await
 }
 
