@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use relayer_utils::LOG;
-use sdk_utils::{proto_types::proto_blueprint::Blueprint, run_command};
+use sdk_utils::{proto_types::proto_blueprint::Blueprint, run_command_with_env};
 use serde::Deserialize;
 use slog::info;
 use std::fs;
@@ -9,8 +9,8 @@ use std::fs;
 // Import from the crate root
 use crate::circuit_generator::generate_circuit;
 use crate::filesystem::{
-    FileUploader, ProductionFileUploader, UploadTarget, compile_circuit, scaffold_contracts_for_circuit,
-    setup, setup_circuit_dir, zip_circuit_dir, zip_regex_graphs,
+    FileUploader, ProductionFileUploader, UploadTarget, compile_circuit,
+    scaffold_contracts_for_circuit, setup, setup_circuit_dir, zip_circuit_dir, zip_regex_graphs,
 };
 use crate::models::CircuitTemplateInputs;
 use crate::regex_generator::generate_regex_circuits;
@@ -176,19 +176,6 @@ async fn maybe_deploy_contracts_for_circuit(
         ));
     }
 
-    // Build .env contents mirroring noir/contracts/.env.example, but populated
-    // from the handler payload.
-    let env_contents = format!(
-        "DKIM_REGISTRY={}\nETHERSCAN_API_KEY={}\nPRIVATE_KEY={}\nRPC_URL={}\n",
-        payload.dkim_registry_address,
-        payload.etherscan_api_key,
-        payload.private_key,
-        payload.rpc_url,
-    );
-
-    let env_path = contracts_root.join(".env");
-    fs::write(&env_path, env_contents)?;
-
     let contracts_root_str = contracts_root.to_str().ok_or_else(|| {
         anyhow!(
             "Contracts directory path '{}' is not valid UTF-8",
@@ -198,10 +185,15 @@ async fn maybe_deploy_contracts_for_circuit(
 
     info!(
         LOG,
-        "Deploying contracts from {} using yarn deploy",
-        contracts_root_str
+        "Deploying contracts from {} using yarn deploy", contracts_root_str
     );
-    run_command("yarn", &["deploy"], Some(contracts_root_str)).await?;
+    let envs = [
+        ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
+        ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
+        ("PRIVATE_KEY", payload.private_key.as_str()),
+        ("RPC_URL", payload.rpc_url.as_str()),
+    ];
+    run_command_with_env("yarn", &["deploy"], Some(contracts_root_str), &envs).await?;
 
     Ok(())
 }
@@ -379,7 +371,9 @@ mod tests {
                 key_dir
             );
 
-            let base = std::path::Path::new("./tmp").join(key_dir).join("contracts");
+            let base = std::path::Path::new("./tmp")
+                .join(key_dir)
+                .join("contracts");
 
             // Top-level config files
             for name in [
@@ -413,8 +407,7 @@ mod tests {
             }
 
             // Deploy script
-            let deploy_script =
-                base.join("script").join("DeployZKEmailVerifier.s.sol");
+            let deploy_script = base.join("script").join("DeployZKEmailVerifier.s.sol");
             assert!(
                 deploy_script.exists(),
                 "Expected deploy script to exist: {}",
@@ -455,8 +448,7 @@ mod tests {
 
         // Additionally, ensure the sender domain from the blueprint is wired
         // into at least the 1024-bit ZKEmailVerifier.
-        let zkemail_1024 =
-            std::path::Path::new("./tmp/1024/contracts/src/ZKEmailVerifier.sol");
+        let zkemail_1024 = std::path::Path::new("./tmp/1024/contracts/src/ZKEmailVerifier.sol");
         let zkemail_1024_code = std::fs::read_to_string(zkemail_1024)
             .expect("ZKEmailVerifier for 1024-bit circuit must exist");
         assert!(

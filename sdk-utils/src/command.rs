@@ -43,6 +43,52 @@ pub async fn run_command(command: &str, args: &[&str], dir: Option<&str>) -> Res
     Ok(())
 }
 
+/// Run a command with additional environment variables set only for that child
+/// process. This avoids mutating global process environment.
+pub async fn run_command_with_env(
+    command: &str,
+    args: &[&str],
+    dir: Option<&str>,
+    envs: &[(&str, &str)],
+) -> Result<()> {
+    let mut cmd = Command::new(command);
+    cmd.stdin(Stdio::piped()).stdout(Stdio::piped());
+
+    if !args.is_empty() {
+        cmd.args(args);
+    }
+
+    if let Some(directory) = dir {
+        cmd.current_dir(directory);
+    }
+
+    for (key, value) in envs {
+        cmd.env(key, value);
+    }
+
+    let mut child = cmd.spawn().expect("failed to execute process");
+
+    if let Some(stdout) = child.stdout.take() {
+        let reader = BufReader::new(stdout);
+        let mut lines = reader.lines();
+
+        while let Some(line) = lines.next().transpose()? {
+            info!(LOG, "Command output"; "line" => line);
+        }
+    }
+
+    let status = child.wait()?;
+    if !status.success() {
+        return Err(anyhow!(
+            "Command `{}` failed with status: {}",
+            command,
+            status
+        ));
+    }
+
+    Ok(())
+}
+
 pub async fn run_command_with_input(
     command: &str,
     args: &[&str],
