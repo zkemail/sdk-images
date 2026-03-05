@@ -108,19 +108,31 @@ fn build_contracts_setup(
     let src_dir = contracts_dir.join("src");
     let interfaces_dir = src_dir.join("interfaces");
 
+    let hh_scripts_dir = contracts_dir.join("hh-scripts");
+    let utils_dir = contracts_dir.join("utils");
     std::fs::create_dir_all(&src_dir)?;
     std::fs::create_dir_all(&script_dir)?;
     std::fs::create_dir_all(&interfaces_dir)?;
+    std::fs::create_dir_all(&hh_scripts_dir)?;
+    std::fs::create_dir_all(&utils_dir)?;
 
-    // copy all needed files
+    // copy all needed files (Foundry + Hardhat/Polka)
     const FILES_TO_COPY: &[&str] = &[
+        // shared
         ".env.example",
-        "foundry.toml",
         "package.json",
         "README.md",
-        "remappings.txt",
         "yarn.lock",
+        // foundry
+        "foundry.toml",
+        "remappings.txt",
         "script/DeployZKEmailVerifier.s.sol",
+        // hardhat
+        "hh-scripts/deploy-zk-email-verifier.ts",
+        "utils/requireEnv.ts",
+        "hardhat.config.ts",
+        "tsconfig.json",
+        // contracts
         "src/interfaces/IDKIMRegistry.sol",
         "src/interfaces/IHonkVerifier.sol",
         "src/interfaces/IZKEmailVerifier.sol",

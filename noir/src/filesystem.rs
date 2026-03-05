@@ -45,15 +45,24 @@ pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<std::path::P
     );
 
     const FILES_TO_ZIP: &[&str] = &[
+        // noir
         "noir/Nargo.toml",
         "noir/src",
+        // contracts shared config
         "contracts/.env.example",
-        "contracts/foundry.toml",
         "contracts/package.json",
         "contracts/README.md",
-        "contracts/remappings.txt",
         "contracts/yarn.lock",
+        // contracts foundry
+        "contracts/foundry.toml",
+        "contracts/remappings.txt",
         "contracts/script/DeployZKEmailVerifier.s.sol",
+        // contracts hardhat
+        "contracts/hh-scripts/deploy-zk-email-verifier.ts",
+        "contracts/utils/requireEnv.ts",
+        "contracts/hardhat.config.ts",
+        "contracts/tsconfig.json",
+        // contracts contracts
         "contracts/src/interfaces/IDKIMRegistry.sol",
         "contracts/src/interfaces/IHonkVerifier.sol",
         "contracts/src/interfaces/IZKEmailVerifier.sol",
