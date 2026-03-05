@@ -1,6 +1,8 @@
 import { HardhatUserConfig, vars } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@parity/hardhat-polkadot";
+import "dotenv/config";
+import { requireEnv } from "./utils/requireEnv";
 
 const config: HardhatUserConfig = {
   networks: {
@@ -28,8 +30,9 @@ const config: HardhatUserConfig = {
       polkadot: {
         target: "evm",
       },
-      url: "https://services.polkadothub-rpc.com/testnet",
-      accounts: [vars.get("PRIVATE_KEY")],
+      url:
+        process.env.RPC_URL || "https://services.polkadothub-rpc.com/testnet",
+      accounts: [requireEnv("PRIVATE_KEY")],
     },
   },
   etherscan: {
