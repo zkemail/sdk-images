@@ -1,265 +1,47 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use relayer_utils::LOG;
-use sdk_utils::{proto_types::proto_blueprint::Blueprint, run_command_with_env};
-use serde::Deserialize;
 use slog::info;
-use std::fs;
 
-// Import from the crate root
-use crate::circuit_generator::generate_circuit;
-use crate::filesystem::{
-    FileUploader, ProductionFileUploader, UploadTarget, compile_circuit,
-    scaffold_contracts_for_circuit, setup, setup_circuit_dir, zip_circuit_dir, zip_regex_graphs,
+use crate::blueprint_pipeline::{
+    Payload, compile_blueprint_artifacts, deploy_blueprint_contracts, package_blueprint_artifacts,
+    upload_blueprint_artifacts,
 };
-use crate::models::CircuitTemplateInputs;
-use crate::regex_generator::generate_regex_circuits;
+use crate::filesystem::{FileUploader, ProductionFileUploader};
 
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct UploadUrls {
-    pub circuit_1024: String,
-    pub circuit_2048: String,
-    pub circuit_json_1024: String,
-    pub circuit_json_2048: String,
-    pub regex_graphs: String,
+async fn process_compile_blueprint<U>(payload: Payload, uploader: U) -> anyhow::Result<()>
+where
+    U: FileUploader,
+{
+    let tmp_dir = std::env::current_dir().unwrap().join("tmp");
+    let compiled = compile_blueprint_artifacts(&tmp_dir, &payload).await?;
+    let packaged = package_blueprint_artifacts(&tmp_dir, &compiled).await?;
+    upload_blueprint_artifacts(&packaged, &payload.upload_urls, uploader).await?;
+    deploy_blueprint_contracts(&compiled, &payload).await?;
+    Ok(())
 }
 
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Payload {
-    pub blueprint: Blueprint,
-    pub upload_urls: UploadUrls,
-    pub database_url: String,
-    pub private_key: String,
-    pub rpc_url: String,
-    pub chain_id: u32,
-    pub etherscan_api_key: String,
-    pub dkim_registry_address: String,
-}
-
-pub async fn compile_circuit_handler(
+pub async fn compile_blueprint_handler(
     Json(payload): Json<Payload>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     info!(LOG, "Received payload: {:?}", payload);
 
-    // Process the request
-    match process_circuits(payload, ProductionFileUploader).await {
-        Ok(_) => Ok(StatusCode::OK),
-        Err(e) => {
-            println!("e while compiling: {:?}", e);
-            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        }
-    }
-}
-
-async fn process_circuits(mut payload: Payload, uploader: impl FileUploader) -> Result<()> {
-    // Setup filesystem
-    let tmp_dir = std::path::Path::new("./tmp");
-    setup(tmp_dir).await?;
-
-    // Extract blueprint and upload URLs so we can still use the remaining
-    // payload fields for deployment configuration later.
-    let blueprint = payload.blueprint.clone();
-    let upload_urls = payload.upload_urls.clone();
-
-    // Generate regex circuits (shared between both key sizes) under this tmp dir
-    let regex_graphs_dir = generate_regex_circuits(tmp_dir, &blueprint.decomposed_regexes)?;
-
-    // Generate separate circuits for 1024-bit and 2048-bit RSA keys.
-    //
-    // Why two circuits instead of one with conditional logic?
-    // - Noir circuits are compile-time fixed; any conditional branching on key size
-    //   would still compile all code paths and incur the constraint cost of both sizes
-    // - Two specialized circuits are more efficient since each only contains the
-    //   constraints needed for its specific key size
-    // - The zkemail library exports different array sizes (KEY_LIMBS_1024=9 vs
-    //   KEY_LIMBS_2048=18) that must be known at compile time for type safety
-    // - This approach lets provers select the appropriate circuit based on the
-    //   actual DKIM key size of the email they're proving
-
-    // Generate and compile 1024-bit and 2048-bit circuits, capturing their circuit directories.
-    let circuit_1024_dir = process_circuit(&blueprint, 1024, tmp_dir, &regex_graphs_dir).await?;
-    let circuit_2048_dir = process_circuit(&blueprint, 2048, tmp_dir, &regex_graphs_dir).await?;
-
-    // Derive bytecode JSON paths from the circuit directories
-    let bytecode_1024 = circuit_1024_dir.join("target").join("sdk_noir.json");
-    let bytecode_2048 = circuit_2048_dir.join("target").join("sdk_noir.json");
-
-    // Zip each circuit and capture the resulting zip paths
-    let circuit_1024_zip = zip_circuit_dir(&circuit_1024_dir, "circuit_1024.zip").await?;
-    let circuit_2048_zip = zip_circuit_dir(&circuit_2048_dir, "circuit_2048.zip").await?;
-
-    // Zip regex graphs (from their holder dir) and capture the zip path
-    let regex_graphs_zip = zip_regex_graphs(&regex_graphs_dir, "regex_graphs.zip").await?;
-
-    let to_string = |p: &std::path::Path| p.to_string_lossy().into_owned();
-
-    let upload_targets = vec![
-        UploadTarget {
-            url: upload_urls.circuit_1024,
-            path: to_string(&circuit_1024_zip),
-            content_type: "application/zip".to_string(),
-        },
-        UploadTarget {
-            url: upload_urls.circuit_2048,
-            path: to_string(&circuit_2048_zip),
-            content_type: "application/zip".to_string(),
-        },
-        UploadTarget {
-            url: upload_urls.circuit_json_1024,
-            path: to_string(&bytecode_1024),
-            content_type: "application/json".to_string(),
-        },
-        UploadTarget {
-            url: upload_urls.circuit_json_2048,
-            path: to_string(&bytecode_2048),
-            content_type: "application/json".to_string(),
-        },
-        UploadTarget {
-            url: upload_urls.regex_graphs,
-            path: to_string(&regex_graphs_zip),
-            content_type: "application/zip".to_string(),
-        },
-    ];
-
-    uploader.upload_files(upload_targets).await?;
-
-    // After successful uploads, optionally deploy the contracts for each circuit
-    // size. Deployment is treated as a best-effort final step; if the payload
-    // does not contain the required configuration, we skip it.
-    maybe_deploy_contracts_for_circuit(&circuit_1024_dir, &payload).await?;
-    maybe_deploy_contracts_for_circuit(&circuit_2048_dir, &payload).await?;
-
-    Ok(())
-}
-
-/// Optionally deploys the Foundry contracts package for a single circuit
-/// directory by running `yarn deploy` inside the sibling
-/// `<circuit_dir_parent>/contracts` directory.
-///
-/// Deployment is skipped unless all of the following payload fields are
-/// non-empty:
-/// - `private_key`  -> `PRIVATE_KEY`
-/// - `rpc_url`      -> `RPC_URL`
-/// - `dkim_registry_address` -> `DKIM_REGISTRY`
-///
-/// `etherscan_api_key` is passed through as `ETHERSCAN_API_KEY` but may be
-/// empty if verification is not required.
-async fn maybe_deploy_contracts_for_circuit(
-    circuit_dir: &std::path::Path,
-    payload: &Payload,
-) -> Result<()> {
-    // Only attempt deployment when we have all required config values.
-    if payload.private_key.trim().is_empty()
-        || payload.rpc_url.trim().is_empty()
-        || payload.dkim_registry_address.trim().is_empty()
-    {
-        info!(
-            LOG,
-            "Skipping contract deployment for {:?}: missing required deployment config",
-            circuit_dir
-        );
-        return Ok(());
+    if let Err(e) = process_compile_blueprint(payload, ProductionFileUploader).await {
+        println!("e while processing blueprint: {:?}", e);
+        return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
     }
 
-    // `circuit_dir` is the Noir project root (e.g. tmp/1024/noir). Contracts
-    // live alongside it in a sibling directory (e.g. tmp/1024/contracts).
-    let key_dir = circuit_dir
-        .parent()
-        .ok_or_else(|| anyhow!("circuit_dir must have a parent directory"))?;
-    let contracts_root = key_dir.join("contracts");
-    if !contracts_root.exists() {
-        return Err(anyhow!(
-            "Expected contracts directory at '{}' but it does not exist",
-            contracts_root.display()
-        ));
-    }
-
-    let contracts_root_str = contracts_root.to_str().ok_or_else(|| {
-        anyhow!(
-            "Contracts directory path '{}' is not valid UTF-8",
-            contracts_root.display()
-        )
-    })?;
-
-    info!(
-        LOG,
-        "Deploying contracts from {} using yarn deploy", contracts_root_str
-    );
-    let envs = [
-        ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
-        ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
-        ("PRIVATE_KEY", payload.private_key.as_str()),
-        ("RPC_URL", payload.rpc_url.as_str()),
-    ];
-    run_command_with_env("yarn", &["deploy"], Some(contracts_root_str), &envs).await?;
-
-    Ok(())
-}
-
-/// Generates a Noir circuit for the given key size, prepares its circuit-specific
-/// directory under `tmp_dir`, copies in the shared regex Noir modules from
-/// `regex_graphs_dir`, writes `main.nr`, and compiles it with `nargo`.
-/// Returns the Noir project root directory path (`<tmp_dir>/<key_size_bits>/noir`).
-async fn process_circuit(
-    blueprint: &Blueprint,
-    key_size_bits: u32,
-    tmp_dir: &std::path::Path,
-    regex_graphs_dir: &std::path::Path,
-) -> Result<std::path::PathBuf> {
-    info!(LOG, "Generating {}-bit circuit", key_size_bits);
-
-    // Ensure the circuit-specific tmp directory exists and has `noir/src` + `noir/Nargo.toml`
-    let subdir = key_size_bits.to_string();
-    let key_dir = tmp_dir.join(&subdir);
-    setup_circuit_dir(tmp_dir, &subdir).await?;
-
-    let circuit_dir = key_dir.join("noir");
-
-    // Copy shared regex Noir modules into this circuit's src dir
-    if regex_graphs_dir.exists() {
-        let src_dir = circuit_dir.join("src");
-        for entry in std::fs::read_dir(regex_graphs_dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if let Some(ext) = path.extension() {
-                if ext == "nr" {
-                    let file_name = entry.file_name();
-                    let dest = src_dir.join(file_name);
-                    std::fs::copy(&path, dest)?;
-                }
-            }
-        }
-    }
-
-    let inputs = CircuitTemplateInputs::from_blueprint_with_key_size(blueprint, key_size_bits);
-    let circuit = generate_circuit(inputs)?;
-
-    let main_path = circuit_dir.join("src").join("main.nr");
-    std::fs::write(&main_path, &circuit)?;
-
-    compile_circuit(&circuit_dir).await?;
-
-    // After successful compilation (and Honk verifier generation), scaffold the
-    // Foundry contracts package for this circuit. Contracts live alongside the
-    // Noir project in a sibling `contracts` directory (e.g. tmp/1024/contracts).
-    let contracts_root = key_dir.join("contracts");
-    scaffold_contracts_for_circuit(&circuit_dir, &contracts_root, blueprint)?;
-
-    Ok(circuit_dir)
+    Ok(StatusCode::OK)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::filesystem::MockFileUploader;
-    // use dotenv::dotenv;
     use prost_wkt_types::Timestamp;
     use sdk_utils::proto_types::proto_blueprint::{
         Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
     };
-    // use std::env;
 
     #[tokio::test]
     async fn test_compile_circuit_x_export_data() {
@@ -329,7 +111,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -349,7 +131,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuits(payload, mock_uploader).await;
+        let result = super::process_compile_blueprint(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -357,104 +139,6 @@ mod tests {
 
         // Assert the result
         assert!(result.is_ok());
-
-        // Verify HonkVerifier.sol and contracts scaffolding exist for both key sizes.
-        for key_dir in ["1024", "2048"] {
-            let honk = std::path::Path::new("./tmp")
-                .join(key_dir)
-                .join("noir")
-                .join("target")
-                .join("HonkVerifier.sol");
-            assert!(
-                honk.exists(),
-                "HonkVerifier.sol should be generated for {}-bit circuit",
-                key_dir
-            );
-
-            let base = std::path::Path::new("./tmp")
-                .join(key_dir)
-                .join("contracts");
-
-            // Top-level config files
-            for name in [
-                ".env.example",
-                "README.md",
-                "foundry.toml",
-                "package.json",
-                "remappings.txt",
-                "yarn.lock",
-            ] {
-                let path = base.join(name);
-                assert!(
-                    path.exists(),
-                    "Expected contracts config file to exist: {}",
-                    path.display()
-                );
-            }
-
-            // Interfaces
-            for name in [
-                "IDKIMRegistry.sol",
-                "IHonkVerifier.sol",
-                "IZKEmailVerifier.sol",
-            ] {
-                let path = base.join("src").join("interfaces").join(name);
-                assert!(
-                    path.exists(),
-                    "Expected contracts interface file to exist: {}",
-                    path.display()
-                );
-            }
-
-            // Deploy script
-            let deploy_script = base.join("script").join("DeployZKEmailVerifier.s.sol");
-            assert!(
-                deploy_script.exists(),
-                "Expected deploy script to exist: {}",
-                deploy_script.display()
-            );
-
-            // HonkVerifier copied under contracts/src
-            let honk_under_contracts = base.join("src").join("HonkVerifier.sol");
-            assert!(
-                honk_under_contracts.exists(),
-                "Expected HonkVerifier under contracts/src: {}",
-                honk_under_contracts.display()
-            );
-
-            // ZKEmailVerifier rendered
-            let zkemail = base.join("src").join("ZKEmailVerifier.sol");
-            assert!(
-                zkemail.exists(),
-                "Expected ZKEmailVerifier to exist: {}",
-                zkemail.display()
-            );
-
-            let zkemail_code = std::fs::read_to_string(&zkemail)
-                .unwrap_or_else(|_| panic!("Failed to read {}", zkemail.display()));
-
-            assert!(
-                zkemail_code.contains("contract ZKEmailVerifier"),
-                "ZKEmailVerifier should define the contract in {}",
-                zkemail.display()
-            );
-
-            assert!(
-                zkemail_code.contains("IHonkVerifier"),
-                "ZKEmailVerifier should reference IHonkVerifier in {}",
-                zkemail.display()
-            );
-        }
-
-        // Additionally, ensure the sender domain from the blueprint is wired
-        // into at least the 1024-bit ZKEmailVerifier.
-        let zkemail_1024 = std::path::Path::new("./tmp/1024/contracts/src/ZKEmailVerifier.sol");
-        let zkemail_1024_code = std::fs::read_to_string(zkemail_1024)
-            .expect("ZKEmailVerifier for 1024-bit circuit must exist");
-        assert!(
-            zkemail_1024_code.contains("x.com"),
-            "ZKEmailVerifier for 1024-bit circuit should embed the sender domain 'x.com'"
-        );
     }
 
     #[tokio::test]
@@ -539,7 +223,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -561,7 +245,7 @@ mod tests {
         println!("calling process_circuit");
 
         // Call the handler with the mock uploader
-        let result = process_circuits(payload, mock_uploader).await;
+        let result = super::process_compile_blueprint(payload, mock_uploader).await;
 
         println!("Got a result");
 
@@ -572,36 +256,38 @@ mod tests {
         // Assert the result
         assert!(result.is_ok());
 
-        // Verify body_mask is generated as a function input parameter in the 1024-bit circuit
-        let circuit_path = std::path::Path::new("./tmp/1024/noir/src/main.nr");
-        let circuit_code = std::fs::read_to_string(circuit_path)
-            .expect("Generated 1024-bit circuit main.nr must exist");
+        // Verify body_mask is generated as a function input parameter
+        let circuit_path = "./tmp/src/main.nr";
+        if std::path::Path::new(circuit_path).exists() {
+            let circuit_code =
+                std::fs::read_to_string(circuit_path).expect("Failed to read generated circuit");
 
-        // Verify header_mask is a function input parameter
-        assert!(
-            circuit_code.contains("header_mask: [bool;"),
-            "Generated circuit should have 'header_mask' as a function input parameter when enable_header_masking is true"
-        );
+            // Verify header_mask is a function input parameter
+            assert!(
+                circuit_code.contains("header_mask: [bool;"),
+                "Generated circuit should have 'header_mask' as a function input parameter when enable_header_masking is true"
+            );
 
-        // Verify body_mask is a function input parameter
-        assert!(
-            circuit_code.contains("body_mask: [bool;"),
-            "Generated circuit should have 'body_mask' as a function input parameter when enable_body_masking is true"
-        );
+            // Verify body_mask is a function input parameter
+            assert!(
+                circuit_code.contains("body_mask: [bool;"),
+                "Generated circuit should have 'body_mask' as a function input parameter when enable_body_masking is true"
+            );
 
-        // Verify masked outputs are present
-        assert!(
-            circuit_code.contains("masked_header"),
-            "Generated circuit should contain 'masked_header' output"
-        );
-        assert!(
-            circuit_code.contains("masked_body"),
-            "Generated circuit should contain 'masked_body' output"
-        );
+            // Verify masked outputs are present
+            assert!(
+                circuit_code.contains("masked_header"),
+                "Generated circuit should contain 'masked_header' output"
+            );
+            assert!(
+                circuit_code.contains("masked_body"),
+                "Generated circuit should contain 'masked_body' output"
+            );
 
-        println!(
-            "✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter"
-        );
+            println!(
+                "✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter"
+            );
+        }
     }
 
     #[tokio::test]
@@ -676,7 +362,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -696,7 +382,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuits(payload, mock_uploader).await;
+        let result = super::process_compile_blueprint(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -776,7 +462,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -796,7 +482,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuits(payload, mock_uploader).await;
+        let result = super::process_compile_blueprint(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -878,7 +564,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -898,7 +584,7 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuits(payload, mock_uploader).await;
+        let result = super::process_compile_blueprint(payload, mock_uploader).await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);

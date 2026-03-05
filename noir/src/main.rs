@@ -4,7 +4,7 @@ use dotenv::dotenv;
 use relayer_utils::LOG;
 use slog::warn;
 
-use noir::handlers::compile_circuit_handler;
+use noir::handlers::compile_blueprint_handler;
 
 #[derive(Clone)]
 struct AppState {
@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
     }
 
     let app = Router::new()
-        .route("/compile", post(compile_circuit_handler))
+        .route("/compile", post(compile_blueprint_handler))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,

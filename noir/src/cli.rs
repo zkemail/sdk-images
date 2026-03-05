@@ -1,9 +1,19 @@
 //! Lightweight CLI subcommands that run without starting the compile API server.
 
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use crate::filesystem::{create_example_contracts_at_path, ExampleContractData};
+use serde::Deserialize;
+
+use crate::template::MockHonkVerifierInputs;
+use crate::template::ZKEmailVerifierInputs;
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExampleContractData {
+    pub sender_domain: String,
+    pub public_inputs_length: u64,
+}
 
 /// If `args` matches a known CLI subcommand, run it and return `Some(result)`.
 /// Otherwise return `None` so the caller can start the server.
@@ -32,9 +42,8 @@ fn run_generate_example_contracts(args: &[String]) -> Result<()> {
             .join("src")
     };
 
-    let json = std::fs::read_to_string(json_path).map_err(|e| {
-        anyhow::anyhow!("Failed to read contract data from {}: {}", json_path, e)
-    })?;
+    let json = std::fs::read_to_string(json_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read contract data from {}: {}", json_path, e))?;
     let contract_data: ExampleContractData = serde_json::from_str(&json)
         .map_err(|e| anyhow::anyhow!("Invalid contract data JSON: {}", e))?;
 
@@ -44,6 +53,32 @@ fn run_generate_example_contracts(args: &[String]) -> Result<()> {
         "Populated HonkVerifier.sol and ZKEmailVerifier.sol written to {}",
         output_dir.display()
     );
+
+    Ok(())
+}
+
+/// Generate both HonkVerifier.sol (mock) and ZKEmailVerifier.sol from templates into
+/// `output_dir`. Used by the `generate-example-contracts` CLI so that `yarn build` passes
+/// without compiling a circuit.
+fn create_example_contracts_at_path(
+    contract_data: &ExampleContractData,
+    output_dir: &Path,
+) -> Result<()> {
+    if !output_dir.exists() {
+        std::fs::create_dir_all(output_dir)?;
+    }
+
+    let honk_path = output_dir.join("HonkVerifier.sol");
+    crate::template::render_mock_honk_verifier(&MockHonkVerifierInputs {}, &honk_path)?;
+
+    let zkemail_path = output_dir.join("ZKEmailVerifier.sol");
+    crate::template::render_zkemail_verifier_sol(
+        &ZKEmailVerifierInputs {
+            sender_domain: contract_data.sender_domain.clone(),
+            public_inputs_length: contract_data.public_inputs_length as usize,
+        },
+        &zkemail_path,
+    )?;
 
     Ok(())
 }
