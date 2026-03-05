@@ -155,6 +155,21 @@ pub async fn run_bb_write_solidity_verifier(
     Ok(output_file_path.to_path_buf())
 }
 
+/// Runs `yarn build` in the given contracts directory (EVM / Foundry).
+pub async fn run_yarn_build(contracts_dir: &str) -> Result<()> {
+    info!(LOG, "Building contracts in {} using yarn build", contracts_dir);
+    run_command("yarn", &["build"], Some(contracts_dir)).await
+}
+
+/// Runs `yarn build:polka` in the given contracts directory (Polkadot / Hardhat).
+pub async fn run_yarn_build_polka(contracts_dir: &str) -> Result<()> {
+    info!(
+        LOG,
+        "Building contracts in {} using yarn build:polka", contracts_dir
+    );
+    run_command("yarn", &["build:polka"], Some(contracts_dir)).await
+}
+
 /// Runs `yarn deploy` in the given contracts directory with the provided
 /// environment variables (EVM / Foundry deployment).
 pub async fn run_yarn_deploy(

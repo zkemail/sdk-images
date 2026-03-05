@@ -6,7 +6,9 @@ use slog::info;
 use std::path::{Path, PathBuf};
 
 use crate::circuit_pipeline::{CompiledCircuit, build_circuit_artifacts};
-use crate::external_command::{run_yarn_deploy, run_yarn_deploy_polka};
+use crate::external_command::{
+    run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka,
+};
 use crate::filesystem::{FileUploader, UploadTarget, zip_circuit_dir, zip_regex_graphs};
 use crate::regex_generator::generate_regex_circuits;
 
@@ -255,12 +257,14 @@ async fn maybe_deploy_contracts_for_circuit(
     })?;
 
     if payload.rpc_url.trim().eq_ignore_ascii_case("POLKA") {
+        run_yarn_build_polka(contracts_dir_str).await?;
         let envs = [
             ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
             ("PRIVATE_KEY", payload.private_key.as_str()),
         ];
         run_yarn_deploy_polka(contracts_dir_str, &envs).await?;
     } else {
+        run_yarn_build(contracts_dir_str).await?;
         let envs = [
             ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
             ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
