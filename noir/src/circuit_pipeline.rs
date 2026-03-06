@@ -208,3 +208,124 @@ pub async fn build_circuit_artifacts(
         bytecode_path,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::filesystem::zip_circuit_dir;
+    use sdk_utils::run_command_and_return_output;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    /// Verifies that the tmp folder structure (circuit/ + contracts/) and
+    /// zip bundling work correctly without compiling a circuit (no nargo, bb).
+    #[tokio::test]
+    async fn test_folder_structure_and_zip() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "noir_zip_test_{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        ));
+
+        // 1. build_circuit_artifacts_setup: creates circuit/ and contracts/
+        let (circuit_dir, contracts_dir) =
+            build_circuit_artifacts_setup(&test_dir).unwrap();
+        assert!(circuit_dir.exists());
+        assert!(contracts_dir.exists());
+        assert_eq!(circuit_dir, test_dir.join("circuit"));
+        assert_eq!(contracts_dir, test_dir.join("contracts"));
+
+        // 2. build_circuit_setup: copies Nargo.toml and .nr regex modules
+        let regex_dir = test_dir.join("regex_graphs");
+        std::fs::create_dir_all(&regex_dir).unwrap();
+        std::fs::write(regex_dir.join("body_regex.nr"), "// test regex module").unwrap();
+        std::fs::write(regex_dir.join("not_a_nr.txt"), "should be skipped").unwrap();
+
+        let src_dir = build_circuit_setup(&circuit_dir, &regex_dir).unwrap();
+        assert!(src_dir.join("body_regex.nr").exists(), "should copy .nr files");
+        assert!(
+            !src_dir.join("not_a_nr.txt").exists(),
+            "should skip non-.nr files"
+        );
+        assert!(
+            circuit_dir.join("Nargo.toml").exists(),
+            "Nargo.toml should be copied"
+        );
+
+        // 3. Fake HonkVerifier.sol with NUMBER_OF_PUBLIC_INPUTS
+        let fake_honk = test_dir.join("HonkVerifier.sol");
+        std::fs::write(
+            &fake_honk,
+            "uint256 public constant NUMBER_OF_PUBLIC_INPUTS = 42;\n",
+        )
+        .unwrap();
+
+        // 4. build_contracts_setup: copies CONTRACT_BUNDLE_FILES + HonkVerifier
+        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let (_script_dir, contracts_src_dir, _interfaces_dir) =
+            build_contracts_setup(&contracts_dir, &manifest_dir.join("contracts"), &fake_honk)
+                .unwrap();
+        assert!(
+            contracts_src_dir.join("HonkVerifier.sol").exists(),
+            "HonkVerifier.sol should be copied into contracts/src"
+        );
+        for rel in CONTRACT_BUNDLE_FILES {
+            assert!(
+                contracts_dir.join(rel).exists(),
+                "contract bundle file '{}' should exist",
+                rel
+            );
+        }
+
+        // 5. render_zkemail_verifier_sol: generates ZKEmailVerifier.sol
+        render_zkemail_verifier_sol(
+            &ZKEmailVerifierInputs {
+                sender_domain: "example.com".to_string(),
+                public_inputs_length: derive_public_inputs_length(&fake_honk).unwrap(),
+            },
+            &contracts_src_dir.join("ZKEmailVerifier.sol"),
+        )
+        .unwrap();
+        assert!(contracts_src_dir.join("ZKEmailVerifier.sol").exists());
+
+        // 6. zip_circuit_dir and verify contents
+        let zip_path = test_dir.join("circuit_1024.zip");
+        zip_circuit_dir(&test_dir, &zip_path).await.unwrap();
+        assert!(zip_path.exists(), "zip file should exist");
+
+        let list_output = run_command_and_return_output(
+            "unzip",
+            &["-l", zip_path.to_str().unwrap()],
+            Some(test_dir.to_str().unwrap()),
+        )
+        .await
+        .unwrap();
+
+        let expected_entries = [
+            "circuit/Nargo.toml",
+            "circuit/src/",
+            "contracts/src/HonkVerifier.sol",
+            "contracts/src/ZKEmailVerifier.sol",
+        ];
+        for entry in &expected_entries {
+            assert!(
+                list_output.contains(entry),
+                "zip should contain '{}'; got:\n{}",
+                entry,
+                list_output
+            );
+        }
+        for rel in CONTRACT_BUNDLE_FILES {
+            let entry = format!("contracts/{}", rel);
+            assert!(
+                list_output.contains(&entry),
+                "zip should contain '{}'; got:\n{}",
+                entry,
+                list_output
+            );
+        }
+
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+}
