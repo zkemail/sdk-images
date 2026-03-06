@@ -250,7 +250,7 @@ pub async fn generate_verifier_contract(
     Ok(())
 }
 
-pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
+pub async fn deploy_verifier_contract() -> Result<String> {
     info!(LOG, "Building contracts");
     run_command("yarn", &["build"], None).await?;
 
@@ -268,118 +268,9 @@ pub async fn deploy_verifier_contract(payload: Payload) -> Result<String> {
         info!(LOG, "{} Contract is at: {}", contract_name, address);
     }
 
-    // Write constructor arguments to a file
-    info!(LOG, "Writing constructor arguments to a file");
-    let constructor_args = run_command_and_return_output(
-        "cast",
-        &[
-            "abi-encode",
-            "constructor(address,address)",
-            contract_addresses.get("DKIM_REGISTRY").unwrap(),
-            contract_addresses.get("GROTH16_VERIFIER").unwrap(),
-        ],
-        None,
-    )
-    .await?;
-
-    if let Ok(_) = env::var("ETHERSCAN_API_KEY") {
-        info!(LOG, "Verify contracts");
-
-        // Verify Groth16Verifier with retries
-        let mut last_error = None;
-        for attempt in 1..=3 {
-            info!(
-                LOG,
-                "Attempting to verify Groth16Verifier (attempt {}/3)", attempt
-            );
-            match run_command(
-                "forge",
-                &[
-                    "verify-contract",
-                    "--chain-id",
-                    payload.chain_id.to_string().as_str(),
-                    contract_addresses.get("GROTH16_VERIFIER").unwrap(),
-                    "tmp/contracts/src/Groth16Verifier.sol:Groth16Verifier",
-                ],
-                None,
-            )
-            .await
-            {
-                Ok(_) => {
-                    info!(LOG, "Successfully verified Groth16Verifier");
-                    last_error = None;
-                    break;
-                }
-                Err(e) => {
-                    info!(
-                        LOG,
-                        "Attempt {}/3 failed to verify Groth16Verifier: {}", attempt, e
-                    );
-                    last_error = Some(e);
-                    if attempt < 3 {
-                        info!(LOG, "Waiting 10 seconds before retry...");
-                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-                    }
-                }
-            }
-        }
-        if let Some(e) = last_error {
-            return Err(anyhow::anyhow!(
-                "Failed to verify Groth16Verifier after 3 attempts: {}",
-                e
-            ));
-        }
-
-        // Delay between contract verifications
-        info!(LOG, "Waiting 5 seconds before next verification...");
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
-        // Verify ZKEmailVerifier with retries
-        let mut last_error = None;
-        for attempt in 1..=3 {
-            info!(
-                LOG,
-                "Attempting to verify ZKEmailVerifier (attempt {}/3)", attempt
-            );
-            match run_command(
-                "forge",
-                &[
-                    "verify-contract",
-                    "--chain-id",
-                    payload.chain_id.to_string().as_str(),
-                    "--constructor-args",
-                    &constructor_args,
-                    contract_addresses.get("ZK_EMAIL_VERIFIER").unwrap(),
-                    "tmp/contracts/src/ZKEmailVerifier.sol:ZKEmailVerifier",
-                ],
-                None,
-            )
-            .await
-            {
-                Ok(_) => {
-                    info!(LOG, "Successfully verified ZKEmailVerifier ");
-                    last_error = None;
-                    break;
-                }
-                Err(e) => {
-                    info!(
-                        LOG,
-                        "Attempt {}/3 failed to verify ZKEmailVerifier: {}", attempt, e
-                    );
-                    last_error = Some(e);
-                    if attempt < 3 {
-                        info!(LOG, "Waiting 10 seconds before retry...");
-                        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-                    }
-                }
-            }
-        }
-        if let Some(e) = last_error {
-            return Err(anyhow::anyhow!(
-                "Failed to verify ZKEmailVerifier after 3 attempts: {}",
-                e
-            ));
-        }
+    if env::var("ETHERSCAN_API_KEY").is_ok() {
+        info!(LOG, "Verifying contracts");
+        run_command("yarn", &["verify"], None).await?;
     }
 
     Ok(contract_addresses

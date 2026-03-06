@@ -7,12 +7,8 @@ use std::{cmp::max, env, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
-    create_mock_groth16_verifier_at_path,
-    create_zkemail_verifier_and_interface_at_paths,
-    deploy_verifier_contract,
-    generate_verifier_contract,
-    prepare_contract_data,
-    ContractData,
+    create_mock_groth16_verifier_at_path, create_zkemail_verifier_and_interface_at_paths,
+    deploy_verifier_contract, generate_verifier_contract, prepare_contract_data, ContractData,
 };
 use db::update_verifier_contract_address;
 use payload::UploadUrls;
@@ -127,7 +123,7 @@ async fn main() -> Result<()> {
     )
     .await?;
 
-    let contract_address = deploy_verifier_contract(payload.clone()).await?;
+    let contract_address = deploy_verifier_contract().await?;
 
     info!(LOG, "Contract deployed at: {}", contract_address);
 
@@ -655,11 +651,7 @@ mod tests {
             test_dir.join("contracts/.env.example"),
         )
         .unwrap();
-        fs::copy(
-            "contracts/README.md",
-            test_dir.join("contracts/README.md"),
-        )
-        .unwrap();
+        fs::copy("contracts/README.md", test_dir.join("contracts/README.md")).unwrap();
         fs::copy(
             "contracts/foundry.toml",
             test_dir.join("contracts/foundry.toml"),
@@ -712,7 +704,6 @@ mod tests {
                 .unwrap(),
         )
         .unwrap();
-
 
         // Generate Groth16Verifier.sol from the mock template (no snarkjs needed)
         create_mock_groth16_verifier_at_path(
