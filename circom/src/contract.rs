@@ -276,9 +276,10 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
         info!(LOG, "{} Contract is at: {}", contract_name, address);
     }
 
-    // ETHERSCAN_API_KEY is used as a generic gate for contract verification,
-    // including Blockscout-based chains like Polkadot Hub (see hardhat.config.ts).
-    if env::var("ETHERSCAN_API_KEY").is_ok() {
+    let should_verify =
+        chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID || env::var("ETHERSCAN_API_KEY").is_ok();
+
+    if should_verify {
         info!(LOG, "Verifying contracts");
         if let Err(e) = run_command("yarn", &[verify_cmd], None).await {
             info!(
