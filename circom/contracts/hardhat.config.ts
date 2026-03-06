@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
     customChains: [
       {
         network: "polkadotHubTestnet",
-        chainId: 420420417,
+        chainId: parseInt(process.env.CHAIN_ID || "420420417"),
         urls: {
           apiURL: "https://blockscout-testnet.polkadot.io/api",
           browserURL: "https://blockscout-testnet.polkadot.io/",
