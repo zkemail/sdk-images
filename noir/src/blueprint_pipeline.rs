@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use crate::circuit_pipeline::{CompiledCircuit, build_circuit_artifacts};
 use crate::external_command::{
-    run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka,
+    run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka, run_yarn_verify,
 };
 use crate::filesystem::{FileUploader, UploadTarget, zip_circuit_dir, zip_regex_graphs};
 use crate::regex_generator::generate_regex_circuits;
@@ -254,22 +254,31 @@ async fn maybe_deploy_contracts_for_circuit(
         )
     })?;
 
-    if payload.rpc_url.trim().eq_ignore_ascii_case("POLKA") {
+    let chain_id_str = payload.chain_id.to_string();
+    let envs: &[(&str, &str)] = &[
+        ("PRIVATE_KEY", payload.private_key.as_str()),
+        ("RPC_URL", payload.rpc_url.as_str()),
+        ("CHAIN_ID", chain_id_str.as_str()),
+        ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
+        ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
+    ];
+
+    const POLKADOT_HUB_TESTNET_CHAIN_ID: u32 = 420420417;
+    if payload.chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
         run_yarn_build_polka(contracts_dir_str).await?;
-        let envs = [
-            ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
-            ("PRIVATE_KEY", payload.private_key.as_str()),
-        ];
-        run_yarn_deploy_polka(contracts_dir_str, &envs).await?;
+        let deploy_output = run_yarn_deploy_polka(contracts_dir_str, envs).await?;
+        info!(LOG, "Contract deployment output: {}", deploy_output);
     } else {
         run_yarn_build(contracts_dir_str).await?;
-        let envs = [
-            ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
-            ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
-            ("PRIVATE_KEY", payload.private_key.as_str()),
-            ("RPC_URL", payload.rpc_url.as_str()),
-        ];
-        run_yarn_deploy(contracts_dir_str, &envs).await?;
+        let deploy_output = run_yarn_deploy(contracts_dir_str, envs).await?;
+        info!(LOG, "Contract deployment output: {}", deploy_output);
+
+        if !payload.etherscan_api_key.trim().is_empty() {
+            let verify_output = run_yarn_verify(contracts_dir_str, envs).await?;
+            info!(LOG, "Contract verification output: {}", verify_output);
+        } else {
+            info!(LOG, "Skipping contract verification: no ETHERSCAN_API_KEY");
+        }
     }
 
     Ok(())

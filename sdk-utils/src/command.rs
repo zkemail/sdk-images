@@ -179,3 +179,36 @@ pub async fn run_command_and_return_output(
 
     Ok(output_lines.join("\n"))
 }
+
+pub async fn run_command_with_env_and_return_output(
+    command: &str,
+    args: &[&str],
+    dir: Option<&str>,
+    envs: &[(&str, &str)],
+) -> Result<String> {
+    let mut cmd = Command::new(command);
+
+    if !args.is_empty() {
+        cmd.args(args);
+    }
+
+    if let Some(directory) = dir {
+        cmd.current_dir(directory);
+    }
+
+    for (key, value) in envs {
+        cmd.env(key, value);
+    }
+
+    let output = cmd.output().expect("failed to execute process");
+
+    if !output.status.success() {
+        return Err(anyhow!(
+            "Command `{}` failed: {}",
+            command,
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
