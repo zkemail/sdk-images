@@ -283,6 +283,8 @@ async fn deploy_contracts_for_circuit(
     } else {
         run_yarn_build(contracts_dir_str).await?;
         let output = run_yarn_deploy(contracts_dir_str, envs).await?;
+        // ETHERSCAN_API_KEY is used as a generic gate for contract verification,
+        // including Blockscout-based chains like Polkadot Hub (see hardhat.config.ts).
         if !payload.etherscan_api_key.trim().is_empty() {
             if let Err(e) = run_yarn_verify(contracts_dir_str, envs).await {
                 warn!(LOG, "Contract verification failed: {}", e);
