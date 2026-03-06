@@ -291,6 +291,11 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
 
     Ok(contract_addresses
         .get("ZK_EMAIL_VERIFIER")
-        .unwrap()
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "ZK_EMAIL_VERIFIER address not found in deployment output. Raw output: {}",
+                output
+            )
+        })?
         .to_string())
 }
