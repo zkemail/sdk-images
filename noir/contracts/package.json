@@ -1,7 +1,7 @@
 {
-  "name": "@zk-email/circom-contracts",
+  "name": "@zk-email/noir-contracts",
   "version": "1.0.0",
-  "description": "Circom onchain verifier contracts for ZKEmail Blueprints",
+  "description": "Noir onchain verifier contracts for ZKEmail Blueprints",
   "license": "MIT",
   "scripts": {
     "build": "forge build",

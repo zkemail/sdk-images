@@ -57,9 +57,11 @@ pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<PathBuf> {
         "contracts/foundry.toml",
         "contracts/remappings.txt",
         "contracts/script/DeployZKEmailVerifier.s.sol",
+        "contracts/script/verify-zk-email-verifier.sh",
         // contracts hardhat
         "contracts/hh-scripts/deploy-zk-email-verifier.ts",
-        "contracts/utils/requireEnv.ts",
+        "contracts/hh-scripts/verify-zk-email-verifier.ts",
+        "contracts/utils/require-env.ts",
         "contracts/hardhat.config.ts",
         "contracts/tsconfig.json",
         // contracts contracts

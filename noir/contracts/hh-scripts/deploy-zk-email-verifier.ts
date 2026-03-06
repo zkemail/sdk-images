@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { ethers, network } from "hardhat";
-import { requireEnv } from "../utils/requireEnv";
+import { requireEnv } from "../utils/require-env";
 
 const DEPLOYMENTS_DIR = "hh-deployments";
 

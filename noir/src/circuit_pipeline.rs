@@ -124,9 +124,11 @@ fn build_contracts_setup(
         "foundry.toml",
         "remappings.txt",
         "script/DeployZKEmailVerifier.s.sol",
+        "script/verify-zk-email-verifier.sh",
         // hardhat
         "hh-scripts/deploy-zk-email-verifier.ts",
-        "utils/requireEnv.ts",
+        "hh-scripts/verify-zk-email-verifier.ts",
+        "utils/require-env.ts",
         "hardhat.config.ts",
         "tsconfig.json",
         // contracts
