@@ -9,14 +9,12 @@ const main = async () => {
   const dkimRegistryAddr = requireEnv("DKIM_REGISTRY");
 
   if (dkimRegistryAddr === ethers.ZeroAddress) {
-    console.error("DKIM_REGISTRY is the zero address");
-    return;
+    throw new Error("DKIM_REGISTRY is the zero address");
   }
 
   const [deployer] = await ethers.getSigners();
   if (!deployer) {
-    console.error("No deployer signer available");
-    return;
+    throw new Error("No deployer signer available - set PRIVATE_KEY in .env");
   }
 
   console.log(`\nUsing network: ${network.name}`);
