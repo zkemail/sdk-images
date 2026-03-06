@@ -141,7 +141,7 @@ pub fn derive_public_inputs_length(honk_path: &Path) -> Result<usize> {
 
     let value = value_str.parse::<usize>().map_err(|e| {
         anyhow!(
-            "Failed to parse NUMBER_OF_PUBLIC_INPUTS value '{}' as u64: {}",
+            "Failed to parse NUMBER_OF_PUBLIC_INPUTS value '{}' as usize: {}",
             value_str,
             e
         )
