@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use crate::external_command::{
     OracleHash, run_bb_write_solidity_verifier, run_bb_write_vk, run_nargo_compile,
 };
-use crate::filesystem::derive_public_inputs_length;
+use crate::filesystem::{CONTRACT_BUNDLE_FILES, derive_public_inputs_length};
 use crate::models::CircuitTemplateInputs;
 use crate::template::{ZKEmailVerifierInputs, render_main_nr_circuit, render_zkemail_verifier_sol};
 
@@ -113,31 +113,7 @@ fn build_contracts_setup(
     std::fs::create_dir_all(&hh_scripts_dir)?;
     std::fs::create_dir_all(&utils_dir)?;
 
-    // copy all needed files (Foundry + Hardhat/Polka)
-    const FILES_TO_COPY: &[&str] = &[
-        // shared
-        ".env.example",
-        "package.json",
-        "README.md",
-        "yarn.lock",
-        // foundry
-        "foundry.toml",
-        "remappings.txt",
-        "script/DeployZKEmailVerifier.s.sol",
-        "script/verify-zk-email-verifier.sh",
-        // hardhat
-        "hh-scripts/deploy-zk-email-verifier.ts",
-        "hh-scripts/verify-zk-email-verifier.ts",
-        "utils/require-env.ts",
-        "hardhat.config.ts",
-        "tsconfig.json",
-        // contracts
-        "src/interfaces/IDKIMRegistry.sol",
-        "src/interfaces/IHonkVerifier.sol",
-        "src/interfaces/IZKEmailVerifier.sol",
-    ];
-
-    for rel in FILES_TO_COPY {
+    for rel in CONTRACT_BUNDLE_FILES {
         let src = contracts_root.join(rel);
         if !src.exists() {
             return Err(anyhow!(

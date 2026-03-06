@@ -34,6 +34,32 @@ impl FileUploader for ProductionFileUploader {
     }
 }
 
+/// Static contract files bundled into every circuit. Paths are relative to the
+/// contracts root so they can be used directly for copying. The zip step
+/// prepends `contracts/` to each entry.
+pub const CONTRACT_BUNDLE_FILES: &[&str] = &[
+    // shared config
+    ".env.example",
+    "package.json",
+    "README.md",
+    "yarn.lock",
+    // foundry
+    "foundry.toml",
+    "remappings.txt",
+    "script/DeployZKEmailVerifier.s.sol",
+    "script/verify-zk-email-verifier.sh",
+    // hardhat
+    "hh-scripts/deploy-zk-email-verifier.ts",
+    "hh-scripts/verify-zk-email-verifier.ts",
+    "utils/require-env.ts",
+    "hardhat.config.ts",
+    "tsconfig.json",
+    // interfaces
+    "src/interfaces/IDKIMRegistry.sol",
+    "src/interfaces/IHonkVerifier.sol",
+    "src/interfaces/IZKEmailVerifier.sol",
+];
+
 /// Zips the Noir project at `circuit_dir` (and its sibling `contracts` folder)
 /// into `zip_name` under the shared tmp dir and returns the full path to the
 /// created zip file.
@@ -44,30 +70,9 @@ pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<PathBuf> {
         zip_path.display()
     );
 
-    const FILES_TO_ZIP: &[&str] = &[
-        // noir
+    const GENERATED_FILES: &[&str] = &[
         "noir/Nargo.toml",
         "noir/src",
-        // contracts shared config
-        "contracts/.env.example",
-        "contracts/package.json",
-        "contracts/README.md",
-        "contracts/yarn.lock",
-        // contracts foundry
-        "contracts/foundry.toml",
-        "contracts/remappings.txt",
-        "contracts/script/DeployZKEmailVerifier.s.sol",
-        "contracts/script/verify-zk-email-verifier.sh",
-        // contracts hardhat
-        "contracts/hh-scripts/deploy-zk-email-verifier.ts",
-        "contracts/hh-scripts/verify-zk-email-verifier.ts",
-        "contracts/utils/require-env.ts",
-        "contracts/hardhat.config.ts",
-        "contracts/tsconfig.json",
-        // contracts contracts
-        "contracts/src/interfaces/IDKIMRegistry.sol",
-        "contracts/src/interfaces/IHonkVerifier.sol",
-        "contracts/src/interfaces/IZKEmailVerifier.sol",
         "contracts/src/HonkVerifier.sol",
         "contracts/src/ZKEmailVerifier.sol",
     ];
@@ -78,9 +83,15 @@ pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<PathBuf> {
     let cwd_str = cwd
         .to_str()
         .ok_or_else(|| anyhow!("cwd must be valid UTF-8"))?;
-    let mut args = vec!["-r", out_str];
-    args.extend(FILES_TO_ZIP);
-    run_command("zip", &args, Some(cwd_str)).await?;
+
+    let mut args = vec!["-r".to_string(), out_str.to_string()];
+    args.extend(GENERATED_FILES.iter().map(|s| s.to_string()));
+    for rel in CONTRACT_BUNDLE_FILES {
+        args.push(format!("contracts/{}", rel));
+    }
+
+    let args_ref: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    run_command("zip", &args_ref, Some(cwd_str)).await?;
 
     Ok(zip_path.to_path_buf())
 }
