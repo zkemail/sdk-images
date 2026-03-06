@@ -62,9 +62,7 @@ pub struct PackagedBlueprint {
 /// - `tmp/regex_graphs`
 /// - `tmp/1024`
 /// - `tmp/2048`
-fn compile_blueprint_setup(
-    tmp_dir: &std::path::Path,
-) -> Result<(PathBuf, PathBuf, PathBuf, PathBuf)> {
+fn compile_blueprint_setup(tmp_dir: &Path) -> Result<(PathBuf, PathBuf, PathBuf, PathBuf)> {
     if tmp_dir.exists() {
         for entry in std::fs::read_dir(tmp_dir)? {
             let entry = entry?;
@@ -164,7 +162,7 @@ pub async fn upload_blueprint_artifacts(
     upload_urls: &UploadUrls,
     uploader: impl FileUploader,
 ) -> Result<()> {
-    let to_string = |p: &std::path::Path| p.to_string_lossy().into_owned();
+    let to_string = |p: &Path| p.to_string_lossy().into_owned();
 
     let upload_targets = vec![
         UploadTarget {

@@ -42,6 +42,7 @@ mod tests {
     use sdk_utils::proto_types::proto_blueprint::{
         Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
     };
+    use std::path::Path;
 
     #[tokio::test]
     async fn test_compile_circuit_x_export_data() {
@@ -258,7 +259,7 @@ mod tests {
 
         // Verify body_mask is generated as a function input parameter
         let circuit_path = "./tmp/src/main.nr";
-        if std::path::Path::new(circuit_path).exists() {
+        if Path::new(circuit_path).exists() {
             let circuit_code =
                 std::fs::read_to_string(circuit_path).expect("Failed to read generated circuit");
 

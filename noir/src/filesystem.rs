@@ -37,7 +37,7 @@ impl FileUploader for ProductionFileUploader {
 /// Zips the Noir project at `circuit_dir` (and its sibling `contracts` folder)
 /// into `zip_name` under the shared tmp dir and returns the full path to the
 /// created zip file.
-pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<std::path::PathBuf> {
+pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<PathBuf> {
     info!(
         LOG,
         "Zipping circuit Noir project (noir + contracts) to {}",
@@ -85,7 +85,7 @@ pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<std::path::P
 
 /// Zips regex graphs into `zip_name` under `holder_dir` and returns
 /// the full path to the created zip file.
-pub async fn zip_regex_graphs(holder_dir: &Path, zip_name: &str) -> Result<std::path::PathBuf> {
+pub async fn zip_regex_graphs(holder_dir: &Path, zip_name: &str) -> Result<PathBuf> {
     // Zip regex graphs (shared)
     info!(LOG, "Zipping regex graphs");
     let holder_dir_str = holder_dir

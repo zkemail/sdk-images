@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
 use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use slog::info;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::external_command::{
     OracleHash, run_bb_write_solidity_verifier, run_bb_write_vk, run_nargo_compile,
@@ -29,15 +29,12 @@ pub struct CompiledCircuit {
 /// Internal setup for `build_circuit`. Ensures the `src` directory exists
 /// under `circuit_dir`, copies `Nargo.toml` into the root, and copies the
 /// shared regex Noir modules into `src`.
-fn build_circuit_setup(
-    circuit_dir: &std::path::Path,
-    regex_graphs_dir: &std::path::Path,
-) -> Result<std::path::PathBuf> {
+fn build_circuit_setup(circuit_dir: &Path, regex_graphs_dir: &Path) -> Result<PathBuf> {
     let src_dir = circuit_dir.join("src");
     std::fs::create_dir_all(&src_dir)?;
 
     // Copy Nargo.toml into the Noir project root.
-    let nargo_toml_path = std::path::Path::new("./Nargo.toml.txt");
+    let nargo_toml_path = Path::new("./Nargo.toml.txt");
     std::fs::copy(nargo_toml_path, circuit_dir.join("Nargo.toml"))?;
 
     // Copy shared regex Noir modules into this circuit's src dir.
@@ -65,10 +62,10 @@ fn build_circuit_setup(
 ///
 /// The first parameter, `workdir`, is the working directory for this step.
 async fn build_circuit(
-    workdir: &std::path::Path,
+    workdir: &Path,
     blueprint: &Blueprint,
     key_size_bits: u32,
-    regex_graphs_dir: &std::path::Path,
+    regex_graphs_dir: &Path,
 ) -> Result<(PathBuf, PathBuf, PathBuf)> {
     info!(LOG, "Generating {}-bit circuit", key_size_bits);
 
@@ -99,9 +96,9 @@ async fn build_circuit(
 /// template files and the generated Honk verifier into the per-circuit
 /// `contracts_dir`. Returns the path to the copied Honk verifier.
 fn build_contracts_setup(
-    contracts_dir: &std::path::Path,
-    contracts_root: &std::path::Path,
-    solidity_verifier_path: &std::path::Path,
+    contracts_dir: &Path,
+    contracts_root: &Path,
+    solidity_verifier_path: &Path,
 ) -> Result<(PathBuf, PathBuf, PathBuf)> {
     // create all needed subdirs first
     let script_dir = contracts_dir.join("script");
@@ -157,11 +154,11 @@ fn build_contracts_setup(
 }
 
 fn build_contracts(
-    contracts_dir: &std::path::Path,
+    contracts_dir: &Path,
     blueprint: &Blueprint,
-    solidity_verifier_path: &std::path::Path,
+    solidity_verifier_path: &Path,
 ) -> Result<()> {
-    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     let (_script_dir, src_dir, _interfaces_dir) = build_contracts_setup(
         contracts_dir,
@@ -185,7 +182,7 @@ fn build_contracts(
 /// directories and returns their paths:
 /// - `circuit_dir = key_dir/noir`
 /// - `contracts_dir = key_dir/contracts`
-fn build_circuit_artifacts_setup(key_dir: &std::path::Path) -> Result<(PathBuf, PathBuf)> {
+fn build_circuit_artifacts_setup(key_dir: &Path) -> Result<(PathBuf, PathBuf)> {
     let circuit_dir = key_dir.join("noir");
     let contracts_dir = key_dir.join("contracts");
 
@@ -205,10 +202,10 @@ fn build_circuit_artifacts_setup(key_dir: &std::path::Path) -> Result<(PathBuf, 
 /// The first parameter, `workdir`, is the working directory for this circuit
 /// (e.g. typically a key-size dir like `tmp/1024` or `tmp/2048`).
 pub async fn build_circuit_artifacts(
-    workdir: &std::path::Path,
+    workdir: &Path,
     blueprint: &Blueprint,
     key_size_bits: u32,
-    regex_graphs_dir: &std::path::Path,
+    regex_graphs_dir: &Path,
 ) -> Result<CompiledCircuit> {
     // Setup: create the circuit and contracts directories under this working
     // directory (typically a key-size dir) and obtain their paths.

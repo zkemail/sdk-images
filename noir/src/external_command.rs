@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
 use sdk_utils::{run_command, run_command_with_env};
 use slog::info;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Supported oracle hash algorithms for `bb write_vk`.
 #[derive(Debug, Clone, Copy)]
@@ -24,10 +24,7 @@ impl OracleHash {
 /// - the `target` directory under `workdir`
 /// - the path to the generated `target/<package_name>.json`.
 /// Fails if the expected bytecode file is not present after compilation.
-pub async fn run_nargo_compile(
-    workdir: &Path,
-    package_name: &str,
-) -> Result<(std::path::PathBuf, std::path::PathBuf)> {
+pub async fn run_nargo_compile(workdir: &Path, package_name: &str) -> Result<(PathBuf, PathBuf)> {
     let workdir_str = workdir
         .to_str()
         .ok_or_else(|| anyhow!("compile_circuit cwd must be valid UTF-8"))?;
@@ -66,7 +63,7 @@ pub async fn run_bb_write_vk(
     bytecode_path: &Path,
     output_dir_path: &Path,
     oracle_hash: OracleHash,
-) -> Result<std::path::PathBuf> {
+) -> Result<PathBuf> {
     let bytecode_path_str = bytecode_path
         .to_str()
         .ok_or_else(|| anyhow!("bytecode_path must be valid UTF-8"))?;
@@ -118,7 +115,7 @@ pub async fn run_bb_write_solidity_verifier(
     workdir: &Path,
     vk_path: &Path,
     output_file_path: &Path,
-) -> Result<std::path::PathBuf> {
+) -> Result<PathBuf> {
     let vk_path_str = vk_path
         .to_str()
         .ok_or_else(|| anyhow!("vk_path must be valid UTF-8"))?;
@@ -157,7 +154,10 @@ pub async fn run_bb_write_solidity_verifier(
 
 /// Runs `yarn build` in the given contracts directory (EVM / Foundry).
 pub async fn run_yarn_build(contracts_dir: &str) -> Result<()> {
-    info!(LOG, "Building contracts in {} using yarn build", contracts_dir);
+    info!(
+        LOG,
+        "Building contracts in {} using yarn build", contracts_dir
+    );
     run_command("yarn", &["build"], Some(contracts_dir)).await
 }
 
@@ -172,24 +172,20 @@ pub async fn run_yarn_build_polka(contracts_dir: &str) -> Result<()> {
 
 /// Runs `yarn deploy` in the given contracts directory with the provided
 /// environment variables (EVM / Foundry deployment).
-pub async fn run_yarn_deploy(
-    contracts_dir: &str,
-    envs: &[(&str, &str)],
-) -> Result<()> {
-    info!(LOG, "Deploying contracts from {} using yarn deploy", contracts_dir);
+pub async fn run_yarn_deploy(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<()> {
+    info!(
+        LOG,
+        "Deploying contracts from {} using yarn deploy", contracts_dir
+    );
     run_command_with_env("yarn", &["deploy"], Some(contracts_dir), envs).await
 }
 
 /// Runs `yarn deploy:polka` in the given contracts directory with the provided
 /// environment variables (Polkadot deployment).
-pub async fn run_yarn_deploy_polka(
-    contracts_dir: &str,
-    envs: &[(&str, &str)],
-) -> Result<()> {
+pub async fn run_yarn_deploy_polka(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<()> {
     info!(
         LOG,
         "Deploying contracts from {} using yarn deploy:polka", contracts_dir
     );
     run_command_with_env("yarn", &["deploy:polka"], Some(contracts_dir), envs).await
 }
-

@@ -1,13 +1,19 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use sdk_utils::proto_types::proto_blueprint::DecomposedRegex;
-use std::{fs, path::{Path, PathBuf}};
-use zk_regex_compiler::{gen_from_decomposed, DecomposedRegexConfig, ProvingFramework, RegexPart};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+use zk_regex_compiler::{DecomposedRegexConfig, ProvingFramework, RegexPart, gen_from_decomposed};
 
 /// Generates Noir files for the provided decomposed regexes under the given
 /// `tmp_dir`. For each decomposed regex it writes:
 /// - a shared Noir module AND graph JSON into `<tmp_dir>/regex_graphs`.
 /// Returns the shared holder directory (`<tmp_dir>/regex_graphs`).
-pub fn generate_regex_circuits(tmp_dir: &Path, decomposed_regexes: &Vec<DecomposedRegex>) -> Result<PathBuf> {
+pub fn generate_regex_circuits(
+    tmp_dir: &Path,
+    decomposed_regexes: &Vec<DecomposedRegex>,
+) -> Result<PathBuf> {
     for decomposed_regex in decomposed_regexes {
         let mut decomposed_regex_config = Vec::new();
         for part in decomposed_regex.parts.clone() {
