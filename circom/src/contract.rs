@@ -278,7 +278,9 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
 
     if env::var("ETHERSCAN_API_KEY").is_ok() {
         info!(LOG, "Verifying contracts");
-        run_command("yarn", &[verify_cmd], None).await?;
+        if let Err(e) = run_command("yarn", &[verify_cmd], None).await {
+            info!(LOG, "Contract verification failed: {}. Continuing without verification.", e);
+        }
     }
 
     Ok(contract_addresses
