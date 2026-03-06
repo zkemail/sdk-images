@@ -462,6 +462,7 @@ async fn cleanup() -> Result<()> {
 
     info!(LOG, "Zipping files");
     let mut zip_args: Vec<String> = vec![
+        "-r".into(),
         "circuit.zip".into(),
         "regex/".into(),
         "circuit.circom".into(),
@@ -638,8 +639,9 @@ mod tests {
 
         fs::create_dir_all(test_dir.join("regex")).unwrap();
 
-        // Minimal circuit.circom and package.json
+        // Minimal circuit.circom, regexes and package.json
         fs::write(test_dir.join("circuit.circom"), "// test circuit").unwrap();
+        fs::write(test_dir.join("regex/test_regex.circom"), "// test regex").unwrap();
         fs::copy("package.json", test_dir.join("package.json")).unwrap();
 
         // Copy non-generated contract files (mirrors cleanup logic)
@@ -685,6 +687,7 @@ mod tests {
         // Build zip args from the same constant used by cleanup
         let test_dir_str = test_dir.to_str().unwrap();
         let mut zip_args: Vec<String> = vec![
+            "-r".into(),
             "circuit.zip".into(),
             "regex/".into(),
             "circuit.circom".into(),
@@ -701,16 +704,24 @@ mod tests {
         let zip_path = test_dir.join("circuit.zip");
         assert!(zip_path.exists(), "circuit.zip should exist");
 
-        // Verify zip contains every bundled contract file
         let list_output =
             run_command_and_return_output("unzip", &["-l", "circuit.zip"], Some(test_dir_str))
                 .await
                 .unwrap();
 
-        for file in CONTRACT_BUNDLE_FILES {
-            let entry = format!("contracts/{file}");
+        let expected_entries: Vec<String> = CONTRACT_BUNDLE_FILES
+            .iter()
+            .map(|f| format!("contracts/{f}"))
+            .chain([
+                "circuit.circom".to_string(),
+                "package.json".to_string(),
+                "regex/test_regex.circom".to_string(),
+            ])
+            .collect();
+
+        for entry in &expected_entries {
             assert!(
-                list_output.contains(&entry),
+                list_output.contains(entry.as_str()),
                 "circuit.zip should contain {}; got:\n{}",
                 entry,
                 list_output
