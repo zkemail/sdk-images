@@ -14,7 +14,7 @@ const main = async () => {
 
   const [deployer] = await ethers.getSigners();
   if (!deployer) {
-    throw new Error("No deployer signer available - set PRIVATE_KEY in .env");
+    throw new Error("No deployer signer available. Ensure PRIVATE_KEY is set");
   }
 
   console.log(`\nUsing network: ${network.name}`);
