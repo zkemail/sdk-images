@@ -34,8 +34,9 @@ fn build_circuit_setup(circuit_dir: &Path, regex_graphs_dir: &Path) -> Result<Pa
     std::fs::create_dir_all(&src_dir)?;
 
     // Copy Nargo.toml into the Noir project root.
-    let nargo_toml_path = Path::new("./Nargo.toml.txt");
-    std::fs::copy(nargo_toml_path, circuit_dir.join("Nargo.toml"))?;
+    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let nargo_toml_path = manifest_dir.join("Nargo.toml.txt");
+    std::fs::copy(&nargo_toml_path, circuit_dir.join("Nargo.toml"))?;
 
     // Copy shared regex Noir modules into this circuit's src dir.
     if regex_graphs_dir.exists() {
