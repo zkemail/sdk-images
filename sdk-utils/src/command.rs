@@ -20,7 +20,7 @@ pub async fn run_command(command: &str, args: &[&str], dir: Option<&str>) -> Res
         cmd.current_dir(directory);
     }
 
-    let mut child = cmd.spawn().expect("failed to execute process");
+    let mut child = cmd.spawn()?;
 
     if let Some(stdout) = child.stdout.take() {
         let reader = BufReader::new(stdout);
@@ -66,7 +66,7 @@ pub async fn run_command_with_env(
         cmd.env(key, value);
     }
 
-    let mut child = cmd.spawn().expect("failed to execute process");
+    let mut child = cmd.spawn()?;
 
     if let Some(stdout) = child.stdout.take() {
         let reader = BufReader::new(stdout);
@@ -101,8 +101,7 @@ pub async fn run_command_with_input(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .current_dir(dir.unwrap_or("."))
-        .spawn()
-        .expect("Failed to spawn child process");
+        .spawn()?;
 
     // Provide input to the command
     info!(LOG, "Writing input to command"; "input" => input);
@@ -200,7 +199,7 @@ pub async fn run_command_with_env_and_return_output(
         cmd.env(key, value);
     }
 
-    let output = cmd.output().expect("failed to execute process");
+    let output = cmd.output()?;
 
     if !output.status.success() {
         return Err(anyhow!(
@@ -237,7 +236,7 @@ pub async fn run_command_with_env_stream_and_return_output(
         cmd.env(key, value);
     }
 
-    let mut child = cmd.spawn().expect("failed to execute process");
+    let mut child = cmd.spawn()?;
     let mut output = String::new();
 
     if let Some(stdout) = child.stdout.take() {
