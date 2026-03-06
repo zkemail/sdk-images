@@ -8,8 +8,13 @@ const DEPLOYMENTS_DIR = "hh-deployments";
 const main = async () => {
   const dkimRegistryAddr = requireEnv("DKIM_REGISTRY");
 
-  if (dkimRegistryAddr === ethers.ZeroAddress) {
-    throw new Error("DKIM_REGISTRY is the zero address");
+  if (
+    !ethers.isAddress(dkimRegistryAddr) ||
+    dkimRegistryAddr === ethers.ZeroAddress
+  ) {
+    throw new Error(
+      `DKIM_REGISTRY is not a valid Ethereum address: ${dkimRegistryAddr}`,
+    );
   }
 
   const [deployer] = await ethers.getSigners();
