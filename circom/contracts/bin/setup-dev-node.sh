@@ -10,7 +10,7 @@ ARCH="$(uname -m)"
 DEV_NODE_ASSET=""
 ETH_RPC_ASSET=""
 
-if [[ "$OS" == "Darwin" && ( "$ARCH" == "arm64" || "$ARCH" == "x86_64" ) ]]; then
+if [[ "$OS" == "Darwin" && "$ARCH" == "arm64" ]]; then
   DEV_NODE_ASSET="revive-dev-node-darwin-arm64"
   ETH_RPC_ASSET="eth-rpc-darwin-arm64"
 elif [[ "$OS" == "Linux" && "$ARCH" == "x86_64" ]]; then
