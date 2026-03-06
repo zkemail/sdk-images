@@ -96,22 +96,24 @@ pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<PathBuf> {
     Ok(zip_path.to_path_buf())
 }
 
-/// Zips regex graphs into `zip_name` under `holder_dir` and returns
-/// the full path to the created zip file.
-pub async fn zip_regex_graphs(holder_dir: &Path, zip_name: &str) -> Result<PathBuf> {
-    // Zip regex graphs (shared)
-    info!(LOG, "Zipping regex graphs");
-    let holder_dir_str = holder_dir
+/// Zips regex graph JSON files found under `source_dir` into the given
+/// `zip_path` and returns the full path to the created zip file.
+pub async fn zip_regex_graphs(source_dir: &Path, zip_path: &Path) -> Result<PathBuf> {
+    info!(LOG, "Zipping regex graphs to {}", zip_path.display());
+    let source_dir_str = source_dir
         .to_str()
-        .ok_or_else(|| anyhow!("holder_dir path must be valid UTF-8"))?;
+        .ok_or_else(|| anyhow!("source_dir path must be valid UTF-8"))?;
+    let out_str = zip_path
+        .to_str()
+        .ok_or_else(|| anyhow!("zip_path must be valid UTF-8"))?;
     run_command(
         "zip",
-        &["-r", zip_name, ".", "-i", "*_regex.json"],
-        Some(holder_dir_str),
+        &["-r", out_str, ".", "-i", "*_regex.json"],
+        Some(source_dir_str),
     )
     .await?;
 
-    Ok(holder_dir.join(zip_name))
+    Ok(zip_path.to_path_buf())
 }
 
 /// Internal helper to derive the public inputs length from the generated

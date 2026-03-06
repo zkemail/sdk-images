@@ -149,7 +149,8 @@ pub async fn package_blueprint_artifacts(
         zip_circuit_dir(&tmp_dir.join("1024"), &tmp_dir.join("circuit_1024.zip")).await?;
     let circuit_2048_zip =
         zip_circuit_dir(&tmp_dir.join("2048"), &tmp_dir.join("circuit_2048.zip")).await?;
-    let regex_graphs_zip = zip_regex_graphs(&compiled.regex_graphs_dir, "regex_graphs.zip").await?;
+    let regex_graphs_zip =
+        zip_regex_graphs(&compiled.regex_graphs_dir, &tmp_dir.join("regex_graphs.zip")).await?;
 
     Ok(PackagedBlueprint {
         compiled: compiled.clone(),
