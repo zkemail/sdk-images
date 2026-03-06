@@ -17,7 +17,17 @@ where
     let compiled = compile_blueprint_artifacts(&tmp_dir, &payload).await?;
     let packaged = package_blueprint_artifacts(&tmp_dir, &compiled).await?;
     upload_blueprint_artifacts(&packaged, &payload.upload_urls, uploader).await?;
-    deploy_blueprint_contracts(&compiled, &payload).await?;
+
+    // Check if all required fields are present for contract deployment
+    if !payload.private_key.trim().is_empty()
+        && !payload.rpc_url.trim().is_empty()
+        && !payload.dkim_registry_address.trim().is_empty()
+    {
+        deploy_blueprint_contracts(&compiled, &payload).await?;
+    } else {
+        info!(LOG, "Skipping contract deployment: missing required config");
+    }
+
     Ok(())
 }
 

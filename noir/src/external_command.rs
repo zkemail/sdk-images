@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
-use sdk_utils::{run_command, run_command_with_env_and_return_output};
+use sdk_utils::{run_command, run_command_with_env, run_command_with_env_stream_and_return_output};
 use slog::info;
 use std::path::{Path, PathBuf};
 
@@ -171,47 +171,54 @@ pub async fn run_yarn_build_polka(contracts_dir: &str) -> Result<()> {
 }
 
 /// Runs `yarn deploy` in the given contracts directory with the provided
-/// environment variables (EVM / Foundry deployment). Returns the captured
-/// stdout so callers can parse deployed contract addresses.
+/// environment variables (EVM / Foundry deployment). Streams output in
+/// real-time and returns the captured stdout so callers can parse deployed
+/// contract addresses.
 pub async fn run_yarn_deploy(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<String> {
     info!(
         LOG,
         "Deploying contracts from {} using yarn deploy", contracts_dir
     );
-    run_command_with_env_and_return_output("yarn", &["deploy"], Some(contracts_dir), envs).await
+    run_command_with_env_stream_and_return_output("yarn", &["deploy"], Some(contracts_dir), envs)
+        .await
 }
 
 /// Runs `yarn deploy:polka` in the given contracts directory with the provided
-/// environment variables (Polkadot deployment). Returns the captured stdout
-/// so callers can log/inspect the result.
+/// environment variables (Polkadot deployment). Streams output in real-time
+/// and returns the captured stdout so callers can parse deployed contract
+/// addresses.
 pub async fn run_yarn_deploy_polka(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<String> {
     info!(
         LOG,
         "Deploying contracts from {} using yarn deploy:polka", contracts_dir
     );
-    run_command_with_env_and_return_output("yarn", &["deploy:polka"], Some(contracts_dir), envs)
-        .await
+    run_command_with_env_stream_and_return_output(
+        "yarn",
+        &["deploy:polka"],
+        Some(contracts_dir),
+        envs,
+    )
+    .await
 }
 
 /// Runs `yarn verify` in the given contracts directory with the provided
 /// environment variables (Foundry / Etherscan contract verification).
-/// Returns the captured stdout so callers can log/inspect the result.
-pub async fn run_yarn_verify(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<String> {
+/// Output is streamed in real-time.
+pub async fn run_yarn_verify(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<()> {
     info!(
         LOG,
         "Verifying contracts in {} using yarn verify", contracts_dir
     );
-    run_command_with_env_and_return_output("yarn", &["verify"], Some(contracts_dir), envs).await
+    run_command_with_env("yarn", &["verify"], Some(contracts_dir), envs).await
 }
 
 /// Runs `yarn verify:polka` in the given contracts directory with the provided
 /// environment variables (Polkadot / Blockscout contract verification).
-/// Returns the captured stdout so callers can log/inspect the result.
-pub async fn run_yarn_verify_polka(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<String> {
+/// Output is streamed in real-time.
+pub async fn run_yarn_verify_polka(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<()> {
     info!(
         LOG,
         "Verifying contracts in {} using yarn verify:polka", contracts_dir
     );
-    run_command_with_env_and_return_output("yarn", &["verify:polka"], Some(contracts_dir), envs)
-        .await
+    run_command_with_env("yarn", &["verify:polka"], Some(contracts_dir), envs).await
 }

@@ -1,11 +1,15 @@
 use anyhow::{Result, anyhow};
+use regex::Regex;
 use relayer_utils::LOG;
 use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Deserialize;
 use slog::info;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::types::Uuid;
 use std::path::{Path, PathBuf};
 
 use crate::circuit_pipeline::{CompiledCircuit, build_circuit_artifacts};
+use crate::db::update_verifier_contract_address;
 use crate::external_command::{
     run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka, run_yarn_verify,
     run_yarn_verify_polka,
@@ -196,50 +200,54 @@ pub async fn upload_blueprint_artifacts(
     uploader.upload_files(upload_targets).await
 }
 
-/// Optionally deploys the Foundry contracts for both 1024- and 2048-bit
-/// circuits. Skips deployment if the payload is missing required config
-/// (private_key, rpc_url, dkim_registry_address). Call after `compile_blueprint`
-/// when the handler wants to deploy.
+/// Deploys Foundry contracts for both 1024- and 2048-bit circuits, parses the
+/// `ZK_EMAIL_VERIFIER` address from each deploy output, and updates the
+/// database. The caller should check `should_deploy` before calling this.
 pub async fn deploy_blueprint_contracts(
     compiled: &CompiledBlueprint,
     payload: &Payload,
 ) -> Result<()> {
-    maybe_deploy_contracts_for_circuit(&compiled.artifacts_1024, payload).await?;
-    maybe_deploy_contracts_for_circuit(&compiled.artifacts_2048, payload).await?;
+    let addr_1024 = deploy_contracts_for_circuit(&compiled.artifacts_1024, payload).await?;
+    let addr_2048 = deploy_contracts_for_circuit(&compiled.artifacts_2048, payload).await?;
+
+    // Prefer the 2048-bit address since 2048-bit RSA keys are more common for
+    // DKIM; fall back to the 1024-bit address.
+    let address = addr_2048.or(addr_1024);
+
+    if let Some(ref addr) = address {
+        let pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect(&payload.database_url)
+            .await?;
+
+        let blueprint_id = Uuid::parse_str(&payload.blueprint.id)?;
+        update_verifier_contract_address(&pool, blueprint_id, addr).await?;
+        info!(
+            LOG,
+            "Updated verifier_contract_address in DB for blueprint {}: {}",
+            payload.blueprint.id,
+            addr
+        );
+    } else {
+        info!(
+            LOG,
+            "Could not parse ZK_EMAIL_VERIFIER address from deploy output; skipping DB update"
+        );
+    }
+
     Ok(())
 }
 
-/// Optionally deploys the contracts package for a single circuit directory by
-/// running `yarn deploy` (EVM) or `yarn deploy:polka` (Polkadot) inside the
-/// `<circuit_dir_parent>/contracts` directory. The script is chosen based on
-/// `rpc_url`: when it equals "POLKA" (case-insensitive), `deploy:polka` is used.
+/// Deploys the contracts package for a single circuit directory by running
+/// `yarn deploy` (EVM) or `yarn deploy:polka` (Polkadot) inside the
+/// `<circuit_dir>/contracts` directory.
 ///
-/// Deployment is skipped unless all of the following payload fields are
-/// non-empty:
-/// - `private_key`  -> `PRIVATE_KEY`
-/// - `rpc_url`      -> `RPC_URL`
-/// - `dkim_registry_address` -> `DKIM_REGISTRY`
-///
-/// `etherscan_api_key` is passed through as `ETHERSCAN_API_KEY` but may be
-/// empty if verification is not required.
-async fn maybe_deploy_contracts_for_circuit(
+/// Returns the `ZK_EMAIL_VERIFIER` contract address parsed from the deploy
+/// output, or `None` if parsing failed.
+async fn deploy_contracts_for_circuit(
     artifacts: &CompiledCircuit,
     payload: &Payload,
-) -> Result<()> {
-    // Only attempt deployment when we have all required config values.
-    if payload.private_key.trim().is_empty()
-        || payload.rpc_url.trim().is_empty()
-        || payload.dkim_registry_address.trim().is_empty()
-    {
-        info!(
-            LOG,
-            "Skipping contract deployment for {:?}: missing required deployment config",
-            artifacts.circuit_dir
-        );
-        return Ok(());
-    }
-
-    // Contracts live under `contracts_dir` for this circuit (e.g. tmp/1024/contracts).
+) -> Result<Option<String>> {
     let contracts_dir = &artifacts.contracts_dir;
     if !contracts_dir.exists() {
         return Err(anyhow!(
@@ -265,25 +273,36 @@ async fn maybe_deploy_contracts_for_circuit(
     ];
 
     const POLKADOT_HUB_TESTNET_CHAIN_ID: u32 = 420420417;
-    if payload.chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
+    let deploy_output = if payload.chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
         run_yarn_build_polka(contracts_dir_str).await?;
-        let deploy_output = run_yarn_deploy_polka(contracts_dir_str, envs).await?;
-        info!(LOG, "Contract deployment output: {}", deploy_output);
-
-        let verify_output = run_yarn_verify_polka(contracts_dir_str, envs).await?;
-        info!(LOG, "Contract verification output: {}", verify_output);
+        let output = run_yarn_deploy_polka(contracts_dir_str, envs).await?;
+        run_yarn_verify_polka(contracts_dir_str, envs).await?;
+        output
     } else {
         run_yarn_build(contracts_dir_str).await?;
-        let deploy_output = run_yarn_deploy(contracts_dir_str, envs).await?;
-        info!(LOG, "Contract deployment output: {}", deploy_output);
-
+        let output = run_yarn_deploy(contracts_dir_str, envs).await?;
         if !payload.etherscan_api_key.trim().is_empty() {
-            let verify_output = run_yarn_verify(contracts_dir_str, envs).await?;
-            info!(LOG, "Contract verification output: {}", verify_output);
+            run_yarn_verify(contracts_dir_str, envs).await?;
         } else {
             info!(LOG, "Skipping contract verification: no ETHERSCAN_API_KEY");
         }
+        output
+    };
+
+    let address = parse_zk_email_verifier_address(&deploy_output);
+    if let Some(ref addr) = address {
+        info!(LOG, "Parsed ZK_EMAIL_VERIFIER address: {}", addr);
     }
 
-    Ok(())
+    Ok(address)
+}
+
+/// Extracts the `ZK_EMAIL_VERIFIER` contract address from deployment output.
+/// Both the Forge and Hardhat deploy scripts print a line like:
+///   `ZK_EMAIL_VERIFIER: 0x<40 hex chars>`
+fn parse_zk_email_verifier_address(output: &str) -> Option<String> {
+    let re = Regex::new(r"ZK_EMAIL_VERIFIER:\s*(0x[a-fA-F0-9]{40})").ok()?;
+    re.captures(output)
+        .and_then(|cap| cap.get(1))
+        .map(|m| m.as_str().to_string())
 }
