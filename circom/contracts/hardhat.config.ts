@@ -30,8 +30,7 @@ const config: HardhatUserConfig = {
       polkadot: {
         target: "evm",
       },
-      url:
-        process.env.RPC_URL || "https://services.polkadothub-rpc.com/testnet",
+      url: "https://services.polkadothub-rpc.com/testnet",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },
@@ -42,7 +41,7 @@ const config: HardhatUserConfig = {
     customChains: [
       {
         network: "polkadotHubTestnet",
-        chainId: parseInt(process.env.CHAIN_ID || "420420417"),
+        chainId: 420420417,
         urls: {
           apiURL: "https://blockscout-testnet.polkadot.io/api",
           browserURL: "https://blockscout-testnet.polkadot.io/",
