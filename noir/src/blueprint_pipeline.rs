@@ -3,7 +3,7 @@ use regex::Regex;
 use relayer_utils::LOG;
 use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use serde::Deserialize;
-use slog::info;
+use slog::{info, warn};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Uuid;
 use std::path::{Path, PathBuf};
@@ -276,13 +276,17 @@ async fn deploy_contracts_for_circuit(
     let deploy_output = if payload.chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
         run_yarn_build_polka(contracts_dir_str).await?;
         let output = run_yarn_deploy_polka(contracts_dir_str, envs).await?;
-        run_yarn_verify_polka(contracts_dir_str, envs).await?;
+        if let Err(e) = run_yarn_verify_polka(contracts_dir_str, envs).await {
+            warn!(LOG, "Contract verification failed (polka): {}", e);
+        }
         output
     } else {
         run_yarn_build(contracts_dir_str).await?;
         let output = run_yarn_deploy(contracts_dir_str, envs).await?;
         if !payload.etherscan_api_key.trim().is_empty() {
-            run_yarn_verify(contracts_dir_str, envs).await?;
+            if let Err(e) = run_yarn_verify(contracts_dir_str, envs).await {
+                warn!(LOG, "Contract verification failed: {}", e);
+            }
         } else {
             info!(LOG, "Skipping contract verification: no ETHERSCAN_API_KEY");
         }
