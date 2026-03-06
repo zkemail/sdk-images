@@ -37,11 +37,11 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      polkadotTestnet: "no-api-key-needed",
+      polkadotHubTestnet: "no-api-key-needed",
     },
     customChains: [
       {
-        network: "polkadotTestnet",
+        network: "polkadotHubTestnet",
         chainId: 420420417,
         urls: {
           apiURL: "https://blockscout-testnet.polkadot.io/api",

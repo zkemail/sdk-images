@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use crate::circuit_pipeline::{CompiledCircuit, build_circuit_artifacts};
 use crate::external_command::{
     run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka, run_yarn_verify,
+    run_yarn_verify_polka,
 };
 use crate::filesystem::{FileUploader, UploadTarget, zip_circuit_dir, zip_regex_graphs};
 use crate::regex_generator::generate_regex_circuits;
@@ -268,6 +269,9 @@ async fn maybe_deploy_contracts_for_circuit(
         run_yarn_build_polka(contracts_dir_str).await?;
         let deploy_output = run_yarn_deploy_polka(contracts_dir_str, envs).await?;
         info!(LOG, "Contract deployment output: {}", deploy_output);
+
+        let verify_output = run_yarn_verify_polka(contracts_dir_str, envs).await?;
+        info!(LOG, "Contract verification output: {}", verify_output);
     } else {
         run_yarn_build(contracts_dir_str).await?;
         let deploy_output = run_yarn_deploy(contracts_dir_str, envs).await?;

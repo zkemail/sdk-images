@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use relayer_utils::LOG;
-use sdk_utils::{run_command, run_command_with_env, run_command_with_env_and_return_output};
+use sdk_utils::{run_command, run_command_with_env_and_return_output};
 use slog::info;
 use std::path::{Path, PathBuf};
 
@@ -202,4 +202,16 @@ pub async fn run_yarn_verify(contracts_dir: &str, envs: &[(&str, &str)]) -> Resu
         "Verifying contracts in {} using yarn verify", contracts_dir
     );
     run_command_with_env_and_return_output("yarn", &["verify"], Some(contracts_dir), envs).await
+}
+
+/// Runs `yarn verify:polka` in the given contracts directory with the provided
+/// environment variables (Polkadot / Blockscout contract verification).
+/// Returns the captured stdout so callers can log/inspect the result.
+pub async fn run_yarn_verify_polka(contracts_dir: &str, envs: &[(&str, &str)]) -> Result<String> {
+    info!(
+        LOG,
+        "Verifying contracts in {} using yarn verify:polka", contracts_dir
+    );
+    run_command_with_env_and_return_output("yarn", &["verify:polka"], Some(contracts_dir), envs)
+        .await
 }

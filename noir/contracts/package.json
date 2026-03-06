@@ -8,7 +8,8 @@
     "build:polka": "hardhat compile",
     "deploy": "forge script script/DeployZKEmailVerifier.s.sol --broadcast --non-interactive --rpc-url rpc_url",
     "deploy:polka": "hardhat run hh-scripts/deploy-zk-email-verifier.ts --network polkadotHubTestnet",
-    "verify": "bash script/verify-zk-email-verifier.sh"
+    "verify": "bash script/verify-zk-email-verifier.sh",
+    "verify:polka": "hardhat run hh-scripts/verify-zk-email-verifier.ts --network polkadotHubTestnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
