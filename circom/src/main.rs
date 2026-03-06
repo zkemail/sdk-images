@@ -22,6 +22,36 @@ use slog::info;
 use sqlx::postgres::PgPoolOptions;
 use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs};
 
+/// All contract files bundled into the downloadable zip, relative to `contracts/`.
+/// Files listed here but NOT in `GENERATED_CONTRACT_FILES` are copied from the
+/// source `contracts/` directory; generated files are produced by templates / snarkjs.
+const CONTRACT_BUNDLE_FILES: &[&str] = &[
+    ".env.example",
+    "README.md",
+    "foundry.toml",
+    "hardhat.config.ts",
+    "package.json",
+    "remappings.txt",
+    "tsconfig.json",
+    "yarn.lock",
+    "src/Groth16Verifier.sol",
+    "src/ZKEmailVerifier.sol",
+    "src/interfaces/IDKIMRegistry.sol",
+    "src/interfaces/IGroth16Verifier.sol",
+    "src/interfaces/IZKEmailVerifier.sol",
+    "script/DeployZKEmailVerifier.s.sol",
+    "script/verify-zk-email-verifier.sh",
+    "hh-scripts/deploy-zk-email-verifier.ts",
+    "hh-scripts/verify-zk-email-verifier.ts",
+    "hh-utils/require-env.ts",
+];
+
+const GENERATED_CONTRACT_FILES: &[&str] = &[
+    "src/Groth16Verifier.sol",
+    "src/ZKEmailVerifier.sol",
+    "src/interfaces/IGroth16Verifier.sol",
+];
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Check for a lightweight CLI mode to only populate the Solidity contracts from a JSON payload.
@@ -403,49 +433,20 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
 async fn cleanup() -> Result<()> {
     info!(LOG, "Cleaning up");
 
-    // Prepare contracts directory inside tmp for bundling
+    // Copy non-generated contract files into tmp/contracts (generated files are
+    // already written there by the template / snarkjs steps above).
     let contracts_tmp_dir = Path::new("tmp").join("contracts");
-    if !contracts_tmp_dir.exists() {
-        fs::create_dir_all(&contracts_tmp_dir)?;
+    for file in CONTRACT_BUNDLE_FILES {
+        if GENERATED_CONTRACT_FILES.contains(file) {
+            continue;
+        }
+        let src = Path::new("contracts").join(file);
+        let dst = contracts_tmp_dir.join(file);
+        if let Some(parent) = dst.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::copy(&src, &dst)?;
     }
-    let contracts_tmp_script_dir = contracts_tmp_dir.join("script");
-    if !contracts_tmp_script_dir.exists() {
-        fs::create_dir_all(&contracts_tmp_script_dir)?;
-    }
-    let contracts_tmp_src_dir = contracts_tmp_dir.join("src");
-    if !contracts_tmp_src_dir.exists() {
-        fs::create_dir_all(&contracts_tmp_src_dir)?;
-    }
-    let contracts_tmp_interfaces_dir = contracts_tmp_src_dir.join("interfaces");
-    if !contracts_tmp_interfaces_dir.exists() {
-        fs::create_dir_all(&contracts_tmp_interfaces_dir)?;
-    }
-
-    // Copy the Foundry contracts project into tmp/contracts
-    run_command("cp", &["contracts/.env.example", "./tmp/contracts"], None).await?;
-    run_command("cp", &["contracts/README.md", "./tmp/contracts"], None).await?;
-    run_command("cp", &["contracts/foundry.toml", "./tmp/contracts"], None).await?;
-    run_command("cp", &["contracts/package.json", "./tmp/contracts"], None).await?;
-    run_command("cp", &["contracts/remappings.txt", "./tmp/contracts"], None).await?;
-    run_command("cp", &["contracts/yarn.lock", "./tmp/contracts"], None).await?;
-    fs::copy(
-        "contracts/src/interfaces/IDKIMRegistry.sol",
-        contracts_tmp_interfaces_dir.join("IDKIMRegistry.sol"),
-    )?;
-    fs::copy(
-        "contracts/src/interfaces/IZKEmailVerifier.sol",
-        contracts_tmp_interfaces_dir.join("IZKEmailVerifier.sol"),
-    )?;
-    run_command(
-        "cp",
-        &[
-            "contracts/script/DeployZKEmailVerifier.s.sol",
-            "./tmp/contracts/script",
-        ],
-        None,
-    )
-    .await?;
-    // ZKEmailVerifier.sol and Groth16Verifier.sol are generated above, not copied
 
     // After generating the chunked zkey, add compression steps
     info!(LOG, "Compressing zkey chunks");
@@ -460,19 +461,17 @@ async fn cleanup() -> Result<()> {
     run_command("gzip", &["circuit.zkey"], Some("tmp")).await?;
 
     info!(LOG, "Zipping files");
-    run_command(
-        "zip",
-        &[
-            "-r",
-            "circuit.zip",
-            "regex",
-            "circuit.circom",
-            "package.json",
-            "contracts",
-        ],
-        Some("tmp"),
-    )
-    .await?;
+    let mut zip_args: Vec<String> = vec![
+        "circuit.zip".into(),
+        "regex/".into(),
+        "circuit.circom".into(),
+        "package.json".into(),
+    ];
+    for file in CONTRACT_BUNDLE_FILES {
+        zip_args.push(format!("contracts/{file}"));
+    }
+    let zip_refs: Vec<&str> = zip_args.iter().map(|s| s.as_str()).collect();
+    run_command("zip", &zip_refs, Some("tmp")).await?;
 
     run_command(
         "zip",
@@ -638,53 +637,23 @@ mod tests {
         ));
 
         fs::create_dir_all(test_dir.join("regex")).unwrap();
-        fs::create_dir_all(test_dir.join("contracts/script")).unwrap();
-        fs::create_dir_all(test_dir.join("contracts/src/interfaces")).unwrap();
 
         // Minimal circuit.circom and package.json
         fs::write(test_dir.join("circuit.circom"), "// test circuit").unwrap();
         fs::copy("package.json", test_dir.join("package.json")).unwrap();
 
-        // Copy contracts config and scripts
-        fs::copy(
-            "contracts/.env.example",
-            test_dir.join("contracts/.env.example"),
-        )
-        .unwrap();
-        fs::copy("contracts/README.md", test_dir.join("contracts/README.md")).unwrap();
-        fs::copy(
-            "contracts/foundry.toml",
-            test_dir.join("contracts/foundry.toml"),
-        )
-        .unwrap();
-        fs::copy(
-            "contracts/package.json",
-            test_dir.join("contracts/package.json"),
-        )
-        .unwrap();
-        fs::copy(
-            "contracts/remappings.txt",
-            test_dir.join("contracts/remappings.txt"),
-        )
-        .unwrap();
-        fs::copy("contracts/yarn.lock", test_dir.join("contracts/yarn.lock")).unwrap();
-        fs::copy(
-            "contracts/script/DeployZKEmailVerifier.s.sol",
-            test_dir.join("contracts/script/DeployZKEmailVerifier.s.sol"),
-        )
-        .unwrap();
-        fs::copy(
-            "contracts/src/interfaces/IDKIMRegistry.sol",
-            test_dir.join("contracts/src/interfaces/IDKIMRegistry.sol"),
-        )
-        .unwrap();
-        fs::copy(
-            "contracts/src/interfaces/IZKEmailVerifier.sol",
-            test_dir.join("contracts/src/interfaces/IZKEmailVerifier.sol"),
-        )
-        .unwrap();
+        // Copy non-generated contract files (mirrors cleanup logic)
+        for file in CONTRACT_BUNDLE_FILES {
+            if GENERATED_CONTRACT_FILES.contains(file) {
+                continue;
+            }
+            let src = Path::new("contracts").join(file);
+            let dst = test_dir.join("contracts").join(file);
+            fs::create_dir_all(dst.parent().unwrap()).unwrap();
+            fs::copy(&src, &dst).unwrap();
+        }
 
-        // Generate ZKEmailVerifier.sol from template (no compilation needed)
+        // Generate contract files from templates (no snarkjs needed)
         let contract_data = ContractData {
             sender_domain: "example.com".to_string(),
             values: vec![],
@@ -704,8 +673,6 @@ mod tests {
                 .unwrap(),
         )
         .unwrap();
-
-        // Generate Groth16Verifier.sol from the mock template (no snarkjs needed)
         create_mock_groth16_verifier_at_path(
             &contract_data,
             test_dir
@@ -715,54 +682,35 @@ mod tests {
         )
         .unwrap();
 
-        // Create circuit.zip (same args as cleanup)
+        // Build zip args from the same constant used by cleanup
         let test_dir_str = test_dir.to_str().unwrap();
-        run_command(
-            "zip",
-            &[
-                "-r",
-                "circuit.zip",
-                "regex",
-                "circuit.circom",
-                "package.json",
-                "contracts",
-            ],
-            Some(test_dir_str),
-        )
-        .await
-        .unwrap();
+        let mut zip_args: Vec<String> = vec![
+            "circuit.zip".into(),
+            "regex/".into(),
+            "circuit.circom".into(),
+            "package.json".into(),
+        ];
+        for file in CONTRACT_BUNDLE_FILES {
+            zip_args.push(format!("contracts/{file}"));
+        }
+        let zip_refs: Vec<&str> = zip_args.iter().map(|s| s.as_str()).collect();
+        run_command("zip", &zip_refs, Some(test_dir_str))
+            .await
+            .unwrap();
 
         let zip_path = test_dir.join("circuit.zip");
         assert!(zip_path.exists(), "circuit.zip should exist");
 
-        // Verify zip contents
+        // Verify zip contains every bundled contract file
         let list_output =
             run_command_and_return_output("unzip", &["-l", "circuit.zip"], Some(test_dir_str))
                 .await
                 .unwrap();
 
-        let expected_entries = [
-            "circuit.circom",
-            "package.json",
-            "regex/",
-            "contracts/",
-            "contracts/README.md",
-            "contracts/src/",
-            "contracts/src/ZKEmailVerifier.sol",
-            "contracts/src/Groth16Verifier.sol",
-            "contracts/src/interfaces/",
-            "contracts/src/interfaces/IDKIMRegistry.sol",
-            "contracts/src/interfaces/IZKEmailVerifier.sol",
-            "contracts/src/interfaces/IGroth16Verifier.sol",
-            "contracts/script/",
-            "contracts/script/DeployZKEmailVerifier.s.sol",
-            "contracts/foundry.toml",
-            "contracts/package.json",
-            "contracts/remappings.txt",
-        ];
-        for entry in expected_entries {
+        for file in CONTRACT_BUNDLE_FILES {
+            let entry = format!("contracts/{file}");
             assert!(
-                list_output.contains(entry),
+                list_output.contains(&entry),
                 "circuit.zip should contain {}; got:\n{}",
                 entry,
                 list_output
