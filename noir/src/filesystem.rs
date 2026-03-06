@@ -71,8 +71,8 @@ pub async fn zip_circuit_dir(cwd: &Path, zip_path: &Path) -> Result<PathBuf> {
     );
 
     const GENERATED_FILES: &[&str] = &[
-        "noir/Nargo.toml",
-        "noir/src",
+        "circuit/Nargo.toml",
+        "circuit/src",
         "contracts/src/HonkVerifier.sol",
         "contracts/src/ZKEmailVerifier.sol",
     ];

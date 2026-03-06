@@ -18,7 +18,7 @@ use crate::template::{ZKEmailVerifierInputs, render_main_nr_circuit, render_zkem
 pub struct CompiledCircuit {
     /// Key size in bits (e.g. 1024, 2048).
     pub key_size_bits: u32,
-    /// Noir project root directory: `<tmp_dir>/<key_size_bits>/noir`.
+    /// Noir project root directory: `<tmp_dir>/<key_size_bits>/circuit`.
     pub circuit_dir: PathBuf,
     /// Contracts root directory: `<tmp_dir>/<key_size_bits>/contracts`.
     pub contracts_dir: PathBuf,
@@ -159,10 +159,10 @@ fn build_contracts(
 /// Internal setup for `build_circuit_artifacts`. Under the given `key_dir`
 /// (e.g. `tmp/1024` or `tmp/2048`), creates the circuit and contracts
 /// directories and returns their paths:
-/// - `circuit_dir = key_dir/noir`
+/// - `circuit_dir = key_dir/circuit`
 /// - `contracts_dir = key_dir/contracts`
 fn build_circuit_artifacts_setup(key_dir: &Path) -> Result<(PathBuf, PathBuf)> {
-    let circuit_dir = key_dir.join("noir");
+    let circuit_dir = key_dir.join("circuit");
     let contracts_dir = key_dir.join("contracts");
 
     std::fs::create_dir_all(&circuit_dir)?;
