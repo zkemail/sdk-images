@@ -1,8 +1,7 @@
-import { HardhatUserConfig, vars } from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@parity/hardhat-polkadot";
 import "dotenv/config";
-import { requireEnv } from "./utils/requireEnv";
 
 const config: HardhatUserConfig = {
   networks: {
@@ -32,7 +31,7 @@ const config: HardhatUserConfig = {
       },
       url:
         process.env.RPC_URL || "https://services.polkadothub-rpc.com/testnet",
-      accounts: [requireEnv("PRIVATE_KEY")],
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },
   etherscan: {
@@ -42,7 +41,7 @@ const config: HardhatUserConfig = {
     customChains: [
       {
         network: "polkadotHubTestnet",
-        chainId: 420420417,
+        chainId: parseInt(process.env.CHAIN_ID || "420420417"),
         urls: {
           apiURL: "https://blockscout-testnet.polkadot.io/api",
           browserURL: "https://blockscout-testnet.polkadot.io/",
