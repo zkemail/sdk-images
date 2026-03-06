@@ -1,19 +1,12 @@
+import fs from "fs";
+import path from "path";
 import { ethers, network } from "hardhat";
-import { vars } from "hardhat/config";
+import { requireEnv } from "../hh-utils/require-env";
 
-async function main() {
-  // Resolve DKIM registry address from Hardhat vars or environment
-  let dkimRegistryAddr: string | undefined;
-  try {
-    dkimRegistryAddr = vars.get("DKIM_REGISTRY");
-  } catch {
-    dkimRegistryAddr = process.env.DKIM_REGISTRY;
-  }
+const DEPLOYMENTS_DIR = "hh-deployments";
 
-  if (!dkimRegistryAddr) {
-    console.error("DKIM_REGISTRY not set (Hardhat vars or environment)");
-    return;
-  }
+const main = async () => {
+  const dkimRegistryAddr = requireEnv("DKIM_REGISTRY");
 
   if (dkimRegistryAddr === ethers.ZeroAddress) {
     console.error("DKIM_REGISTRY is the zero address");
@@ -57,10 +50,26 @@ async function main() {
   console.log("\n=== Deployment Complete ===");
   console.log("GROTH16_VERIFIER:", groth16VerifierAddress);
   console.log("ZK_EMAIL_VERIFIER:", zkEmailVerifierAddress);
-}
+
+  const chainId = (await ethers.provider.getNetwork()).chainId;
+  const deploymentsDir = path.join(DEPLOYMENTS_DIR, chainId.toString());
+  const deploymentsFile = path.join(deploymentsDir, "run-latest.json");
+  fs.mkdirSync(deploymentsDir, { recursive: true });
+  fs.writeFileSync(
+    deploymentsFile,
+    JSON.stringify(
+      {
+        GROTH16_VERIFIER: groth16VerifierAddress,
+        ZK_EMAIL_VERIFIER: zkEmailVerifierAddress,
+      },
+      null,
+      2,
+    ),
+  );
+  console.log(`Deployment addresses saved to ${deploymentsFile}`);
+};
 
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-
