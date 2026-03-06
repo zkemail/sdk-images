@@ -123,7 +123,7 @@ async fn main() -> Result<()> {
     )
     .await?;
 
-    let contract_address = deploy_verifier_contract().await?;
+    let contract_address = deploy_verifier_contract(payload.chain_id).await?;
 
     info!(LOG, "Contract deployed at: {}", contract_address);
 

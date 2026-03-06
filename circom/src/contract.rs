@@ -250,12 +250,20 @@ pub async fn generate_verifier_contract(
     Ok(())
 }
 
-pub async fn deploy_verifier_contract() -> Result<String> {
+pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
+    const POLKADOT_HUB_TESTNET_CHAIN_ID: u32 = 420420417;
+
+    let (build_cmd, deploy_cmd, verify_cmd) = if chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
+        ("build:polka", "deploy:polka", "verify:polka")
+    } else {
+        ("build", "deploy", "verify")
+    };
+
     info!(LOG, "Building contracts");
-    run_command("yarn", &["build"], None).await?;
+    run_command("yarn", &[build_cmd], None).await?;
 
     info!(LOG, "Deploying contracts");
-    let output = run_command_and_return_output("yarn", &["deploy"], None).await?;
+    let output = run_command_and_return_output("yarn", &[deploy_cmd], None).await?;
 
     // Parse the output to extract addresses
     let re = Regex::new(r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})")
@@ -270,7 +278,7 @@ pub async fn deploy_verifier_contract() -> Result<String> {
 
     if env::var("ETHERSCAN_API_KEY").is_ok() {
         info!(LOG, "Verifying contracts");
-        run_command("yarn", &["verify"], None).await?;
+        run_command("yarn", &[verify_cmd], None).await?;
     }
 
     Ok(contract_addresses
