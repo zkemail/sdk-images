@@ -7,10 +7,10 @@ This crate includes a small helper CLI for working with the ZKEmail Noir pipelin
 You can generate example Solidity contracts for a Foundry project (so it can compile and run tests) without running `nargo` or `bb` by using:
 
 ```bash
-cargo run -p noir -- generate-example-contracts ./example-contract-data.json [./contracts/src]
+cargo run -p noir -- generate-example-contracts ./example-contract-data.json ./contracts/src
 ```
 
-- `./example-contract-data.json` – JSON payload matching the `ExampleContractData` schema: `senderDomain` (string) and `publicInputsLength` (number).
+- `./example-contract-data.json` – JSON payload matching the `ExampleContractData` schema used by the Noir tooling.
 - `./contracts/src` – (optional) output directory. If omitted, files are written to `noir/contracts/src/`.
 
 The command writes:
