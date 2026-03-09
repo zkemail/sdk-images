@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
-import hre, { ethers } from "hardhat";
+import { ethers } from "hardhat";
 import { requireEnv } from "../utils/require-env";
+import { verifyWithRetry } from "../utils/verify-with-retry";
 
 const DEPLOYMENTS_DIR = "hh-deployments";
 
@@ -42,13 +43,13 @@ const main = async () => {
   console.log(`DKIM_REGISTRY: ${dkimRegistryAddr}`);
 
   console.log("\n=== Verifying HonkVerifier ===");
-  await hre.run("verify:verify", {
+  await verifyWithRetry("HonkVerifier", {
     address: honkVerifierAddr,
     constructorArguments: [],
   });
 
   console.log("\n=== Verifying ZKEmailVerifier ===");
-  await hre.run("verify:verify", {
+  await verifyWithRetry("ZKEmailVerifier", {
     address: zkEmailVerifierAddr,
     constructorArguments: [dkimRegistryAddr, honkVerifierAddr],
   });
