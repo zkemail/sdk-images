@@ -3,11 +3,22 @@ broadcast
 cache
 out
 
-# other directories
-coverage
-node_modules
+# hardhat directories
+hh-artifacts
+hh-cache
+hh-deployments
+
+# polkadot hardhat node binaries
+bin/dev-node
+bin/eth-rpc
 
 # .env files
 .env
 .env.*
 !.env.example
+
+# other directories
+coverage
+node_modules
+/typechain
+/typechain-types

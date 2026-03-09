@@ -39,7 +39,7 @@ contract ZKEmailVerifier is IZKEmailVerifier {
      */
     constructor(IDKIMRegistry _dkimRegistry, IGroth16Verifier _groth16Verifier) {
         if (address(_dkimRegistry) == address(0)) revert InvalidDKIMRegistry();
-        if (address(_groth16Verifier) == address(0)) revert InvalidGroth16Verifier();
+        if (address(_groth16Verifier) == address(0)) revert InvalidProofVerifier();
         DKIM_REGISTRY = _dkimRegistry;
         GROTH16_VERIFIER = _groth16Verifier;
     }

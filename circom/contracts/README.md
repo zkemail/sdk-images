@@ -5,13 +5,16 @@ These contracts are built by the pipeline whenever a new blueprint is created, t
 
 ### What lives in this package
 
-- `src/Groth16Verifier.sol` - Groth16 verifier contract for the blueprint’s proving key.
+- `src/Groth16Verifier.sol` - Groth16 verifier contract for the blueprint's proving key.
 - `src/ZKEmailVerifier.sol` - ZKEmail verifier that plugs into the shared DKIM registry and Groth16 verifier.
 - `src/interfaces/IGroth16Verifier.sol` - interface for the Groth16 verifier.
 - `src/interfaces/IDKIMRegistry.sol` - interface used to talk to the DKIM registry.
 - `src/interfaces/IZKEmailVerifier.sol` - interface for the ZKEmail verifier contract.
 - `test/DKIMRegistryMock.sol` - simple mock of the DKIM registry for testing.
-- `script/DeployZKEmailVerifier.s.sol` - Foundry script that deploys a fresh `Groth16Verifier` and `ZKEmailVerifier` against an existing DKIM registry instance.
+- `script/DeployZKEmailVerifier.s.sol` - Foundry script that deploys `Groth16Verifier` and `ZKEmailVerifier` against an existing DKIM registry instance.
+- `script/verify-zk-email-verifier.sh` - Shell script to verify both contracts on Etherscan-compatible explorers via Foundry.
+- `hh-scripts/deploy-zk-email-verifier.ts` - Hardhat script for deploying to Polkadot Hub.
+- `hh-scripts/verify-zk-email-verifier.ts` - Hardhat script for verifying contracts on Polkadot Hub (Blockscout).
 
 ### DKIM registry code / repo
 
@@ -37,38 +40,83 @@ When deploying, you typically have two options:
 
 Once you have a `DKIMRegistry` address (from either 1 or 2), pass that address into the verifier deployment flow (see below).
 
-### Deploying with Foundry
+### Environment variables
 
-Deployment is handled via Foundry’s `forge` CLI. This repository assumes you have Foundry installed globally (via `foundryup`) rather than as an NPM dependency.
+Copy `.env.example` to `.env` and fill in the values:
 
-**Required environment variables:**
+| Variable            | Required                      | Description                                                                                |
+| ------------------- | ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `PRIVATE_KEY`       | Yes                           | EOA private key used to broadcast transactions.                                            |
+| `DKIM_REGISTRY`     | Yes                           | Address of the already-deployed `DKIMRegistry` contract.                                   |
+| `RPC_URL`           | Yes                           | RPC URL for the target network.                                                            |
+| `CHAIN_ID`          | Yes                           | Numeric chain ID (used by verification scripts).                                           |
+| `ETHERSCAN_API_KEY` | For Foundry verification only | API key for Etherscan-compatible block explorer. Not needed for Polkadot Hub (Blockscout). |
+| `GROTH16_VERIFIER`  | Optional                      | Deployed `Groth16Verifier` address (auto-read from deployment files if omitted).           |
+| `ZK_EMAIL_VERIFIER` | Optional                      | Deployed `ZKEmailVerifier` address (auto-read from deployment files if omitted).           |
 
-- `PRIVATE_KEY` - EOA private key used by Foundry to broadcast transactions.
-- `DKIM_REGISTRY` - address of the already-deployed `DKIMRegistry` contract.
-- `RPC_URL` - RPC URL for the target network (passed to the `deploy` script via `--rpc-url`).
+### Deploying with Foundry (EVM chains)
 
-The `package.json` scripts are thin wrappers around `forge` and can be run with Yarn.
+Deployment is handled via Foundry's `forge` CLI. This repository assumes you have Foundry installed globally (via `foundryup`) rather than as an NPM dependency.
 
-First install dependencies:
+Install dependencies:
 
 ```bash
 yarn
 ```
 
-Then you can:
+Build:
 
-- Build:
+```bash
+yarn build
+```
 
-  ```bash
-  yarn build
-  # equivalent to:
-  # forge build
-  ```
+Deploy:
 
-- Deploy:
+```bash
+yarn deploy
+```
 
-  ```bash
-  yarn deploy
-  # equivalent to:
-  # forge script script/DeployZKEmailVerifier.s.sol --broadcast --non-interactive --rpc-url $RPC_URL
-  ```
+Verify on Etherscan (after deploying):
+
+```bash
+yarn verify
+```
+
+The verification script reads deployed addresses from Foundry's `broadcast/DeployZKEmailVerifier.s.sol/<CHAIN_ID>/run-latest.json`. You can also set `GROTH16_VERIFIER` and `ZK_EMAIL_VERIFIER` explicitly in `.env` to skip the auto-detection.
+
+### Deploying to Polkadot Hub
+
+Polkadot Hub deployment uses Hardhat with the `@parity/hardhat-polkadot` plugin.
+
+#### Polkadot Hub Testnet
+
+Build (compiles with `resolc` for PolkaVM):
+
+```bash
+yarn build:polka
+```
+
+Deploy to Polkadot Hub Testnet:
+
+```bash
+yarn deploy:polka
+```
+
+Verify on Blockscout (after deploying):
+
+```bash
+yarn verify:polka
+```
+
+The Polkadot deploy script saves addresses to `hh-deployments/<chainId>/run-latest.json`. The verify script reads from there automatically, or you can override with `GROTH16_VERIFIER` / `ZK_EMAIL_VERIFIER` env vars.
+
+### All available commands
+
+| Command             | Description                                                          |
+| ------------------- | -------------------------------------------------------------------- |
+| `yarn build`        | Compile contracts with Foundry (`forge build`).                      |
+| `yarn build:polka`  | Compile contracts with Hardhat + `resolc` for Polkadot Hub.          |
+| `yarn deploy`       | Deploy via Foundry to the chain at `$RPC_URL`.                       |
+| `yarn deploy:polka` | Deploy via Hardhat to Polkadot Hub Testnet.                          |
+| `yarn verify`       | Verify both contracts on an Etherscan-compatible explorer (Foundry). |
+| `yarn verify:polka` | Verify both contracts on Polkadot Hub Blockscout (Hardhat).          |
