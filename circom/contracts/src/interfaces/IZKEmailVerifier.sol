@@ -14,7 +14,6 @@ interface IZKEmailVerifier {
      * @notice Thrown when the Groth16 verifier address is zero or otherwise invalid
      */
     error InvalidGroth16Verifier();
-
     /**
      * @notice Thrown when the public inputs array length does not match the circuit's expected length
      */
