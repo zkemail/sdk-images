@@ -9,7 +9,9 @@ use sqlx::types::Uuid;
 use std::path::{Path, PathBuf};
 
 use crate::circuit_pipeline::{CompiledCircuit, build_circuit_artifacts};
-use crate::db::update_verifier_contract_address;
+use crate::db::{
+    update_noir_verifier_contract_address_1024, update_noir_verifier_contract_address_2048,
+};
 use crate::external_command::{
     run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka, run_yarn_install,
     run_yarn_verify, run_yarn_verify_polka,
@@ -278,26 +280,38 @@ pub async fn deploy_blueprint_contracts(
     let addr_1024 = deploy_contracts_for_circuit(&compiled.artifacts_1024, config).await?;
     let addr_2048 = deploy_contracts_for_circuit(&compiled.artifacts_2048, config).await?;
 
-    // Prefer the 2048-bit address since 2048-bit RSA keys are more common for
-    // DKIM; fall back to the 1024-bit address.
-    let address = addr_2048.or(addr_1024);
-
-    if let Some(ref addr) = address {
-        let pool = PgPoolOptions::new()
-            .max_connections(1)
-            .connect(&config.database_url)
-            .await?;
-
-        let blueprint_uuid = Uuid::parse_str(blueprint_id)?;
-        update_verifier_contract_address(&pool, blueprint_uuid, addr).await?;
+    if addr_1024.is_none() && addr_2048.is_none() {
         info!(
             LOG,
-            "Updated verifier_contract_address in DB for blueprint {}: {}", blueprint_id, addr
+            "Could not parse ZK_EMAIL_VERIFIER address from deploy output for either 1024- or 2048-bit circuits; skipping DB update"
         );
-    } else {
+        return Ok(());
+    }
+
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&config.database_url)
+        .await?;
+
+    let blueprint_uuid = Uuid::parse_str(blueprint_id)?;
+
+    if let Some(ref addr) = addr_1024 {
+        update_noir_verifier_contract_address_1024(&pool, &blueprint_uuid, addr).await?;
         info!(
             LOG,
-            "Could not parse ZK_EMAIL_VERIFIER address from deploy output; skipping DB update"
+            "Updated noir_verifier_contract_address_1024 in DB for blueprint {}: {}",
+            blueprint_id,
+            addr
+        );
+    }
+
+    if let Some(ref addr) = addr_2048 {
+        update_noir_verifier_contract_address_2048(&pool, &blueprint_uuid, addr).await?;
+        info!(
+            LOG,
+            "Updated noir_verifier_contract_address_2048 in DB for blueprint {}: {}",
+            blueprint_id,
+            addr
         );
     }
 
