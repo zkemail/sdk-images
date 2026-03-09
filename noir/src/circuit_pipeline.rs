@@ -132,11 +132,31 @@ fn build_contracts_setup(
     Ok((script_dir, src_dir, interfaces_dir))
 }
 
+/// Validates that a sender domain contains only safe characters (letters,
+/// digits, dots, hyphens) to prevent template injection in generated Solidity.
+fn validate_sender_domain(domain: &str) -> Result<()> {
+    if domain.is_empty() {
+        return Err(anyhow!("sender_domain must not be empty"));
+    }
+    if !domain
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-')
+    {
+        return Err(anyhow!(
+            "sender_domain contains invalid characters (only a-z, A-Z, 0-9, '.', '-' are allowed): {:?}",
+            domain
+        ));
+    }
+    Ok(())
+}
+
 fn build_contracts(
     contracts_dir: &Path,
     blueprint: &Blueprint,
     solidity_verifier_path: &Path,
 ) -> Result<()> {
+    validate_sender_domain(&blueprint.sender_domain)?;
+
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     let (_script_dir, src_dir, _interfaces_dir) = build_contracts_setup(
