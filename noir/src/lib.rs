@@ -10,6 +10,6 @@ pub mod regex_generator;
 mod template;
 
 // Re-export key structs and functions for easier access
-pub use blueprint_pipeline::{Payload, UploadUrls};
+pub use blueprint_pipeline::{DeployConfig, Payload, UploadUrls};
 pub use models::CircuitTemplateInputs;
 pub use regex_generator::generate_regex_circuits;

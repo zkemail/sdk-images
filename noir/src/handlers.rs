@@ -1,32 +1,29 @@
-use anyhow::Result;
 use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use relayer_utils::LOG;
+use sdk_utils::proto_types::proto_blueprint::Blueprint;
 use slog::info;
 
 use crate::blueprint_pipeline::{
-    Payload, compile_blueprint_artifacts, deploy_blueprint_contracts, package_blueprint_artifacts,
-    upload_blueprint_artifacts,
+    DeployConfig, Payload, UploadUrls, compile_blueprint_artifacts, deploy_blueprint_contracts,
+    package_blueprint_artifacts, upload_blueprint_artifacts,
 };
 use crate::filesystem::{FileUploader, ProductionFileUploader};
 
-async fn process_compile_blueprint<U>(payload: Payload, uploader: U) -> anyhow::Result<()>
+async fn process_compile_blueprint<U>(
+    blueprint: Blueprint,
+    upload_urls: UploadUrls,
+    deploy_config: DeployConfig,
+    uploader: U,
+) -> anyhow::Result<()>
 where
     U: FileUploader,
 {
     let tmp_dir = std::env::current_dir().unwrap().join("tmp");
-    let compiled = compile_blueprint_artifacts(&tmp_dir, &payload).await?;
+    let compiled = compile_blueprint_artifacts(&tmp_dir, &blueprint).await?;
     let packaged = package_blueprint_artifacts(&tmp_dir, &compiled).await?;
-    upload_blueprint_artifacts(&packaged, &payload.upload_urls, uploader).await?;
+    upload_blueprint_artifacts(&packaged, &upload_urls, uploader).await?;
 
-    // Check if all required fields are present for contract deployment
-    if !payload.private_key.trim().is_empty()
-        && !payload.rpc_url.trim().is_empty()
-        && !payload.dkim_registry_address.trim().is_empty()
-    {
-        deploy_blueprint_contracts(&compiled, &payload).await?;
-    } else {
-        info!(LOG, "Skipping contract deployment: missing required config");
-    }
+    deploy_blueprint_contracts(&compiled, &deploy_config, &blueprint.id).await?;
 
     Ok(())
 }
@@ -34,11 +31,33 @@ where
 pub async fn compile_blueprint_handler(
     Json(payload): Json<Payload>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    info!(LOG, "Received payload: {:?}", payload);
+    info!(
+        LOG,
+        "Received compile request for blueprint: {}", payload.blueprint.id
+    );
 
-    if let Err(e) = process_compile_blueprint(payload, ProductionFileUploader).await {
-        println!("e while processing blueprint: {:?}", e);
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+    let deploy_config = DeployConfig {
+        database_url: payload.database_url,
+        private_key: payload.private_key,
+        rpc_url: payload.rpc_url,
+        chain_id: payload.chain_id,
+        etherscan_api_key: payload.etherscan_api_key,
+        dkim_registry_address: payload.dkim_registry_address,
+    };
+
+    if let Err(e) = process_compile_blueprint(
+        payload.blueprint,
+        payload.upload_urls,
+        deploy_config,
+        ProductionFileUploader,
+    )
+    .await
+    {
+        info!(LOG, "Error processing blueprint: {:?}", e);
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Internal processing error".to_string(),
+        ));
     }
 
     Ok(StatusCode::OK)
@@ -142,7 +161,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = super::process_compile_blueprint(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -256,7 +289,21 @@ mod tests {
         println!("calling process_circuit");
 
         // Call the handler with the mock uploader
-        let result = super::process_compile_blueprint(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         println!("Got a result");
 
@@ -393,7 +440,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = super::process_compile_blueprint(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -493,7 +554,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = super::process_compile_blueprint(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -595,7 +670,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = super::process_compile_blueprint(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);

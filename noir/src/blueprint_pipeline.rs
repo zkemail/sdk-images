@@ -27,7 +27,7 @@ pub struct UploadUrls {
     pub regex_graphs: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Payload {
     pub blueprint: Blueprint,
@@ -38,6 +38,65 @@ pub struct Payload {
     pub chain_id: u32,
     pub etherscan_api_key: String,
     pub dkim_registry_address: String,
+}
+
+impl std::fmt::Debug for Payload {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Payload")
+            .field("blueprint", &self.blueprint)
+            .field("upload_urls", &"[REDACTED]")
+            .field("database_url", &"[REDACTED]")
+            .field("private_key", &"[REDACTED]")
+            .field("rpc_url", &"[REDACTED]")
+            .field("chain_id", &self.chain_id)
+            .field("etherscan_api_key", &"[REDACTED]")
+            .field("dkim_registry_address", &self.dkim_registry_address)
+            .finish()
+    }
+}
+
+/// Sensitive configuration extracted from the payload for contract deployment.
+/// Passed through Rust code and only set as env vars at child-process spawn
+/// via `cmd.env()`, avoiding process-wide mutation that would race under
+/// concurrent requests.
+pub struct DeployConfig {
+    pub database_url: String,
+    pub private_key: String,
+    pub rpc_url: String,
+    pub chain_id: u32,
+    pub etherscan_api_key: String,
+    pub dkim_registry_address: String,
+}
+
+impl std::fmt::Debug for DeployConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeployConfig")
+            .field("database_url", &"[REDACTED]")
+            .field("private_key", &"[REDACTED]")
+            .field("rpc_url", &"[REDACTED]")
+            .field("chain_id", &self.chain_id)
+            .field("etherscan_api_key", &"[REDACTED]")
+            .field("dkim_registry_address", &self.dkim_registry_address)
+            .finish()
+    }
+}
+
+impl DeployConfig {
+    pub fn should_deploy(&self) -> bool {
+        !self.private_key.trim().is_empty()
+            && !self.rpc_url.trim().is_empty()
+            && !self.dkim_registry_address.trim().is_empty()
+    }
+
+    pub fn as_env_pairs(&self) -> Vec<(String, String)> {
+        vec![
+            ("PRIVATE_KEY".into(), self.private_key.clone()),
+            ("RPC_URL".into(), self.rpc_url.clone()),
+            ("CHAIN_ID".into(), self.chain_id.to_string()),
+            ("DKIM_REGISTRY".into(), self.dkim_registry_address.clone()),
+            ("ETHERSCAN_API_KEY".into(), self.etherscan_api_key.clone()),
+        ]
+    }
 }
 
 /// Result of a successful blueprint compile before any packaging or uploads.
@@ -105,10 +164,8 @@ fn compile_blueprint_setup(tmp_dir: &Path) -> Result<(PathBuf, PathBuf, PathBuf,
 /// - per-key-size circuit generation and compilation
 pub async fn compile_blueprint_artifacts(
     tmp_dir: &Path,
-    payload: &Payload,
+    blueprint: &Blueprint,
 ) -> Result<CompiledBlueprint> {
-    let blueprint = payload.blueprint.clone();
-
     // Setup filesystem and top-level directories used by the pipeline.
     let (tmp_dir, _regex_graphs_dir, key_1024_dir, key_2048_dir) =
         compile_blueprint_setup(tmp_dir)?;
@@ -131,9 +188,9 @@ pub async fn compile_blueprint_artifacts(
 
     // Build full artifact bundles for 1024-bit and 2048-bit circuits.
     Ok(CompiledBlueprint {
-        artifacts_1024: build_circuit_artifacts(&key_1024_dir, &blueprint, 1024, &regex_graphs_dir)
+        artifacts_1024: build_circuit_artifacts(&key_1024_dir, blueprint, 1024, &regex_graphs_dir)
             .await?,
-        artifacts_2048: build_circuit_artifacts(&key_2048_dir, &blueprint, 2048, &regex_graphs_dir)
+        artifacts_2048: build_circuit_artifacts(&key_2048_dir, blueprint, 2048, &regex_graphs_dir)
             .await?,
         regex_graphs_dir,
     })
@@ -149,8 +206,11 @@ pub async fn package_blueprint_artifacts(
         zip_circuit_dir(&tmp_dir.join("1024"), &tmp_dir.join("circuit_1024.zip")).await?;
     let circuit_2048_zip =
         zip_circuit_dir(&tmp_dir.join("2048"), &tmp_dir.join("circuit_2048.zip")).await?;
-    let regex_graphs_zip =
-        zip_regex_graphs(&compiled.regex_graphs_dir, &tmp_dir.join("regex_graphs.zip")).await?;
+    let regex_graphs_zip = zip_regex_graphs(
+        &compiled.regex_graphs_dir,
+        &tmp_dir.join("regex_graphs.zip"),
+    )
+    .await?;
 
     Ok(PackagedBlueprint {
         compiled: compiled.clone(),
@@ -203,13 +263,20 @@ pub async fn upload_blueprint_artifacts(
 
 /// Deploys Foundry contracts for both 1024- and 2048-bit circuits, parses the
 /// `ZK_EMAIL_VERIFIER` address from each deploy output, and updates the
-/// database. The caller should check `should_deploy` before calling this.
+/// database. Checks `config.should_deploy()` internally and returns early
+/// when required fields are missing.
 pub async fn deploy_blueprint_contracts(
     compiled: &CompiledBlueprint,
-    payload: &Payload,
+    config: &DeployConfig,
+    blueprint_id: &str,
 ) -> Result<()> {
-    let addr_1024 = deploy_contracts_for_circuit(&compiled.artifacts_1024, payload).await?;
-    let addr_2048 = deploy_contracts_for_circuit(&compiled.artifacts_2048, payload).await?;
+    if !config.should_deploy() {
+        info!(LOG, "Skipping contract deployment: missing required config");
+        return Ok(());
+    }
+
+    let addr_1024 = deploy_contracts_for_circuit(&compiled.artifacts_1024, config).await?;
+    let addr_2048 = deploy_contracts_for_circuit(&compiled.artifacts_2048, config).await?;
 
     // Prefer the 2048-bit address since 2048-bit RSA keys are more common for
     // DKIM; fall back to the 1024-bit address.
@@ -218,16 +285,14 @@ pub async fn deploy_blueprint_contracts(
     if let Some(ref addr) = address {
         let pool = PgPoolOptions::new()
             .max_connections(1)
-            .connect(&payload.database_url)
+            .connect(&config.database_url)
             .await?;
 
-        let blueprint_id = Uuid::parse_str(&payload.blueprint.id)?;
-        update_verifier_contract_address(&pool, blueprint_id, addr).await?;
+        let blueprint_uuid = Uuid::parse_str(blueprint_id)?;
+        update_verifier_contract_address(&pool, blueprint_uuid, addr).await?;
         info!(
             LOG,
-            "Updated verifier_contract_address in DB for blueprint {}: {}",
-            payload.blueprint.id,
-            addr
+            "Updated verifier_contract_address in DB for blueprint {}: {}", blueprint_id, addr
         );
     } else {
         info!(
@@ -247,7 +312,7 @@ pub async fn deploy_blueprint_contracts(
 /// output, or `None` if parsing failed.
 async fn deploy_contracts_for_circuit(
     artifacts: &CompiledCircuit,
-    payload: &Payload,
+    config: &DeployConfig,
 ) -> Result<Option<String>> {
     let contracts_dir = &artifacts.contracts_dir;
     if !contracts_dir.exists() {
@@ -264,30 +329,27 @@ async fn deploy_contracts_for_circuit(
         )
     })?;
 
-    let chain_id_str = payload.chain_id.to_string();
-    let envs: &[(&str, &str)] = &[
-        ("PRIVATE_KEY", payload.private_key.as_str()),
-        ("RPC_URL", payload.rpc_url.as_str()),
-        ("CHAIN_ID", chain_id_str.as_str()),
-        ("DKIM_REGISTRY", payload.dkim_registry_address.as_str()),
-        ("ETHERSCAN_API_KEY", payload.etherscan_api_key.as_str()),
-    ];
+    let env_pairs = config.as_env_pairs();
+    let envs: Vec<(&str, &str)> = env_pairs
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_str()))
+        .collect();
 
     const POLKADOT_HUB_TESTNET_CHAIN_ID: u32 = 420420417;
-    let deploy_output = if payload.chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
+    let deploy_output = if config.chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
         run_yarn_build_polka(contracts_dir_str).await?;
-        let output = run_yarn_deploy_polka(contracts_dir_str, envs).await?;
-        if let Err(e) = run_yarn_verify_polka(contracts_dir_str, envs).await {
+        let output = run_yarn_deploy_polka(contracts_dir_str, &envs).await?;
+        if let Err(e) = run_yarn_verify_polka(contracts_dir_str, &envs).await {
             warn!(LOG, "Contract verification failed (polka): {}", e);
         }
         output
     } else {
         run_yarn_build(contracts_dir_str).await?;
-        let output = run_yarn_deploy(contracts_dir_str, envs).await?;
+        let output = run_yarn_deploy(contracts_dir_str, &envs).await?;
         // ETHERSCAN_API_KEY is used as a generic gate for contract verification,
         // including Blockscout-based chains like Polkadot Hub (see hardhat.config.ts).
-        if !payload.etherscan_api_key.trim().is_empty() {
-            if let Err(e) = run_yarn_verify(contracts_dir_str, envs).await {
+        if !config.etherscan_api_key.trim().is_empty() {
+            if let Err(e) = run_yarn_verify(contracts_dir_str, &envs).await {
                 warn!(LOG, "Contract verification failed: {}", e);
             }
         } else {
