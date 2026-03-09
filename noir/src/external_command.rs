@@ -152,6 +152,22 @@ pub async fn run_bb_write_solidity_verifier(
     Ok(output_file_path.to_path_buf())
 }
 
+/// Runs `yarn install` in the given contracts directory to ensure
+/// `node_modules` are present before build/deploy.
+pub async fn run_yarn_install(contracts_dir: &str) -> Result<()> {
+    info!(
+        LOG,
+        "Installing node modules in {} using yarn install", contracts_dir
+    );
+    // Use the checked-in yarn.lock to get reproducible installs.
+    run_command(
+        "yarn",
+        &["install", "--frozen-lockfile"],
+        Some(contracts_dir),
+    )
+    .await
+}
+
 /// Runs `yarn build` in the given contracts directory (EVM / Foundry).
 pub async fn run_yarn_build(contracts_dir: &str) -> Result<()> {
     info!(

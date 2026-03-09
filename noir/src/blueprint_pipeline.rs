@@ -11,8 +11,8 @@ use std::path::{Path, PathBuf};
 use crate::circuit_pipeline::{CompiledCircuit, build_circuit_artifacts};
 use crate::db::update_verifier_contract_address;
 use crate::external_command::{
-    run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka, run_yarn_verify,
-    run_yarn_verify_polka,
+    run_yarn_build, run_yarn_build_polka, run_yarn_deploy, run_yarn_deploy_polka, run_yarn_install,
+    run_yarn_verify, run_yarn_verify_polka,
 };
 use crate::filesystem::{FileUploader, UploadTarget, zip_circuit_dir, zip_regex_graphs};
 use crate::regex_generator::generate_regex_circuits;
@@ -328,6 +328,9 @@ async fn deploy_contracts_for_circuit(
             contracts_dir.display()
         )
     })?;
+
+    // Ensure node_modules are installed for this per-circuit contracts directory
+    run_yarn_install(contracts_dir_str).await?;
 
     let env_pairs = config.as_env_pairs();
     let envs: Vec<(&str, &str)> = env_pairs
