@@ -153,15 +153,18 @@ async fn main() -> Result<()> {
     )
     .await?;
 
+    // Cleanup (compress/zip artifacts) and upload to GCS BEFORE deployment.
+    // This ensures all circuit artifacts are safely persisted even if contract deployment fails,
+    // so we don't lose hours of compute on a deployment-only failure.
+    cleanup().await?;
+
+    upload_files(payload.upload_urls).await?;
+
     let contract_address = deploy_verifier_contract(payload.chain_id).await?;
 
     info!(LOG, "Contract deployed at: {}", contract_address);
 
-    cleanup().await?;
-
     update_verifier_contract_address(&pool, &blueprint.id, &contract_address).await?;
-
-    upload_files(payload.upload_urls).await?;
 
     Ok(())
 }

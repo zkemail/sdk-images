@@ -104,15 +104,32 @@ pub async fn run_command_and_return_output(
         cmd.current_dir(directory);
     }
 
-    let output = cmd.output().expect("failed to execute process");
+    // Stream stdout through slog for real-time log visibility.
+    // Let stderr inherit so it goes directly to the pod output immediately.
+    let mut child = cmd
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .expect("failed to execute process");
 
-    if !output.status.success() {
+    let mut output_lines = Vec::new();
+    if let Some(stdout) = child.stdout.take() {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines() {
+            let line = line?;
+            info!(LOG, "Command output"; "line" => &line);
+            output_lines.push(line);
+        }
+    }
+
+    let status = child.wait()?;
+    if !status.success() {
         return Err(anyhow!(
-            "Command `{}` failed: {}",
+            "Command `{}` failed with status: {}",
             command,
-            String::from_utf8_lossy(&output.stderr)
+            status
         ));
     }
 
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    Ok(output_lines.join("\n"))
 }
