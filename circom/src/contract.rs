@@ -259,11 +259,14 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
         ("build", "deploy", "verify")
     };
 
+    info!(LOG, "Installing contract dependencies");
+    run_command("yarn", &["install"], Some("contracts")).await?;
+
     info!(LOG, "Building contracts");
-    run_command("yarn", &[build_cmd], None).await?;
+    run_command("yarn", &[build_cmd], Some("contracts")).await?;
 
     info!(LOG, "Deploying contracts");
-    let output = run_command_and_return_output("yarn", &[deploy_cmd], None).await?;
+    let output = run_command_and_return_output("yarn", &[deploy_cmd], Some("contracts")).await?;
 
     // Parse the output to extract addresses
     let re = Regex::new(r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})")
@@ -281,7 +284,7 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
 
     if should_verify {
         info!(LOG, "Verifying contracts");
-        if let Err(e) = run_command("yarn", &[verify_cmd], None).await {
+        if let Err(e) = run_command("yarn", &[verify_cmd], Some("contracts")).await {
             info!(
                 LOG,
                 "Contract verification failed: {}. Continuing without verification.", e
