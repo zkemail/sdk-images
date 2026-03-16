@@ -26,7 +26,7 @@ ENV PATH="/root/.nargo/bin:$PATH"
 RUN noirup --version 1.0.0-beta.5
 
 # Install Barrentenberg
-RUN curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/master/barretenberg/bbup/install | bash
+RUN curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/next/barretenberg/bbup/install | bash
 ENV PATH="/root/.bb:$PATH"
 RUN bbup --version 0.84.0
 
