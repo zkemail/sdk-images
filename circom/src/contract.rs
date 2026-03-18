@@ -220,7 +220,7 @@ pub async fn generate_verifier_contract(
                     )
                 })?
                 .as_str(),
-            &format!("pragma solidity ^{};", "0.8.34"),
+            &format!("pragma solidity ^{};", "0.8.30"),
         )
         .replace(
             Regex::new(r"contract .*\{")

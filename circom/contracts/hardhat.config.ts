@@ -7,9 +7,7 @@ import "dotenv/config";
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
-      polkadot: {
-        target: "evm",
-      },
+      polkadot: true,
       nodeConfig: {
         nodeBinaryPath: "./bin/dev-node",
         rpcPort: 8000,
@@ -21,15 +19,11 @@ const config: HardhatUserConfig = {
       },
     },
     localNode: {
-      polkadot: {
-        target: "evm",
-      },
+      polkadot: true,
       url: `http://127.0.0.1:8545`,
     },
     polkadotHubTestnet: {
-      polkadot: {
-        target: "evm",
-      },
+      polkadot: true,
       url: "https://services.polkadothub-rpc.com/testnet",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
@@ -51,17 +45,17 @@ const config: HardhatUserConfig = {
   },
 
   solidity: {
-    version: "0.8.34",
+    version: "0.8.30",
     settings: {
       optimizer: {
         enabled: true,
         runs: 10000,
       },
-      evmVersion: "osaka",
+      evmVersion: "prague",
     },
   },
   resolc: {
-    version: "1.0.0",
+    version: "0.5.0",
     settings: {
       optimizer: {
         enabled: true,
