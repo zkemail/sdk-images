@@ -4,11 +4,9 @@
   "description": "Circom onchain verifier contracts for ZKEmail Blueprints",
   "license": "MIT",
   "scripts": {
-    "build": "forge build",
-    "build:polka": "hardhat compile",
-    "deploy": "forge script script/DeployZKEmailVerifier.s.sol --broadcast --non-interactive --rpc-url rpc_url",
-    "deploy:polka": "yes | hardhat ignition deploy hh-ignition/modules/ZKEmailVerifier.ts --network polkadotHubTestnet",
-    "verify": "bash script/verify-zk-email-verifier.sh"
+    "build": "hardhat compile",
+    "deploy": "yes | hardhat ignition deploy hh-ignition/modules/ZKEmailVerifier.ts --network",
+    "verify": "hardhat ignition verify --include-unrelated-contracts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
