@@ -8,7 +8,9 @@ import "dotenv/config";
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
-      polkadot: true,
+      polkadot: {
+        target: "pvm",
+      },
       nodeConfig: {
         nodeBinaryPath: "./bin/dev-node",
         rpcPort: 8000,
@@ -20,11 +22,15 @@ const config: HardhatUserConfig = {
       },
     },
     localNode: {
-      polkadot: true,
+      polkadot: {
+        target: "pvm",
+      },
       url: `http://127.0.0.1:8545`,
     },
     "420420417": {
-      polkadot: true,
+      polkadot: {
+        target: "pvm",
+      },
       url: "https://services.polkadothub-rpc.com/testnet",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
