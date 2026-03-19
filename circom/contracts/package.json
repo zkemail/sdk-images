@@ -7,12 +7,13 @@
     "build": "forge build",
     "build:polka": "hardhat compile",
     "deploy": "forge script script/DeployZKEmailVerifier.s.sol --broadcast --non-interactive --rpc-url rpc_url",
-    "deploy:polka": "hardhat run hh-scripts/deploy-zk-email-verifier.ts --network polkadotHubTestnet",
-    "verify": "bash script/verify-zk-email-verifier.sh",
-    "verify:polka": "hardhat run hh-scripts/verify-zk-email-verifier.ts --network polkadotHubTestnet"
+    "deploy:polka": "yes | hardhat ignition deploy hh-ignition/modules/ZKEmailVerifier.ts --network polkadotHubTestnet",
+    "verify": "bash script/verify-zk-email-verifier.sh"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-ignition": "0.15.16",
+    "@nomicfoundation/hardhat-ignition-ethers": "0.15.16",
     "@nomicfoundation/hardhat-verify": "^2.0.0",
     "@parity/hardhat-polkadot": "^0.2.7",
     "@parity/hardhat-polkadot-resolc": "^0.2.3",
@@ -24,5 +25,8 @@
     "rxjs": "^7.8.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "resolutions": {
+    "micro-eth-signer": "0.16.0"
   }
 }

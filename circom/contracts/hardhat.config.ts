@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-ignition-ethers";
 import "@nomicfoundation/hardhat-verify";
 import "@parity/hardhat-polkadot";
 import "dotenv/config";
@@ -28,22 +29,6 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
   },
-  etherscan: {
-    apiKey: {
-      polkadotHubTestnet: "no-api-key-needed",
-    },
-    customChains: [
-      {
-        network: "polkadotHubTestnet",
-        chainId: 420420417,
-        urls: {
-          apiURL: "https://blockscout-testnet.polkadot.io/api",
-          browserURL: "https://blockscout-testnet.polkadot.io/",
-        },
-      },
-    ],
-  },
-
   solidity: {
     version: "0.8.30",
     settings: {
@@ -68,6 +53,7 @@ const config: HardhatUserConfig = {
     tests: "hh-tests",
     cache: "hh-cache",
     artifacts: "hh-artifacts",
+    ignition: "hh-ignition",
   },
 };
 
