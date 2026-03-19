@@ -23,11 +23,28 @@ const config: HardhatUserConfig = {
       polkadot: true,
       url: `http://127.0.0.1:8545`,
     },
-    polkadotHubTestnet: {
+    "420420417": {
       polkadot: true,
       url: "https://services.polkadothub-rpc.com/testnet",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
+    "84532": {
+      url: "https://sepolia.base.org",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
+    customChains: [
+      {
+        chainId: 84532,
+        network: "84532",
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org/",
+        },
+      },
+    ],
   },
   solidity: {
     version: "0.8.30",
