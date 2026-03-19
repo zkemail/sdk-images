@@ -23,8 +23,8 @@ use sqlx::postgres::PgPoolOptions;
 use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs};
 
 /// All contract files bundled into the downloadable zip, relative to `contracts/`.
-/// Files listed here but NOT in `GENERATED_CONTRACT_FILES` are copied from the
-/// source `contracts/` directory; generated files are produced by templates / snarkjs.
+/// Some files are static (checked into the repo), others in `GENERATED_CONTRACT_FILES`
+/// are produced at runtime by templates / snarkjs into `contracts/src/`.
 const CONTRACT_BUNDLE_FILES: &[&str] = &[
     ".env.example",
     "README.md",
@@ -46,6 +46,7 @@ const CONTRACT_BUNDLE_FILES: &[&str] = &[
     "hh-utils/require-env.ts",
 ];
 
+#[cfg(test)]
 const GENERATED_CONTRACT_FILES: &[&str] = &[
     "src/Groth16Verifier.sol",
     "src/ZKEmailVerifier.sol",
@@ -138,8 +139,8 @@ async fn main() -> Result<()> {
 
     create_zkemail_verifier_and_interface_at_paths(
         &contract_data,
-        "tmp/contracts/src/ZKEmailVerifier.sol",
-        "tmp/contracts/src/interfaces/IGroth16Verifier.sol",
+        "contracts/src/ZKEmailVerifier.sol",
+        "contracts/src/interfaces/IGroth16Verifier.sol",
     )?;
 
     let chunked_snarkjs_path = "./node_modules/.bin/snarkjs";
@@ -149,7 +150,7 @@ async fn main() -> Result<()> {
         "tmp",
         chunked_snarkjs_path,
         "circuit.zkey",
-        "tmp/contracts/src/Groth16Verifier.sol",
+        "contracts/src/Groth16Verifier.sol",
     )
     .await?;
 
@@ -196,10 +197,10 @@ async fn setup() -> Result<()> {
     }
     fs::create_dir_all(&regex_path)?;
 
-    // Ensure tmp/contracts/src and interfaces exist for generated contract files
-    let tmp_contracts_src = tmp_path.join("contracts/src");
-    fs::create_dir_all(&tmp_contracts_src)?;
-    fs::create_dir_all(tmp_contracts_src.join("interfaces"))?;
+    // Ensure contracts/src and interfaces exist for generated contract files
+    let contracts_src = Path::new("contracts/src");
+    fs::create_dir_all(&contracts_src)?;
+    fs::create_dir_all(contracts_src.join("interfaces"))?;
 
     run_command("cp", &["package.json", "./tmp"], None).await?;
     Ok(())
@@ -436,13 +437,9 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
 async fn cleanup() -> Result<()> {
     info!(LOG, "Cleaning up");
 
-    // Copy non-generated contract files into tmp/contracts (generated files are
-    // already written there by the template / snarkjs steps above).
+    // Copy all contract files (source + generated) into tmp/contracts for zipping.
     let contracts_tmp_dir = Path::new("tmp").join("contracts");
     for file in CONTRACT_BUNDLE_FILES {
-        if GENERATED_CONTRACT_FILES.contains(file) {
-            continue;
-        }
         let src = Path::new("contracts").join(file);
         let dst = contracts_tmp_dir.join(file);
         if let Some(parent) = dst.parent() {
