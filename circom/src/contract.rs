@@ -5,6 +5,7 @@ use regex::Regex;
 use relayer_utils::LOG;
 use sdk_utils::{run_command, run_command_and_return_output};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use slog::info;
 use tera::{Context, Tera};
 
@@ -268,14 +269,38 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
     info!(LOG, "Deploying contracts");
     let output = run_command_and_return_output("yarn", &[deploy_cmd], Some("contracts")).await?;
 
-    // Parse the output to extract addresses
-    let re = Regex::new(r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})")
-        .unwrap();
     let mut contract_addresses = HashMap::new();
-    for cap in re.captures_iter(&output) {
-        let contract_name = &cap[1];
-        let address = &cap[2];
-        contract_addresses.insert(contract_name.to_string(), address.to_string());
+    let is_polka = chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID;
+
+    if is_polka {
+        if let Ok(dkim_registry) = env::var("DKIM_REGISTRY") {
+            contract_addresses.insert("DKIM_REGISTRY".to_string(), dkim_registry);
+        }
+
+        if let Some((groth16_verifier, zk_email_verifier)) =
+            read_ignition_deployed_addresses(chain_id)?
+        {
+            contract_addresses.insert("GROTH16_VERIFIER".to_string(), groth16_verifier);
+            contract_addresses.insert("ZK_EMAIL_VERIFIER".to_string(), zk_email_verifier);
+        }
+    }
+
+    // Fallback parser for non-Ignition deployments (or if deployment file is not found)
+    if !contract_addresses.contains_key("ZK_EMAIL_VERIFIER")
+        || !contract_addresses.contains_key("GROTH16_VERIFIER")
+    {
+        let re = Regex::new(
+            r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})",
+        )
+        .unwrap();
+        for cap in re.captures_iter(&output) {
+            let contract_name = &cap[1];
+            let address = &cap[2];
+            contract_addresses.insert(contract_name.to_string(), address.to_string());
+        }
+    }
+
+    for (contract_name, address) in &contract_addresses {
         info!(LOG, "{} Contract is at: {}", contract_name, address);
     }
 
@@ -301,4 +326,47 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
             )
         })?
         .to_string())
+}
+
+fn read_ignition_deployed_addresses(chain_id: u32) -> Result<Option<(String, String)>> {
+    let candidate_paths = [
+        format!(
+            "hh-ignition/deployments/chain-{}/deployed_addresses.json",
+            chain_id
+        ),
+        format!("ignition/deployments/chain-{}/deployed_addresses.json", chain_id),
+        format!(
+            "contracts/hh-ignition/deployments/chain-{}/deployed_addresses.json",
+            chain_id
+        ),
+        format!(
+            "tmp/contracts/hh-ignition/deployments/chain-{}/deployed_addresses.json",
+            chain_id
+        ),
+    ];
+
+    let deployed_addresses_path = candidate_paths
+        .iter()
+        .find(|path| Path::new(path.as_str()).exists());
+
+    let Some(path) = deployed_addresses_path else {
+        return Ok(None);
+    };
+
+    let content = fs::read_to_string(path)?;
+    let json: Value = serde_json::from_str(&content)?;
+
+    let groth16_verifier = json
+        .get("ZKEmailVerifierModule#Groth16Verifier")
+        .and_then(|v| v.as_str())
+        .map(ToOwned::to_owned);
+    let zk_email_verifier = json
+        .get("ZKEmailVerifierModule#ZKEmailVerifier")
+        .and_then(|v| v.as_str())
+        .map(ToOwned::to_owned);
+
+    match (groth16_verifier, zk_email_verifier) {
+        (Some(groth), Some(zk)) => Ok(Some((groth, zk))),
+        _ => Ok(None),
+    }
 }
