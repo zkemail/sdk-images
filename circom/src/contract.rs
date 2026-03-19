@@ -305,7 +305,7 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
     }
 
     let should_verify =
-        chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID || env::var("ETHERSCAN_API_KEY").is_ok();
+        chain_id != POLKADOT_HUB_TESTNET_CHAIN_ID && env::var("ETHERSCAN_API_KEY").is_ok();
 
     if should_verify {
         info!(LOG, "Verifying contracts");
@@ -315,6 +315,8 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
                 "Contract verification failed: {}. Continuing without verification.", e
             );
         }
+    } else if chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
+        info!(LOG, "Skipping contract verification for Polkadot Hub deployment");
     }
 
     Ok(contract_addresses
