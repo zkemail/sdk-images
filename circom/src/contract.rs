@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env, fs, path::Path};
+use std::{fs, path::Path};
 
 use anyhow::Result;
 use regex::Regex;
@@ -220,7 +220,7 @@ pub async fn generate_verifier_contract(
                     )
                 })?
                 .as_str(),
-            &format!("pragma solidity ^{};", "0.8.34"),
+            &format!("pragma solidity ^{};", "0.8.30"),
         )
         .replace(
             Regex::new(r"contract .*\{")
@@ -253,38 +253,34 @@ pub async fn generate_verifier_contract(
 pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
     const POLKADOT_HUB_TESTNET_CHAIN_ID: u32 = 420420417;
 
-    let (build_cmd, deploy_cmd, verify_cmd) = if chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
-        ("build:polka", "deploy:polka", "verify:polka")
-    } else {
-        ("build", "deploy", "verify")
-    };
-
     info!(LOG, "Installing contract dependencies");
     run_command("yarn", &["install"], Some("contracts")).await?;
 
     info!(LOG, "Building contracts");
-    run_command("yarn", &[build_cmd], Some("contracts")).await?;
+    run_command("yarn", &["build"], Some("contracts")).await?;
 
     info!(LOG, "Deploying contracts");
-    let output = run_command_and_return_output("yarn", &[deploy_cmd], Some("contracts")).await?;
+    run_command_and_return_output(
+        "yarn",
+        &["deploy", &chain_id.to_string()],
+        Some("contracts"),
+    )
+    .await?;
 
-    // Parse the output to extract addresses
-    let re = Regex::new(r"(DKIM_REGISTRY|GROTH16_VERIFIER|ZK_EMAIL_VERIFIER): (0x[a-fA-F0-9]{40})")
-        .unwrap();
-    let mut contract_addresses = HashMap::new();
-    for cap in re.captures_iter(&output) {
-        let contract_name = &cap[1];
-        let address = &cap[2];
-        contract_addresses.insert(contract_name.to_string(), address.to_string());
-        info!(LOG, "{} Contract is at: {}", contract_name, address);
-    }
-
-    let should_verify =
-        chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID || env::var("ETHERSCAN_API_KEY").is_ok();
-
-    if should_verify {
+    if chain_id == POLKADOT_HUB_TESTNET_CHAIN_ID {
+        info!(
+            LOG,
+            "Skipping contract verification for Polkadot Hub deployment"
+        );
+    } else {
         info!(LOG, "Verifying contracts");
-        if let Err(e) = run_command("yarn", &[verify_cmd], Some("contracts")).await {
+        if let Err(e) = run_command(
+            "yarn",
+            &["verify", &format!("chain-{}", chain_id)],
+            Some("contracts"),
+        )
+        .await
+        {
             info!(
                 LOG,
                 "Contract verification failed: {}. Continuing without verification.", e
@@ -292,13 +288,40 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
         }
     }
 
-    Ok(contract_addresses
-        .get("ZK_EMAIL_VERIFIER")
-        .ok_or_else(|| {
-            anyhow::anyhow!(
-                "ZK_EMAIL_VERIFIER address not found in deployment output. Raw output: {}",
-                output
-            )
-        })?
-        .to_string())
+    let zk_email_verifier = read_ignition_deployed_address(chain_id)?.ok_or_else(|| {
+        anyhow::anyhow!(
+            "ZKEmailVerifierModule#ZKEmailVerifier not found in Ignition deployed addresses for chain-{}",
+            chain_id
+        )
+    })?;
+    info!(
+        LOG,
+        "ZK_EMAIL_VERIFIER Contract is at: {}", zk_email_verifier
+    );
+
+    Ok(zk_email_verifier)
+}
+
+fn read_ignition_deployed_address(chain_id: u32) -> Result<Option<String>> {
+    let path = format!(
+        "tmp/contracts/hh-ignition/deployments/chain-{}/deployed_addresses.json",
+        chain_id
+    );
+
+    if !Path::new(&path).exists() {
+        return Err(anyhow::anyhow!(
+            "Ignition deployed addresses file not found at {}",
+            path
+        ));
+    }
+
+    let content = fs::read_to_string(path)?;
+    let json: serde_json::Value = serde_json::from_str(&content)?;
+
+    let zk_email_verifier = json
+        .get("ZKEmailVerifierModule#ZKEmailVerifier")
+        .and_then(|v| v.as_str())
+        .map(ToOwned::to_owned);
+
+    Ok(zk_email_verifier)
 }

@@ -28,10 +28,8 @@ use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs}
 const CONTRACT_BUNDLE_FILES: &[&str] = &[
     ".env.example",
     "README.md",
-    "foundry.toml",
     "hardhat.config.ts",
     "package.json",
-    "remappings.txt",
     "tsconfig.json",
     "yarn.lock",
     "src/Groth16Verifier.sol",
@@ -39,11 +37,7 @@ const CONTRACT_BUNDLE_FILES: &[&str] = &[
     "src/interfaces/IDKIMRegistry.sol",
     "src/interfaces/IGroth16Verifier.sol",
     "src/interfaces/IZKEmailVerifier.sol",
-    "script/DeployZKEmailVerifier.s.sol",
-    "script/verify-zk-email-verifier.sh",
-    "hh-scripts/deploy-zk-email-verifier.ts",
-    "hh-scripts/verify-zk-email-verifier.ts",
-    "hh-utils/require-env.ts",
+    "hh-ignition/modules/ZKEmailVerifier.ts",
 ];
 
 #[cfg(test)]

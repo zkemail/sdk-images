@@ -11,10 +11,9 @@ These contracts are built by the pipeline whenever a new blueprint is created, t
 - `src/interfaces/IDKIMRegistry.sol` - interface used to talk to the DKIM registry.
 - `src/interfaces/IZKEmailVerifier.sol` - interface for the ZKEmail verifier contract.
 - `test/DKIMRegistryMock.sol` - simple mock of the DKIM registry for testing.
-- `script/DeployZKEmailVerifier.s.sol` - Foundry script that deploys `Groth16Verifier` and `ZKEmailVerifier` against an existing DKIM registry instance.
-- `script/verify-zk-email-verifier.sh` - Shell script to verify both contracts on Etherscan-compatible explorers via Foundry.
-- `hh-scripts/deploy-zk-email-verifier.ts` - Hardhat script for deploying to Polkadot Hub.
-- `hh-scripts/verify-zk-email-verifier.ts` - Hardhat script for verifying contracts on Polkadot Hub (Blockscout).
+- `hh-ignition/modules/ZKEmailVerifier.ts` - Hardhat Ignition module that deploys `Groth16Verifier` and `ZKEmailVerifier`.
+- `script/DeployZKEmailVerifier.s.sol` - Foundry deployment script retained for manual/advanced usage.
+- `script/verify-zk-email-verifier.sh` - Foundry verification helper for explorers that support standard Etherscan APIs.
 
 ### DKIM registry code / repo
 
@@ -49,14 +48,12 @@ Copy `.env.example` to `.env` and fill in the values:
 | `PRIVATE_KEY`       | Yes                           | EOA private key used to broadcast transactions.                                            |
 | `DKIM_REGISTRY`     | Yes                           | Address of the already-deployed `DKIMRegistry` contract.                                   |
 | `RPC_URL`           | Yes                           | RPC URL for the target network.                                                            |
-| `CHAIN_ID`          | Yes                           | Numeric chain ID (used by verification scripts).                                           |
-| `ETHERSCAN_API_KEY` | For Foundry verification only | API key for Etherscan-compatible block explorer. Not needed for Polkadot Hub (Blockscout). |
-| `GROTH16_VERIFIER`  | Optional                      | Deployed `Groth16Verifier` address (auto-read from deployment files if omitted).           |
-| `ZK_EMAIL_VERIFIER` | Optional                      | Deployed `ZKEmailVerifier` address (auto-read from deployment files if omitted).           |
+| `CHAIN_ID`          | Optional                      | Numeric chain ID used by `script/verify-zk-email-verifier.sh` (Foundry helper).           |
+| `ETHERSCAN_API_KEY` | For verification only | API key for Etherscan-compatible block explorer (for example Base Sepolia). |
 
-### Deploying with Foundry (EVM chains)
+### Deploying with Hardhat Ignition
 
-Deployment is handled via Foundry's `forge` CLI. This repository assumes you have Foundry installed globally (via `foundryup`) rather than as an NPM dependency.
+Deployment is handled through Hardhat Ignition using `hh-ignition/modules/ZKEmailVerifier.ts`.
 
 Install dependencies:
 
@@ -70,53 +67,34 @@ Build:
 yarn build
 ```
 
-Deploy:
+Deploy (pass a network from `hardhat.config.ts`, e.g. `84532` for Base Sepolia or `420420417` for Polkadot Hub Testnet):
 
 ```bash
-yarn deploy
+yarn deploy 84532
 ```
 
-Verify on Etherscan (after deploying):
+Verify contracts for the same network:
 
 ```bash
-yarn verify
+yarn verify chain-84532
 ```
 
-The verification script reads deployed addresses from Foundry's `broadcast/DeployZKEmailVerifier.s.sol/<CHAIN_ID>/run-latest.json`. You can also set `GROTH16_VERIFIER` and `ZK_EMAIL_VERIFIER` explicitly in `.env` to skip the auto-detection.
+Hardhat Ignition stores deployment artifacts under `hh-ignition/deployments`, and verification uses those artifacts.
 
-### Deploying to Polkadot Hub
+### Optional: deploying with Foundry script
 
-Polkadot Hub deployment uses Hardhat with the `@parity/hardhat-polkadot` plugin.
-
-#### Polkadot Hub Testnet
-
-Build (compiles with `resolc` for PolkaVM):
+For manual/advanced flows you can still use the Foundry script:
 
 ```bash
-yarn build:polka
+forge script script/DeployZKEmailVerifier.s.sol:DeployZKEmailVerifierScript \
+  --rpc-url $RPC_URL \
+  --broadcast
 ```
-
-Deploy to Polkadot Hub Testnet:
-
-```bash
-yarn deploy:polka
-```
-
-Verify on Blockscout (after deploying):
-
-```bash
-yarn verify:polka
-```
-
-The Polkadot deploy script saves addresses to `hh-deployments/<chainId>/run-latest.json`. The verify script reads from there automatically, or you can override with `GROTH16_VERIFIER` / `ZK_EMAIL_VERIFIER` env vars.
 
 ### All available commands
 
-| Command             | Description                                                          |
-| ------------------- | -------------------------------------------------------------------- |
-| `yarn build`        | Compile contracts with Foundry (`forge build`).                      |
-| `yarn build:polka`  | Compile contracts with Hardhat + `resolc` for Polkadot Hub.          |
-| `yarn deploy`       | Deploy via Foundry to the chain at `$RPC_URL`.                       |
-| `yarn deploy:polka` | Deploy via Hardhat to Polkadot Hub Testnet.                          |
-| `yarn verify`       | Verify both contracts on an Etherscan-compatible explorer (Foundry). |
-| `yarn verify:polka` | Verify both contracts on Polkadot Hub Blockscout (Hardhat).          |
+| Command       | Description                                                                 |
+| ------------- | --------------------------------------------------------------------------- |
+| `yarn build`  | Compile contracts with Hardhat (`hardhat compile`).                         |
+| `yarn deploy` | Deploy with Hardhat Ignition (`hardhat ignition deploy ... --network <id>`). |
+| `yarn verify` | Verify Ignition deployments (use `yarn verify chain-<chainid>`). |
