@@ -27,6 +27,7 @@ const config: HardhatUserConfig = {
       },
       url: `http://127.0.0.1:8545`,
     },
+    // Polkadot Hub Testnet
     "420420417": {
       polkadot: {
         target: "pvm",
@@ -34,6 +35,7 @@ const config: HardhatUserConfig = {
       url: "https://services.polkadothub-rpc.com/testnet",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
+    // Base Sepolia
     "84532": {
       url: "https://sepolia.base.org",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
