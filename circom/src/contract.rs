@@ -304,7 +304,7 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
 
 fn read_ignition_deployed_address(chain_id: u32) -> Result<Option<String>> {
     let path = format!(
-        "tmp/contracts/hh-ignition/deployments/chain-{}/deployed_addresses.json",
+        "contracts/hh-ignition/deployments/chain-{}/deployed_addresses.json",
         chain_id
     );
 
