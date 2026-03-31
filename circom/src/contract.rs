@@ -254,16 +254,16 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
     const POLKADOT_HUB_TESTNET_CHAIN_ID: u32 = 420420417;
 
     info!(LOG, "Installing contract dependencies");
-    run_command("yarn", &["install"], Some("contracts")).await?;
+    run_command("yarn", &["install"], Some("tmp/contracts")).await?;
 
     info!(LOG, "Building contracts");
-    run_command("yarn", &["build"], Some("contracts")).await?;
+    run_command("yarn", &["build"], Some("tmp/contracts")).await?;
 
     info!(LOG, "Deploying contracts");
     run_command_and_return_output(
         "yarn",
         &["deploy", &chain_id.to_string()],
-        Some("contracts"),
+        Some("tmp/contracts"),
     )
     .await?;
 
@@ -277,7 +277,7 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
         if let Err(e) = run_command(
             "yarn",
             &["verify", &format!("chain-{}", chain_id)],
-            Some("contracts"),
+            Some("tmp/contracts"),
         )
         .await
         {
