@@ -191,10 +191,10 @@ async fn setup() -> Result<()> {
     }
     fs::create_dir_all(&regex_path)?;
 
-    // Ensure contracts/src and interfaces exist for generated contract files
-    let contracts_src = Path::new("contracts/src");
-    fs::create_dir_all(&contracts_src)?;
-    fs::create_dir_all(contracts_src.join("interfaces"))?;
+    // Ensure tmp/contracts/src and interfaces exist for generated contract files
+    let tmp_contracts_src = tmp_path.join("contracts/src");
+    fs::create_dir_all(&tmp_contracts_src)?;
+    fs::create_dir_all(tmp_contracts_src.join("interfaces"))?;
 
     run_command("cp", &["package.json", "./tmp"], None).await?;
     Ok(())
