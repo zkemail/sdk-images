@@ -3,7 +3,7 @@ use std::{fs, path::Path};
 use anyhow::Result;
 use regex::Regex;
 use relayer_utils::LOG;
-use sdk_utils::{run_command, run_command_and_return_output};
+use sdk_utils::{compute_signal_length, run_command, run_command_and_return_output};
 use serde::{Deserialize, Serialize};
 use slog::info;
 use tera::{Context, Tera};
@@ -127,23 +127,28 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
 
     let mut values = Vec::new();
     for regex in &payload.blueprint.decomposed_regexes {
-        let pack_size = ((regex.max_match_length as f64) / 31.0).ceil() as usize;
+        let pack_size = compute_signal_length(regex.max_match_length as usize);
         let field = Field {
             name: regex.name.clone(),
             max_length: regex.max_match_length as usize,
             pack_size,
             start_idx: current_idx,
         };
+        let mut has_public_part = false;
         for part in regex.parts.iter() {
             if part.is_public == Some(true) {
-                if regex.is_hashed.unwrap_or(false) {
-                    signal_size += 1;
-                    current_idx += 1;
-                } else {
-                    signal_size += pack_size;
-                    current_idx += pack_size;
+                has_public_part = true;
+                if !regex.is_hashed.unwrap_or(false) {
+                    let part_pack_size = compute_signal_length(part.max_length() as usize);
+                    signal_size += part_pack_size;
+                    current_idx += part_pack_size;
                 }
             }
+        }
+        if has_public_part && regex.is_hashed.unwrap_or(false) {
+            // Hashed regexes emit a single PackedHash public output, regardless of part count.
+            signal_size += 1;
+            current_idx += 1;
         }
         values.push(field);
     }
@@ -153,7 +158,7 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
 
     let mut external_inputs = Vec::new();
     for input in &payload.blueprint.external_inputs {
-        let pack_size = ((input.max_length as f64) / 31.0).ceil() as usize;
+        let pack_size = compute_signal_length(input.max_length as usize);
         let field = Field {
             name: input.name.clone(),
             max_length: input.max_length as usize,
@@ -324,4 +329,141 @@ fn read_ignition_deployed_address(chain_id: u32) -> Result<Option<String>> {
         .map(ToOwned::to_owned);
 
     Ok(zk_email_verifier)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::prepare_contract_data;
+    use crate::payload::{Payload, UploadUrls};
+    use sdk_utils::proto_types::proto_blueprint::{
+        Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
+    };
+
+    fn payload_with(
+        decomposed_regexes: Vec<DecomposedRegex>,
+        external_inputs: Vec<ExternalInput>,
+    ) -> Payload {
+        Payload {
+            blueprint: Blueprint {
+                internal_version: "v2".to_string(),
+                id: "test-id".to_string(),
+                title: "test".to_string(),
+                description: "test".to_string(),
+                slug: "test/test".to_string(),
+                tags: vec![],
+                email_query: "from:test.com".to_string(),
+                circuit_name: "TestCircuit".to_string(),
+                ignore_body_hash_check: true,
+                sha_precompute_selector: "".to_string(),
+                email_body_max_length: 0,
+                sender_domain: "x.com".to_string(),
+                enable_header_masking: false,
+                enable_body_masking: false,
+                client_zk_framework: 1,
+                server_zk_framework: 0,
+                verifier_contract_chain: 84532,
+                verifier_contract_address: "".to_string(),
+                is_public: true,
+                created_at: None,
+                updated_at: None,
+                external_inputs,
+                decomposed_regexes,
+                client_status: 1,
+                server_status: 3,
+                version: 1,
+                github_username: "test".to_string(),
+                email_header_max_length: 1024,
+                remove_soft_linebreaks: false,
+                stars: 0,
+                ptau: 0,
+                num_local_proofs: 0,
+            },
+            upload_urls: UploadUrls {
+                circuit: "".to_string(),
+                circuit_cpp: "".to_string(),
+                circuit_wasm: "".to_string(),
+                witness_calculator: "".to_string(),
+                generate_witness: "".to_string(),
+                circuit_full_zkey: "".to_string(),
+                vk: "".to_string(),
+                circuit_zkey: "".to_string(),
+                zkey_b: "".to_string(),
+                zkey_c: "".to_string(),
+                zkey_d: "".to_string(),
+                zkey_e: "".to_string(),
+                zkey_f: "".to_string(),
+                zkey_g: "".to_string(),
+                zkey_h: "".to_string(),
+                zkey_i: "".to_string(),
+                zkey_j: "".to_string(),
+                zkey_k: "".to_string(),
+                circom_regex_graphs: "".to_string(),
+            },
+            database_url: "".to_string(),
+            private_key: "".to_string(),
+            rpc_url: "".to_string(),
+            chain_id: 84532,
+            etherscan_api_key: "".to_string(),
+            dkim_registry_address: "".to_string(),
+        }
+    }
+
+    #[test]
+    fn prepare_contract_data_counts_non_hashed_public_part_lengths() {
+        let payload = payload_with(
+            vec![DecomposedRegex {
+                name: "downloadDataLink".to_string(),
+                max_match_length: 128,
+                location: "body".to_string(),
+                is_hashed: Some(false),
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "ready for you to download ".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "[^ ]*".to_string(),
+                        max_length: Some(20),
+                    },
+                ],
+            }],
+            vec![ExternalInput {
+                name: "address".to_string(),
+                max_length: 44,
+            }],
+        );
+
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.signal_size, 7);
+    }
+
+    #[test]
+    fn prepare_contract_data_counts_hashed_regex_once() {
+        let payload = payload_with(
+            vec![DecomposedRegex {
+                name: "EmailSubject".to_string(),
+                max_match_length: 64,
+                location: "header".to_string(),
+                is_hashed: Some(true),
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "subject:".to_string(),
+                        max_length: Some(20),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "Good news: your account is now Intermediate!".to_string(),
+                        max_length: Some(20),
+                    },
+                ],
+            }],
+            vec![],
+        );
+
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.signal_size, 5);
+    }
 }
