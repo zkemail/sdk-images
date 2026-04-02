@@ -43,13 +43,15 @@ Once you have a `DKIMRegistry` address (from either 1 or 2), pass that address i
 
 Copy `.env.example` to `.env` and fill in the values:
 
-| Variable            | Required                      | Description                                                                                |
-| ------------------- | ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `PRIVATE_KEY`       | Yes                           | EOA private key used to broadcast transactions.                                            |
-| `DKIM_REGISTRY`     | Yes                           | Address of the already-deployed `DKIMRegistry` contract.                                   |
-| `RPC_URL`           | Yes                           | RPC URL for the target network.                                                            |
-| `CHAIN_ID`          | Optional                      | Numeric chain ID used by `script/verify-zk-email-verifier.sh` (Foundry helper).           |
-| `ETHERSCAN_API_KEY` | For verification only | API key for Etherscan-compatible block explorer (for example Base Sepolia). |
+| Variable            | Required              | Description                                                                                            |
+| ------------------- | --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `PRIVATE_KEY`       | Yes                   | EOA private key used to broadcast transactions (Hardhat `accounts` when set).                          |
+| `DKIM_REGISTRY`     | Yes                   | Address of the already-deployed `DKIMRegistry` contract.                                               |
+| `RPC_URL`           | See below             | Overrides the default public RPC for **numeric** networks in `hardhat.config.ts` (see next paragraph). |
+| `CHAIN_ID`          | Optional              | Numeric chain ID used by `script/verify-zk-email-verifier.sh` (Foundry helper).                        |
+| `ETHERSCAN_API_KEY` | For verification only | API key for Etherscan-compatible block explorer (for example Base Sepolia).                            |
+
+**Hardhat and `RPC_URL` / `PRIVATE_KEY`:** In [`hardhat.config.ts`](./hardhat.config.ts), networks keyed by chain id — `420420417` (Polkadot Hub testnet), `84532` (Base Sepolia), `11155111` (Ethereum Sepolia) — use `process.env.RPC_URL` when set, otherwise each chain’s default HTTPS RPC. `PRIVATE_KEY` populates `accounts` for those networks. The Circom pipeline sets the same variables from the blueprint payload before `yarn deploy <chain_id>`, so deploy targets the RPC and signer from the payload without editing the config. One `RPC_URL` value applies to whichever numeric network you pass to `yarn deploy <chain_id>` in that shell. Profiles `localEvm` and `localPvm` keep fixed `http://127.0.0.1:8545` URLs; `PRIVATE_KEY` is only attached when set so local node for pvm defaults still work when you omit it.
 
 ### Deploying with Hardhat Ignition
 
@@ -67,7 +69,7 @@ Build:
 yarn build
 ```
 
-Deploy (pass a network from `hardhat.config.ts`, e.g. `84532` for Base Sepolia or `420420417` for Polkadot Hub Testnet):
+Deploy (pass a network from `hardhat.config.ts`, e.g. `localPvm` / `localEvm` for local PolkaVM-compatible RPC or local Anvil, `84532` for Base Sepolia, `420420417` for Polkadot Hub testnet, or `11155111` for Ethereum Sepolia):
 
 ```bash
 yarn deploy 84532
@@ -81,20 +83,10 @@ yarn verify chain-84532
 
 Hardhat Ignition stores deployment artifacts under `hh-ignition/deployments`, and verification uses those artifacts.
 
-### Optional: deploying with Foundry script
-
-For manual/advanced flows you can still use the Foundry script:
-
-```bash
-forge script script/DeployZKEmailVerifier.s.sol:DeployZKEmailVerifierScript \
-  --rpc-url $RPC_URL \
-  --broadcast
-```
-
 ### All available commands
 
-| Command       | Description                                                                 |
-| ------------- | --------------------------------------------------------------------------- |
-| `yarn build`  | Compile contracts with Hardhat (`hardhat compile`).                         |
+| Command       | Description                                                                  |
+| ------------- | ---------------------------------------------------------------------------- |
+| `yarn build`  | Compile contracts with Hardhat (`hardhat compile`).                          |
 | `yarn deploy` | Deploy with Hardhat Ignition (`hardhat ignition deploy ... --network <id>`). |
-| `yarn verify` | Verify Ignition deployments (use `yarn verify chain-<chainid>`). |
+| `yarn verify` | Verify Ignition deployments (use `yarn verify chain-<chainid>`).             |

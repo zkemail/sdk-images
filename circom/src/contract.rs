@@ -307,16 +307,12 @@ pub async fn deploy_verifier_contract(chain_id: u32) -> Result<String> {
     Ok(zk_email_verifier)
 }
 
-fn read_ignition_deployed_address(chain_id: u32) -> Result<Option<String>> {
-    let path = format!(
-        "tmp/contracts/hh-ignition/deployments/chain-{}/deployed_addresses.json",
-        chain_id
-    );
-
-    if !Path::new(&path).exists() {
+/// Parses Ignition `deployed_addresses.json` and returns `ZKEmailVerifierModule#ZKEmailVerifier` if present.
+pub fn read_zkemail_verifier_from_deployed_addresses_path(path: &Path) -> Result<Option<String>> {
+    if !path.exists() {
         return Err(anyhow::anyhow!(
             "Ignition deployed addresses file not found at {}",
-            path
+            path.display()
         ));
     }
 
@@ -331,8 +327,17 @@ fn read_ignition_deployed_address(chain_id: u32) -> Result<Option<String>> {
     Ok(zk_email_verifier)
 }
 
+fn read_ignition_deployed_address(chain_id: u32) -> Result<Option<String>> {
+    let path = Path::new("tmp/contracts/hh-ignition/deployments")
+        .join(format!("chain-{chain_id}"))
+        .join("deployed_addresses.json");
+    read_zkemail_verifier_from_deployed_addresses_path(&path)
+}
+
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use super::prepare_contract_data;
     use crate::payload::{Payload, UploadUrls};
     use sdk_utils::proto_types::proto_blueprint::{
@@ -466,4 +471,40 @@ mod tests {
         let data = prepare_contract_data(&payload);
         assert_eq!(data.signal_size, 5);
     }
+
+    #[test]
+    fn ignition_deployed_addresses_reads_zkemail_verifier() {
+        use super::read_zkemail_verifier_from_deployed_addresses_path;
+        let dir = std::env::temp_dir().join(format!(
+            "circom_ignition_deployed_addresses_{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("deployed_addresses.json");
+        fs::write(
+            &path,
+            r#"{"ZKEmailVerifierModule#ZKEmailVerifier":"0xabcdef0123456789abcdef0123456789abcdef01","ZKEmailVerifierModule#Groth16Verifier":"0x1111111111111111111111111111111111111111"}"#,
+        )
+        .unwrap();
+        let addr = read_zkemail_verifier_from_deployed_addresses_path(&path).unwrap();
+        assert_eq!(
+            addr.as_deref(),
+            Some("0xabcdef0123456789abcdef0123456789abcdef01")
+        );
+        fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn ignition_deployed_addresses_errors_when_file_missing() {
+        use super::read_zkemail_verifier_from_deployed_addresses_path;
+        let dir = std::env::temp_dir().join(format!(
+            "circom_ignition_missing_json_{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("missing.json");
+        assert!(read_zkemail_verifier_from_deployed_addresses_path(&path).is_err());
+        fs::remove_dir_all(&dir).ok();
+    }
+
 }
