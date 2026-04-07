@@ -7,15 +7,17 @@ use slog::info;
 
 // Import from the crate root
 use crate::circuit_generator::generate_circuit;
-use crate::filesystem::{FileUploader, ProductionFileUploader, cleanup, compile_circuit, setup};
+use crate::filesystem::{FileUploader, ProductionFileUploader, cleanup_multi_key, compile_circuit, setup};
 use crate::models::CircuitTemplateInputs;
 use crate::regex_generator::generate_regex_circuits;
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UploadUrls {
-    pub circuit: String,
-    pub circuit_json: String,
+    pub circuit_1024: String,
+    pub circuit_2048: String,
+    pub circuit_json_1024: String,
+    pub circuit_json_2048: String,
     pub regex_graphs: String,
 }
 
@@ -54,22 +56,49 @@ async fn process_circuit(payload: Payload, uploader: impl FileUploader) -> Resul
     // Extract blueprint
     let blueprint = payload.blueprint;
 
-    // Generate regex circuits
+    // Generate regex circuits (shared between both key sizes)
     generate_regex_circuits(&blueprint.decomposed_regexes)?;
 
-    // Generate main circuit from template
-    let circuit_template_inputs = CircuitTemplateInputs::from(blueprint);
+    // Generate separate circuits for 1024-bit and 2048-bit RSA keys.
+    //
+    // Why two circuits instead of one with conditional logic?
+    // - Noir circuits are compile-time fixed; any conditional branching on key size
+    //   would still compile all code paths and incur the constraint cost of both sizes
+    // - Two specialized circuits are more efficient since each only contains the
+    //   constraints needed for its specific key size
+    // - The zkemail library exports different array sizes (KEY_LIMBS_1024=9 vs
+    //   KEY_LIMBS_2048=18) that must be known at compile time for type safety
+    // - This approach lets provers select the appropriate circuit based on the
+    //   actual DKIM key size of the email they're proving
 
-    let circuit = generate_circuit(circuit_template_inputs)?;
-
-    // Write the circuit to a file
-    let circuit_path = "./tmp/src/main.nr";
-    std::fs::write(circuit_path, circuit)?;
-
-    // Compile and clean up
+    // Generate and compile 1024-bit circuit
+    info!(LOG, "Generating 1024-bit circuit");
+    let inputs_1024 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 1024);
+    let circuit_1024 = generate_circuit(inputs_1024)?;
+    std::fs::write("./tmp/src/main.nr", &circuit_1024)?;
     compile_circuit().await?;
 
-    cleanup().await?;
+    // Move 1024-bit artifacts to specific names
+    std::fs::rename(
+        "./tmp/target/sdk_noir.json",
+        "./tmp/target/sdk_noir_1024.json",
+    )?;
+
+    // Generate and compile 2048-bit circuit
+    info!(LOG, "Generating 2048-bit circuit");
+    let inputs_2048 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 2048);
+    let circuit_2048 = generate_circuit(inputs_2048)?;
+    std::fs::write("./tmp/src/main.nr", &circuit_2048)?;
+    compile_circuit().await?;
+
+    // Move 2048-bit artifacts to specific names
+    std::fs::rename(
+        "./tmp/target/sdk_noir.json",
+        "./tmp/target/sdk_noir_2048.json",
+    )?;
+
+    // Cleanup and zip both circuits
+    cleanup_multi_key(&circuit_1024, &circuit_2048).await?;
 
     // Upload files
     uploader.upload_files(payload.upload_urls).await?;
@@ -157,8 +186,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -207,12 +238,12 @@ mod tests {
             tags: vec![],
             email_query: "from:email.apple.com".to_string(),
             circuit_name: "AppleKYC".to_string(),
-            ignore_body_hash_check: true,
+            ignore_body_hash_check: false, // Set to false to enable body masking test
             sha_precompute_selector: "".to_string(),
-            email_body_max_length: 0,
+            email_body_max_length: 2048, // Set a valid body length for body masking
             sender_domain: "email.apple.com".to_string(),
-            enable_header_masking: false,
-            enable_body_masking: false,
+            enable_header_masking: true, // Enable header masking for testing
+            enable_body_masking: true, // Enable body masking for testing
             client_zk_framework: 3, // Noir
             server_zk_framework: 0, // None
             verifier_contract_chain: 84532,
@@ -267,8 +298,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -296,6 +329,37 @@ mod tests {
 
         // Assert the result
         assert!(result.is_ok());
+
+        // Verify body_mask is generated as a function input parameter
+        let circuit_path = "./tmp/src/main.nr";
+        if std::path::Path::new(circuit_path).exists() {
+            let circuit_code = std::fs::read_to_string(circuit_path)
+                .expect("Failed to read generated circuit");
+
+            // Verify header_mask is a function input parameter
+            assert!(
+                circuit_code.contains("header_mask: [bool;"),
+                "Generated circuit should have 'header_mask' as a function input parameter when enable_header_masking is true"
+            );
+
+            // Verify body_mask is a function input parameter
+            assert!(
+                circuit_code.contains("body_mask: [bool;"),
+                "Generated circuit should have 'body_mask' as a function input parameter when enable_body_masking is true"
+            );
+
+            // Verify masked outputs are present
+            assert!(
+                circuit_code.contains("masked_header"),
+                "Generated circuit should contain 'masked_header' output"
+            );
+            assert!(
+                circuit_code.contains("masked_body"),
+                "Generated circuit should contain 'masked_body' output"
+            );
+
+            println!("✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter");
+        }
     }
 
     #[tokio::test]
@@ -371,8 +435,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -469,8 +535,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 
@@ -569,8 +637,10 @@ mod tests {
         };
 
         let upload_urls = UploadUrls {
-            circuit: "".to_string(),
-            circuit_json: "".to_string(),
+            circuit_1024: "".to_string(),
+            circuit_2048: "".to_string(),
+            circuit_json_1024: "".to_string(),
+            circuit_json_2048: "".to_string(),
             regex_graphs: "".to_string(),
         };
 

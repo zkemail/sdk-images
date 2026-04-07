@@ -15,13 +15,35 @@ pub struct ProductionFileUploader;
 
 impl FileUploader for ProductionFileUploader {
     async fn upload_files(&self, upload_urls: UploadUrls) -> Result<()> {
-        upload_to_url(&upload_urls.circuit, "./tmp/circuit.zip", "application/zip").await?;
+        // 1024-bit artifacts
         upload_to_url(
-            &upload_urls.circuit_json,
-            "./tmp/target/sdk_noir.json",
+            &upload_urls.circuit_1024,
+            "./tmp/circuit_1024.zip",
+            "application/zip",
+        )
+        .await?;
+        upload_to_url(
+            &upload_urls.circuit_json_1024,
+            "./tmp/target/sdk_noir_1024.json",
             "application/json",
         )
         .await?;
+
+        // 2048-bit artifacts
+        upload_to_url(
+            &upload_urls.circuit_2048,
+            "./tmp/circuit_2048.zip",
+            "application/zip",
+        )
+        .await?;
+        upload_to_url(
+            &upload_urls.circuit_json_2048,
+            "./tmp/target/sdk_noir_2048.json",
+            "application/json",
+        )
+        .await?;
+
+        // Shared regex graphs
         upload_to_url(
             &upload_urls.regex_graphs,
             "./tmp/regex_graphs.zip",
@@ -79,18 +101,32 @@ pub async fn compile_circuit() -> Result<()> {
     Ok(())
 }
 
-/// Cleans up after compilation and zips the circuit files
-pub async fn cleanup() -> Result<()> {
-    info!(LOG, "Cleaning up");
+/// Cleans up after multi-key compilation and zips both circuit variants
+/// Takes the circuit source code for each key size to create separate zips
+pub async fn cleanup_multi_key(circuit_1024: &str, circuit_2048: &str) -> Result<()> {
+    info!(LOG, "Cleaning up multi-key compilation");
 
-    info!(LOG, "Zipping circuit");
+    // Write 1024-bit circuit and zip it
+    info!(LOG, "Zipping 1024-bit circuit");
+    std::fs::write("./tmp/src/main.nr", circuit_1024)?;
     run_command(
         "zip",
-        &["-r", "circuit.zip", "src", "Nargo.toml"],
+        &["-r", "circuit_1024.zip", "src", "Nargo.toml"],
         Some("tmp"),
     )
     .await?;
 
+    // Write 2048-bit circuit and zip it
+    info!(LOG, "Zipping 2048-bit circuit");
+    std::fs::write("./tmp/src/main.nr", circuit_2048)?;
+    run_command(
+        "zip",
+        &["-r", "circuit_2048.zip", "src", "Nargo.toml"],
+        Some("tmp"),
+    )
+    .await?;
+
+    // Zip regex graphs (shared)
     info!(LOG, "Zipping regex graphs");
     run_command(
         "zip",

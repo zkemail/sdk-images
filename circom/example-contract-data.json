@@ -1,0 +1,21 @@
+{
+  "sender_domain": "example.com",
+  "values": [
+    {
+      "name": "Subject",
+      "max_length": 64,
+      "pack_size": 3,
+      "start_idx": 1
+    }
+  ],
+  "external_inputs": [
+    {
+      "name": "address",
+      "max_length": 44,
+      "pack_size": 2,
+      "start_idx": 5
+    }
+  ],
+  "signal_size": 8,
+  "prover_eth_address_idx": 7
+}

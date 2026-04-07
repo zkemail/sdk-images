@@ -3,11 +3,12 @@ mod db;
 mod payload;
 mod template;
 
-use std::{cmp::max, fs, path::Path};
+use std::{cmp::max, env, fs, path::Path};
 
 use anyhow::Result;
 use contract::{
-    create_contract, deploy_verifier_contract, generate_verifier_contract, prepare_contract_data,
+    create_mock_groth16_verifier_at_path, create_zkemail_verifier_and_interface_at_paths,
+    deploy_verifier_contract, generate_verifier_contract, prepare_contract_data, ContractData,
 };
 use db::update_verifier_contract_address;
 use payload::UploadUrls;
@@ -21,8 +22,96 @@ use slog::info;
 use sqlx::postgres::PgPoolOptions;
 use template::{generate_circuit, generate_regex_circuits, CircuitTemplateInputs};
 
+/// All contract files bundled into the downloadable zip, relative to `contracts/`.
+/// Some files are static (checked into the repo), others in `GENERATED_CONTRACT_FILES`
+/// are produced at runtime by templates / snarkjs into `contracts/src/`.
+const CONTRACT_BUNDLE_FILES: &[&str] = &[
+    ".env.example",
+    "README.md",
+    "hardhat.config.ts",
+    "package.json",
+    "tsconfig.json",
+    "yarn.lock",
+    "src/Groth16Verifier.sol",
+    "src/ZKEmailVerifier.sol",
+    "src/interfaces/IDKIMRegistry.sol",
+    "src/interfaces/IGroth16Verifier.sol",
+    "src/interfaces/IZKEmailVerifier.sol",
+    "hh-ignition/modules/ZKEmailVerifier.ts",
+];
+
+#[cfg(test)]
+const GENERATED_CONTRACT_FILES: &[&str] = &[
+    "src/Groth16Verifier.sol",
+    "src/ZKEmailVerifier.sol",
+    "src/interfaces/IGroth16Verifier.sol",
+];
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Check for a lightweight CLI mode to only populate the Solidity contracts from a JSON payload.
+    // Usage:
+    //   circom generate-example-contracts <contract_data_json_path> <output_directory>
+    let args: Vec<String> = env::args().collect();
+    if args.len() >= 2 && args[1] == "generate-example-contracts" {
+        if args.len() < 4 {
+            return Err(anyhow::anyhow!(
+                "Usage: circom generate-example-contracts <contract_data_json_path> <output_dir_path>"
+            ));
+        }
+
+        let contract_data_json_path = &args[2];
+        let output_dir = Path::new(&args[3]);
+
+        if !output_dir.exists() {
+            fs::create_dir_all(output_dir)?;
+        }
+        if !output_dir.is_dir() {
+            return Err(anyhow::anyhow!(
+                "Expected <output_directory> to be a directory, but got a file"
+            ));
+        }
+
+        let json = fs::read_to_string(contract_data_json_path)?;
+        let contract_data: ContractData = serde_json::from_str(&json)?;
+
+        // Generate ZKEmailVerifier and IGroth16Verifier interface side by side.
+        let zkemail_output_path = output_dir.join("ZKEmailVerifier.sol");
+        let interfaces_dir = output_dir.join("interfaces");
+        if !interfaces_dir.exists() {
+            fs::create_dir_all(&interfaces_dir)?;
+        }
+        let igroth16_interface_output_path = interfaces_dir.join("IGroth16Verifier.sol");
+        create_zkemail_verifier_and_interface_at_paths(
+            &contract_data,
+            zkemail_output_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid ZKEmailVerifier output path"))?,
+            igroth16_interface_output_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid IGroth16Verifier output path"))?,
+        )?;
+
+        let groth16_output_path = output_dir.join("Groth16Verifier.sol");
+
+        create_mock_groth16_verifier_at_path(
+            &contract_data,
+            groth16_output_path
+                .to_str()
+                .ok_or_else(|| anyhow::anyhow!("Invalid MockGroth16Verifier output path"))?,
+        )?;
+
+        println!(
+            "Populated ZKEmailVerifier contract written to {}",
+            zkemail_output_path.display()
+        );
+        println!(
+            "Populated MockGroth16Verifier contract written to {}",
+            groth16_output_path.display()
+        );
+        return Ok(());
+    }
+
     let payload = payload::load_payload()?;
     info!(LOG, "Loaded configuration: {:?}", payload);
     println!("payload: {:?}", payload);
@@ -42,44 +131,35 @@ async fn main() -> Result<()> {
 
     let contract_data = prepare_contract_data(&payload);
 
-    create_contract(&contract_data)?;
+    create_zkemail_verifier_and_interface_at_paths(
+        &contract_data,
+        "contracts/src/ZKEmailVerifier.sol",
+        "contracts/src/interfaces/IGroth16Verifier.sol",
+    )?;
 
-    // We use two different snarkjs paths:
-    // 1. snarkjs_path: The global snarkjs installation for server-side proofs (full zkey)
-    // 2. chunked_snarkjs_path: The local node_modules installation for client-side proofs (chunked zkey)
-    let snarkjs_path = run_command_and_return_output("which", &["snarkjs"], None)
-        .await?
-        .trim()
-        .to_string();
     let chunked_snarkjs_path = "./node_modules/.bin/snarkjs";
 
-    // Generate verifier contract for client-side proofs using chunked zkey
+    // Generate the single Groth16Verifier from the chunked zkey (for client-side proofs)
     generate_verifier_contract(
         "tmp",
         chunked_snarkjs_path,
         "circuit.zkey",
-        "ClientProofVerifier",
+        "contracts/src/Groth16Verifier.sol",
     )
     .await?;
 
-    // Generate verifier contract for server-side proofs using full zkey
-    generate_verifier_contract(
-        "tmp",
-        &snarkjs_path,
-        "circuit_full.zkey",
-        "ServerProofVerifier",
-    )
-    .await?;
+    // Cleanup (compress/zip artifacts) and upload to GCS BEFORE deployment.
+    // This ensures all circuit artifacts are safely persisted even if contract deployment fails,
+    // so we don't lose hours of compute on a deployment-only failure.
+    cleanup().await?;
 
-    let contract_address = deploy_verifier_contract(payload.clone()).await?;
+    upload_files(payload.upload_urls).await?;
+
+    let contract_address = deploy_verifier_contract(payload.chain_id).await?;
 
     info!(LOG, "Contract deployed at: {}", contract_address);
 
-    cleanup().await?;
-
     update_verifier_contract_address(&pool, &blueprint.id, &contract_address).await?;
-
-    upload_files(payload.upload_urls).await?;
 
     Ok(())
 }
@@ -110,6 +190,11 @@ async fn setup() -> Result<()> {
         fs::remove_dir_all(&regex_path)?;
     }
     fs::create_dir_all(&regex_path)?;
+
+    // Ensure tmp/contracts/src and interfaces exist for generated contract files
+    let tmp_contracts_src = tmp_path.join("contracts/src");
+    fs::create_dir_all(&tmp_contracts_src)?;
+    fs::create_dir_all(tmp_contracts_src.join("interfaces"))?;
 
     run_command("cp", &["package.json", "./tmp"], None).await?;
     Ok(())
@@ -346,10 +431,16 @@ async fn generate_keys(tmp_dir: &str, ptau: usize) -> Result<()> {
 async fn cleanup() -> Result<()> {
     info!(LOG, "Cleaning up");
 
-    run_command("cp", &["remappings.txt", "./tmp"], None).await?;
-    run_command("cp", &["package.json", "./tmp"], None).await?;
-    run_command("cp", &["foundry.toml", "./tmp"], None).await?;
-    run_command("cp", &["Deploy.s.sol", "./tmp"], None).await?;
+    // Copy all contract files (source + generated) into tmp/contracts for zipping.
+    let contracts_tmp_dir = Path::new("tmp").join("contracts");
+    for file in CONTRACT_BUNDLE_FILES {
+        let src = Path::new("contracts").join(file);
+        let dst = contracts_tmp_dir.join(file);
+        if let Some(parent) = dst.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::copy(&src, &dst)?;
+    }
 
     // After generating the chunked zkey, add compression steps
     info!(LOG, "Compressing zkey chunks");
@@ -364,24 +455,18 @@ async fn cleanup() -> Result<()> {
     run_command("gzip", &["circuit.zkey"], Some("tmp")).await?;
 
     info!(LOG, "Zipping files");
-    run_command(
-        "zip",
-        &[
-            "-r",
-            "circuit.zip",
-            "regex",
-            "circuit.circom",
-            "Contract.sol",
-            "Deploy.s.sol",
-            "foundry.toml",
-            "package.json",
-            "remappings.txt",
-            "ClientProofVerifier.sol",
-            "ServerProofVerifier.sol",
-        ],
-        Some("tmp"),
-    )
-    .await?;
+    let mut zip_args: Vec<String> = vec![
+        "-r".into(),
+        "circuit.zip".into(),
+        "regex/".into(),
+        "circuit.circom".into(),
+        "package.json".into(),
+    ];
+    for file in CONTRACT_BUNDLE_FILES {
+        zip_args.push(format!("contracts/{file}"));
+    }
+    let zip_refs: Vec<&str> = zip_args.iter().map(|s| s.as_str()).collect();
+    run_command("zip", &zip_refs, Some("tmp")).await?;
 
     run_command(
         "zip",
@@ -532,6 +617,114 @@ mod tests {
     use sdk_utils::proto_types::proto_blueprint::{
         Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
     };
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    /// Verifies that the tmp/contracts structure and circuit.zip bundling work correctly
+    /// without compiling a circuit (no circom, npm, snarkjs).
+    #[tokio::test]
+    async fn test_contracts_bundle_and_zip_works() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "circom_zip_test_{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        ));
+
+        fs::create_dir_all(test_dir.join("regex")).unwrap();
+
+        // Minimal circuit.circom, regexes and package.json
+        fs::write(test_dir.join("circuit.circom"), "// test circuit").unwrap();
+        fs::write(test_dir.join("regex/test_regex.circom"), "// test regex").unwrap();
+        fs::copy("package.json", test_dir.join("package.json")).unwrap();
+
+        // Copy non-generated contract files (mirrors cleanup logic)
+        for file in CONTRACT_BUNDLE_FILES {
+            if GENERATED_CONTRACT_FILES.contains(file) {
+                continue;
+            }
+            let src = Path::new("contracts").join(file);
+            let dst = test_dir.join("contracts").join(file);
+            fs::create_dir_all(dst.parent().unwrap()).unwrap();
+            fs::copy(&src, &dst).unwrap();
+        }
+
+        // Generate contract files from templates (no snarkjs needed)
+        let contract_data = ContractData {
+            sender_domain: "example.com".to_string(),
+            values: vec![],
+            external_inputs: vec![],
+            signal_size: 8,
+            prover_eth_address_idx: 4,
+        };
+        create_zkemail_verifier_and_interface_at_paths(
+            &contract_data,
+            test_dir
+                .join("contracts/src/ZKEmailVerifier.sol")
+                .to_str()
+                .unwrap(),
+            test_dir
+                .join("contracts/src/interfaces/IGroth16Verifier.sol")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+        create_mock_groth16_verifier_at_path(
+            &contract_data,
+            test_dir
+                .join("contracts/src/Groth16Verifier.sol")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+
+        // Build zip args from the same constant used by cleanup
+        let test_dir_str = test_dir.to_str().unwrap();
+        let mut zip_args: Vec<String> = vec![
+            "-r".into(),
+            "circuit.zip".into(),
+            "regex/".into(),
+            "circuit.circom".into(),
+            "package.json".into(),
+        ];
+        for file in CONTRACT_BUNDLE_FILES {
+            zip_args.push(format!("contracts/{file}"));
+        }
+        let zip_refs: Vec<&str> = zip_args.iter().map(|s| s.as_str()).collect();
+        run_command("zip", &zip_refs, Some(test_dir_str))
+            .await
+            .unwrap();
+
+        let zip_path = test_dir.join("circuit.zip");
+        assert!(zip_path.exists(), "circuit.zip should exist");
+
+        let list_output =
+            run_command_and_return_output("unzip", &["-l", "circuit.zip"], Some(test_dir_str))
+                .await
+                .unwrap();
+
+        let expected_entries: Vec<String> = CONTRACT_BUNDLE_FILES
+            .iter()
+            .map(|f| format!("contracts/{f}"))
+            .chain([
+                "circuit.circom".to_string(),
+                "package.json".to_string(),
+                "regex/test_regex.circom".to_string(),
+            ])
+            .collect();
+
+        for entry in &expected_entries {
+            assert!(
+                list_output.contains(entry.as_str()),
+                "circuit.zip should contain {}; got:\n{}",
+                entry,
+                list_output
+            );
+        }
+
+        // Cleanup
+        fs::remove_dir_all(&test_dir).ok();
+    }
 
     #[tokio::test]
     async fn test_compile_circuit_x_export_data() {

@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+import { IDKIMRegistry } from "./interfaces/IDKIMRegistry.sol";
+import { IGroth16Verifier } from "./interfaces/IGroth16Verifier.sol";
+import { IZKEmailVerifier } from "./interfaces/IZKEmailVerifier.sol";
+
+/**
+ * @title ZKEmailVerifier
+ * @notice Concrete implementation of {IZKEmailVerifier} that verifies Groth16 proofs and DKIM public key hashes
+ * @dev See {IZKEmailVerifier} for the interface-level documentation.
+ */
+contract ZKEmailVerifier is IZKEmailVerifier {
+    /**
+     * @notice The DKIM registry contract used to verify the public key hash
+     */
+    IDKIMRegistry public immutable DKIM_REGISTRY;
+    /**
+     * @notice The Groth16 verifier contract used to verify the Groth16 proof
+     */
+    IGroth16Verifier public immutable GROTH16_VERIFIER;
+
+    /**
+     * @notice Public key hash offset in the public inputs array
+     */
+    uint256 public constant PUBLIC_KEY_HASH_OFFSET = 0;
+    /**
+     * @notice Public inputs length (number of public inputs for the circuit)
+     */
+    uint256 public constant PUBLIC_INPUTS_LENGTH = {{ signal_size }};
+    /**
+     * @notice Constant domain hash for dkim verification
+     */
+    bytes32 public constant DOMAIN_HASH = keccak256(bytes("{{ sender_domain }}"));
+
+    /**
+     * @param _dkimRegistry The IERC7969 compliant DKIM registry contract
+     * @param _groth16Verifier The Groth16 verifier contract
+     */
+    constructor(IDKIMRegistry _dkimRegistry, IGroth16Verifier _groth16Verifier) {
+        if (address(_dkimRegistry) == address(0)) revert InvalidDKIMRegistry();
+        if (address(_groth16Verifier) == address(0)) revert InvalidProofVerifier();
+        DKIM_REGISTRY = _dkimRegistry;
+        GROTH16_VERIFIER = _groth16Verifier;
+    }
+
+    /**
+     * @inheritdoc IZKEmailVerifier
+     */
+    function verify(bytes calldata proof, bytes32[] calldata publicInputs) external view {
+        if (publicInputs.length != PUBLIC_INPUTS_LENGTH) {
+            revert InvalidPublicInputsLength(PUBLIC_INPUTS_LENGTH, publicInputs.length);
+        }
+        if (!DKIM_REGISTRY.isKeyHashValid(DOMAIN_HASH, publicInputs[PUBLIC_KEY_HASH_OFFSET])) {
+            revert InvalidPublicKey();
+        }
+
+        (uint256[2] memory pA, uint256[2][2] memory pB, uint256[2] memory pC) =
+            abi.decode(proof, (uint256[2], uint256[2][2], uint256[2]));
+
+        uint256[PUBLIC_INPUTS_LENGTH] memory pubSignals;
+        for (uint256 i = 0; i < PUBLIC_INPUTS_LENGTH; i++) {
+            pubSignals[i] = uint256(publicInputs[i]);
+        }
+
+        if (!GROTH16_VERIFIER.verifyProof(pA, pB, pC, pubSignals)) revert InvalidProof();
+    }
+}
