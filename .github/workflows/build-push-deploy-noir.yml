@@ -228,7 +228,7 @@ jobs:
             --region us-east1 \
             --platform managed \
             --allow-unauthenticated \
-            --memory 16Gi \
+            --memory 4Gi \
             --timeout 3600 \
             --update-secrets "ZKEMAIL_API_KEY=ZKEMAIL_API_KEY:latest"
 
