@@ -7,7 +7,7 @@ edition = "2021"
 anyhow = "1.0.90"
 dotenv = "0.15.0"
 tokio = { version = "1.40.0", features = ["full"] }
-relayer-utils = { git = "https://github.com/zkemail/relayer-utils", rev = "8da4440e6ff17a540a75c2d58d278bfab96eef27" }
+relayer-utils = { git = "https://github.com/zkemail/relayer-utils", rev = "fecd55f" }
 slog = { version = "2.7.0", features = [
     "max_level_trace",
     "release_max_level_warn",
