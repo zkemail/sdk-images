@@ -13,7 +13,6 @@ on:
         type: choice
         options:
           - staging
-          - dev
 
 permissions:
   id-token: write

@@ -2,7 +2,7 @@ name: Build Push Deploy Noir
 
 on:
   push:
-    branches: [main, staging, dev]
+    branches: [main, staging]
     paths:
       - 'noir/**'
       - 'sdk-utils/**'
@@ -16,7 +16,7 @@ on:
         description: 'Target environment'
         required: false
         type: choice
-        options: [dev, staging, production]
+        options: [staging, production]
 
 permissions:
   id-token: write
@@ -60,9 +60,6 @@ jobs:
             # Auto from branch
             BRANCH="${GITHUB_REF##*/}"
             case "$BRANCH" in
-              dev)
-                ENVIRONMENT="dev"
-                ;;
               staging)
                 ENVIRONMENT="staging"
                 ;;
