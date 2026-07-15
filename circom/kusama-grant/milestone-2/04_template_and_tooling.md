@@ -12,9 +12,9 @@ Deliverable mapping: Milestone 2, Deliverable 4 (`Template and Tooling`).
 ### Solidity templates and generation
 
 - **Tera sources** under [`circom/templates/`](../../templates/):
-  - [`ZKEmailVerifier.sol.tera`](../../templates/ZKEmailVerifier.sol.tera) — wrapper parameters (`signal_size`, `sender_domain`, regex / external-input metadata).
-  - [`IGroth16Verifier.sol.tera`](../../templates/IGroth16Verifier.sol.tera) — verifier interface sized to the blueprint’s public-signal count.
-  - [`MockGroth16Verifier.sol.tera`](../../templates/MockGroth16Verifier.sol.tera) — mock `Groth16Verifier.sol` for local / CI without a full `snarkjs` export.
+  - [`ZKEmailVerifier.sol.tera`](../../templates/ZKEmailVerifier.sol.tera): wrapper parameters (`signal_size`, `sender_domain`, regex / external-input metadata).
+  - [`IGroth16Verifier.sol.tera`](../../templates/IGroth16Verifier.sol.tera): verifier interface sized to the blueprint’s public-signal count.
+  - [`MockGroth16Verifier.sol.tera`](../../templates/MockGroth16Verifier.sol.tera): mock `Groth16Verifier.sol` for local / CI without a full `snarkjs` export.
 - **Rust entrypoints** in [`circom/src/contract.rs`](../../src/contract.rs): render templates to disk, optionally run [`generate_verifier_contract`](../../src/contract.rs) (`snarkjs zkey export solidityverifier`) for a **real** Groth16 verifier when a `.zkey` is available.
 - **Local / example path:** `cargo run -p circom -- generate-example-contracts …` (see [`02_local_environment.md`](./02_local_environment.md) and [`circom/README.md`](../../README.md)) writes mock verifier + wrapper + interface into `circom/contracts/src/` without running the full pipeline.
 

@@ -234,7 +234,7 @@ Listening on 127.0.0.1:8545
 populate the `.env` with the test values:
 
 ```env
-# Anvil default account #0 — public test key; never use on mainnet
+# Anvil default account #0, public test key; never use on mainnet
 PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 # placeholder for deploy testing (not a real DKIM registry; replace to exercise verify)
 DKIM_REGISTRY=0x70997970C51812dc3A010C7d01b50e0d17dc79C8

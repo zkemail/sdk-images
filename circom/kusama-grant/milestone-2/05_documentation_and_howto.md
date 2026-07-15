@@ -10,13 +10,13 @@ Deliverable mapping: Milestone 2, Deliverable 5 (`Documentation`).
 
 Documentation for this milestone spans **three layers**:
 
-1. **Contracts package (operators / integrators)** — [`circom/contracts/README.md`](../../contracts/README.md)  
+1. **Contracts package (operators / integrators)**: [`circom/contracts/README.md`](../../contracts/README.md)  
    Describes package layout, DKIM registry sourcing (external zk.email docs and `@zk-email/contracts`), environment variables, Hardhat Ignition deploy and verify and command reference. Network examples include `localPvm`, `localEvm`, Base Sepolia (`84532`), Polkadot Hub testnet (`420420417`), and Ethereum Sepolia (`11155111`). Numeric networks read `RPC_URL` / `PRIVATE_KEY` from the environment when set (see [`contracts/README.md`](../../contracts/README.md)). For **which** variables apply to which local network profile, use [`02_local_environment.md`](./02_local_environment.md) together with [`hardhat.config.ts`](../../contracts/hardhat.config.ts).
 
-2. **Circom crate (pipeline / local Solidity-only)** — [`circom/README.md`](../../README.md)  
+2. **Circom crate (pipeline / local Solidity-only)**: [`circom/README.md`](../../README.md)  
    Documents `generate-example-contracts` for populating gitignored `src/*.sol` from [`example-contract-data.json`](../../example-contract-data.json) without a full circuit build. This complements the contracts README: a fresh clone needs generated verifiers before `yarn build` (see [`02_local_environment.md`](./02_local_environment.md)).
 
-3. **Grant evidence and structure (this directory)** — [`circom/kusama-grant/README.md`](../README.md) indexes milestones; Milestone 2 detail lives under [`milestone-2/`](./):
+3. **Grant evidence and structure (this directory)**: [`circom/kusama-grant/README.md`](../README.md) indexes milestones; Milestone 2 detail lives under [`milestone-2/`](./):
 
    | Doc                                                                                | Role                                                                        |
    | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
