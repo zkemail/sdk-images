@@ -40,7 +40,7 @@ const config: HardhatUserConfig = {
       polkadot: {
         target: "pvm",
       },
-      url: rpcUrl || "https://services.polkadothub-rpc.com/testnet",
+      url: rpcUrl || "https://eth-rpc-testnet.polkadot.io",
       accounts,
     },
     // Base Sepolia
@@ -100,20 +100,6 @@ const config: HardhatUserConfig = {
     cache: "hh-cache",
     artifacts: "hh-artifacts",
     ignition: "hh-ignition",
-  },
-  ignition: {
-    // IGN401 fix for PolkaVM / Paseo AssetHub:
-    // The EVM-RPC adapter briefly returns null from eth_getTransaction right after
-    // a tx is included (indexing gap). Default maxRetries=10 × retryInterval=1s
-    // gives only 10s to detect the tx before IGN401 is thrown. 60s is enough.
-    maxRetries: 60,
-    // Stop Ignition from sending replacement txs (same nonce, higher gas): the
-    // EVM-RPC adapter does not handle them well and can make the original tx also
-    // appear dropped.
-    disableFeeBumping: true,
-    // PolkaVM uses GRANDPA deterministic finality — 1 confirmation is truly final.
-    // Default is 5.
-    requiredConfirmations: 1,
   },
 };
 
