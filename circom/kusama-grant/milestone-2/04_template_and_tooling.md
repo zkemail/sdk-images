@@ -46,11 +46,8 @@ Deliverable mapping: Milestone 2, Deliverable 4 (`Template and Tooling`).
 - Generation and optional real verifier export:
   - [`circom/src/contract.rs`](../../src/contract.rs)
   - [`circom/src/main.rs`](../../src/main.rs) (`generate-example-contracts`, bundle assembly)
-- Deployment:
-  - [`circom/contracts/hh-ignition/modules/ZKEmailVerifier.ts`](../../contracts/hh-ignition/modules/ZKEmailVerifier.ts)
-  - [`circom/contracts/script/DeployZKEmailVerifier.s.sol`](../../contracts/script/DeployZKEmailVerifier.s.sol)
-- Verification:
-  - [`circom/contracts/script/verify-zk-email-verifier.sh`](../../contracts/script/verify-zk-email-verifier.sh)
+- Deployment and verification:
+  - Hardhat Ignition module [`circom/contracts/hh-ignition/modules/ZKEmailVerifier.ts`](../../contracts/hh-ignition/modules/ZKEmailVerifier.ts), driven by `yarn deploy` / `yarn verify` in [`circom/contracts/package.json`](../../contracts/package.json)
 - Operator-facing summaries:
   - [`circom/contracts/README.md`](../../contracts/README.md)
 
