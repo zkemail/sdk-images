@@ -27,6 +27,10 @@ Documentation for this milestone spans **three layers**:
    | [`04_template_and_tooling.md`](./04_template_and_tooling.md)                       | Tera templates, bundle, deploy/verify tooling                               |
    | [`05_documentation_and_howto.md`](./05_documentation_and_howto.md)                 | This map of public and grant-facing docs                                    |
 
+### Reusable public template
+
+As a community-facing outcome of this milestone, the generic project structure and dual-target (EVM + PolkaVM) tooling are published as a standalone GitHub template repository: [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template). It strips the ZK Email-specific verifier contracts and ships a minimal `Counter` example, so anyone can click **"Use this template"** and deploy Solidity to both EVM and PolkaVM with Hardhat + `resolc` + Foundry. Its README documents local PolkaVM / Anvil flows, testnet deploy (create-and-fund-a-wallet), and the PolkaVM source-verification tooling gap.
+
 ## Repo Evidence
 
 - Operator-facing how-to:
@@ -38,6 +42,8 @@ Documentation for this milestone spans **three layers**:
   - [`circom/kusama-grant/README.md`](../README.md)
   - [`circom/kusama-grant/milestone-2/00_overview.md`](./00_overview.md)
   - Deliverables [`01`](./01_project_setup.md)–[`04`](./04_template_and_tooling.md) as linked above
+- Reusable public template repository (community-facing outcome):
+  - [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template)
 
 ## Related documentation
 
