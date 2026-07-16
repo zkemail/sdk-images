@@ -12,8 +12,6 @@ These contracts are built by the pipeline whenever a new blueprint is created, t
 - `src/interfaces/IZKEmailVerifier.sol` - interface for the ZKEmail verifier contract.
 - `test/DKIMRegistryMock.sol` - simple mock of the DKIM registry for testing.
 - `hh-ignition/modules/ZKEmailVerifier.ts` - Hardhat Ignition module that deploys `Groth16Verifier` and `ZKEmailVerifier`.
-- `script/DeployZKEmailVerifier.s.sol` - Foundry deployment script retained for manual/advanced usage.
-- `script/verify-zk-email-verifier.sh` - Foundry verification helper for explorers that support standard Etherscan APIs.
 
 ### DKIM registry code / repo
 
@@ -48,10 +46,9 @@ Copy `.env.example` to `.env` and fill in the values:
 | `PRIVATE_KEY`       | Yes                   | EOA private key used to broadcast transactions (Hardhat `accounts` when set).                          |
 | `DKIM_REGISTRY`     | Yes                   | Address of the already-deployed `DKIMRegistry` contract.                                               |
 | `RPC_URL`           | See below             | Overrides the default public RPC for **numeric** networks in `hardhat.config.ts` (see next paragraph). |
-| `CHAIN_ID`          | Optional              | Numeric chain ID used by `script/verify-zk-email-verifier.sh` (Foundry helper).                        |
 | `ETHERSCAN_API_KEY` | For verification only | API key for Etherscan-compatible block explorer (for example Base Sepolia).                            |
 
-**Hardhat and `RPC_URL` / `PRIVATE_KEY`:** In [`hardhat.config.ts`](./hardhat.config.ts), networks keyed by chain id — `420420417` (Polkadot Hub testnet), `84532` (Base Sepolia), `11155111` (Ethereum Sepolia) — use `process.env.RPC_URL` when set, otherwise each chain’s default HTTPS RPC. `PRIVATE_KEY` populates `accounts` for those networks. The Circom pipeline sets the same variables from the blueprint payload before `yarn deploy <chain_id>`, so deploy targets the RPC and signer from the payload without editing the config. One `RPC_URL` value applies to whichever numeric network you pass to `yarn deploy <chain_id>` in that shell. Profiles `localEvm` and `localPvm` keep fixed `http://127.0.0.1:8545` URLs; `PRIVATE_KEY` is only attached when set so local node for pvm defaults still work when you omit it.
+**Hardhat and `RPC_URL` / `PRIVATE_KEY`:** In [`hardhat.config.ts`](./hardhat.config.ts), networks keyed by chain id (`420420417` Polkadot Hub testnet, `84532` Base Sepolia, `11155111` Ethereum Sepolia) use `process.env.RPC_URL` when set, otherwise each chain’s default HTTPS RPC. `PRIVATE_KEY` populates `accounts` for those networks. The Circom pipeline sets the same variables from the blueprint payload before `yarn deploy <chain_id>`, so deploy targets the RPC and signer from the payload without editing the config. One `RPC_URL` value applies to whichever numeric network you pass to `yarn deploy <chain_id>` in that shell. Profiles `localEvm` and `localPvm` keep fixed `http://127.0.0.1:8545` URLs; `PRIVATE_KEY` is only attached when set so local node for pvm defaults still work when you omit it.
 
 ### Deploying with Hardhat Ignition
 
