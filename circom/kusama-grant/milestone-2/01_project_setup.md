@@ -25,12 +25,11 @@ Deliverable mapping: Milestone 2, Deliverable 1 (`Project Setup`).
   - Used for tests.
   - Not the primary deployment path for milestone delivery.
 
-## Verification Limitation (Paseo)
+## Verification Limitation (PolkaVM)
 
-- RouteScan can be used for manual verification on Paseo/Polkadot Hub explorer environments.
-- The Hardhat verification config example currently provided by RouteScan does not work in this setup (API error is returned).
-- This indicates the explorer endpoint is not yet behaving as a standard Etherscan-compatible API path for automated verification in our workflow.
-- As a result, automated verification is treated as unavailable for Paseo at the moment; manual RouteScan verification is the practical path.
+- Source-code verification is not currently possible for PolkaVM deployments (e.g. Polkadot Hub testnet, `420420417`). The contract is `resolc`-compiled to PolkaVM/RISC-V bytecode; the Blockscout explorer's verification API and `@nomicfoundation/hardhat-verify` both only support EVM `solc`/Vyper bytecode, and `@parity/hardhat-polkadot` does not yet provide a `resolc`-aware verify task.
+- This is a PolkaVM tooling gap, not a deployment issue. The contract remains fully visible on Blockscout (address, PolkaVM bytecode, transactions) and is exercisable via its read/write methods.
+- Automated `yarn verify` (Hardhat Ignition) applies to EVM targets with a working Etherscan-compatible API (for example Base Sepolia).
 
 ## Contracts Project Structure
 

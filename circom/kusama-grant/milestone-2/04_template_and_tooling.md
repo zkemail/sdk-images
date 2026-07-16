@@ -32,8 +32,8 @@ Deliverable mapping: Milestone 2, Deliverable 4 (`Template and Tooling`).
 
 ### Verification tooling
 
-- **Ignition:** `yarn verify chain-<chainId>` (Hardhat verify) for networks where an Etherscan-compatible API is configured and working.
-- **Polkadot / Paseo caveat:** automated explorer verification may be unavailable or flaky for PolkaVM targets; see [`01_project_setup.md`](./01_project_setup.md) (RouteScan / Hardhat verify limitation). Manual explorer verification remains the fallback.
+- **EVM:** `yarn verify chain-<chainId>` (Hardhat Ignition verify) for networks where an Etherscan-compatible API is configured and working (for example Base Sepolia).
+- **PolkaVM:** source-code verification is not currently possible. `resolc`/RISC-V bytecode is unsupported by `@nomicfoundation/hardhat-verify` and the Blockscout verification API, and there is no `resolc`-aware verify task yet (see [`01_project_setup.md`](./01_project_setup.md)). This is a tooling gap, not a deployment issue; the contract stays visible and exercisable on Blockscout.
 
 ## Repo Evidence
 
