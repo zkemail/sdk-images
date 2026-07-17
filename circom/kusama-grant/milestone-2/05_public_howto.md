@@ -8,6 +8,8 @@ Public usage guide for the Milestone 2 ZK verifier contract tooling: generate th
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) installed for the local EVM (Anvil) flow.
 - macOS (arm64) or Linux (x86_64) for the bundled PolkaVM dev-node binaries.
 
+For the full command reference, environment variables, DKIM registry sourcing, and supported networks, see [`circom/contracts/README.md`](../../contracts/README.md).
+
 Use two directories: run **contract generation** from **`circom/`** (so `./templates/` resolves), then run **install / build / deploy** from **[`circom/contracts/`](../../contracts/)** unless noted.
 
 ## 2) Generate example contracts (do this first)
@@ -33,7 +35,7 @@ Populated ZKEmailVerifier contract written to contracts/src/ZKEmailVerifier.sol
 Populated MockGroth16Verifier contract written to contracts/src/Groth16Verifier.sol
 ```
 
-See [`circom/README.md`](../../README.md) for the `ContractData` JSON shape if you need a custom payload.
+The default payload is [`circom/example-contract-data.json`](../../example-contract-data.json); see [`circom/README.md`](../../README.md) for the `ContractData` JSON shape if you need a custom one.
 
 ## 3) Install dependencies
 
@@ -262,25 +264,6 @@ ZKEmailVerifierModule#ZKEmailVerifier - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F05
 ✨  Done in 2.26s.
 ```
 
-### Reusable public template
+## Reusable public template
 
 As a community-facing outcome of this milestone, the generic project structure and dual-target (EVM + PolkaVM) tooling are published as a standalone GitHub template repository: [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template). It strips the ZK Email-specific verifier contracts and ships a minimal `Counter` example, so anyone can click **"Use this template"** and deploy Solidity to both EVM and PolkaVM with Hardhat + `resolc` + Foundry. Its README documents local PolkaVM / Anvil flows, testnet deploy (create-and-fund-a-wallet), and the PolkaVM source-verification tooling gap.
-
-## Repo Evidence
-
-- Operator-facing how-to:
-  - [`circom/contracts/README.md`](../../contracts/README.md)
-- Circom CLI / example generation:
-  - [`circom/README.md`](../../README.md)
-  - [`circom/example-contract-data.json`](../../example-contract-data.json)
-- Grant index and Milestone 2 narrative:
-  - [`circom/kusama-grant/README.md`](../README.md)
-  - [`circom/kusama-grant/milestone-2/00_overview.md`](./00_overview.md)
-  - Deliverables [`01`](./01_project_setup.md) through [`04`](./04_template_and_tooling.md) as linked above
-- Reusable public template repository (community-facing outcome):
-  - [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template)
-
-## Related documentation
-
-- Local environment components and network definitions: [`02_local_environment.md`](./02_local_environment.md)
-- Template and deploy/verify tooling detail: [`04_template_and_tooling.md`](./04_template_and_tooling.md)

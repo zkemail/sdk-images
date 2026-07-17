@@ -11,7 +11,7 @@ Milestone 2 templating and tooling: reusable Tera templates for the wrapper and 
   - [`IGroth16Verifier.sol.tera`](../../templates/IGroth16Verifier.sol.tera): verifier interface sized to the blueprint’s public-signal count.
   - [`MockGroth16Verifier.sol.tera`](../../templates/MockGroth16Verifier.sol.tera): mock `Groth16Verifier.sol` for local / CI without a full `snarkjs` export.
 - **Rust entrypoints** in [`circom/src/contract.rs`](../../src/contract.rs): render templates to disk, optionally run [`generate_verifier_contract`](../../src/contract.rs) (`snarkjs zkey export solidityverifier`) for a **real** Groth16 verifier when a `.zkey` is available.
-- **Local / example path:** `cargo run -p circom -- generate-example-contracts …` (see [`02_local_environment.md`](./02_local_environment.md) and [`circom/README.md`](../../README.md)) writes mock verifier + wrapper + interface into [`circom/contracts/src/`](../../contracts/src/) without running the full pipeline.
+- **Local / example path:** the `generate-example-contracts` CLI in [`circom/src/main.rs`](../../src/main.rs) (see [`02_local_environment.md`](./02_local_environment.md) and [`circom/README.md`](../../README.md)) writes mock verifier + wrapper + interface into [`circom/contracts/src/`](../../contracts/src/) without running the full pipeline.
 
 ### Deployment tooling
 
@@ -21,22 +21,3 @@ Milestone 2 templating and tooling: reusable Tera templates for the wrapper and 
 
 - **EVM:** `yarn verify chain-<chainId>` (Hardhat Ignition verify) for networks where an Etherscan-compatible API is configured and working (for example Base Sepolia).
 - **PolkaVM:** source-code verification is not currently possible for PolkaVM deployments (e.g. Polkadot Hub testnet, `420420417`). The contract is `resolc`-compiled to PolkaVM/RISC-V bytecode; the Blockscout explorer's verification API and `@nomicfoundation/hardhat-verify` both only support EVM `solc`/Vyper bytecode, and `@parity/hardhat-polkadot` does not yet provide a `resolc`-aware verify task. This is a PolkaVM tooling gap, not a deployment issue: the contract remains fully visible on Blockscout (address, PolkaVM bytecode, transactions) and is exercisable via its read/write methods.
-
-## Repo Evidence
-
-- Reusable Solidity templates:
-  - [`circom/templates/ZKEmailVerifier.sol.tera`](../../templates/ZKEmailVerifier.sol.tera)
-  - [`circom/templates/IGroth16Verifier.sol.tera`](../../templates/IGroth16Verifier.sol.tera)
-  - [`circom/templates/MockGroth16Verifier.sol.tera`](../../templates/MockGroth16Verifier.sol.tera)
-- Generation and optional real verifier export:
-  - [`circom/src/contract.rs`](../../src/contract.rs)
-  - [`circom/src/main.rs`](../../src/main.rs) (`generate-example-contracts`)
-- Deployment and verification:
-  - Hardhat Ignition module [`circom/contracts/hh-ignition/modules/ZKEmailVerifier.ts`](../../contracts/hh-ignition/modules/ZKEmailVerifier.ts), driven by `yarn deploy` / `yarn verify` in [`circom/contracts/package.json`](../../contracts/package.json)
-- Operator-facing summaries:
-  - [`circom/contracts/README.md`](../../contracts/README.md)
-
-## Related documentation
-
-- Wrapper / interface intent and what is generated vs committed: [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md)
-- Local prerequisites (`generate-example-contracts`, `yarn build`, deploy): [`02_local_environment.md`](./02_local_environment.md)

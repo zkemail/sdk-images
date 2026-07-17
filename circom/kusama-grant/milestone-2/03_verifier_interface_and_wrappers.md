@@ -20,29 +20,6 @@ Milestone 2 on-chain integration surface: a generic `IZKEmailVerifier` interface
 4. Build `uint256[PUBLIC_INPUTS_LENGTH] pubSignals` from `publicInputs`.
 5. Require `GROTH16_VERIFIER.verifyProof(pA, pB, pC, pubSignals)`.
 
-## Repo Evidence
-
-- Committed interfaces (integration surface + DKIM registry API):
-  - [`circom/contracts/src/interfaces/IZKEmailVerifier.sol`](../../contracts/src/interfaces/IZKEmailVerifier.sol)
-  - [`circom/contracts/src/interfaces/IDKIMRegistry.sol`](../../contracts/src/interfaces/IDKIMRegistry.sol)
-- Generated per blueprint (not tracked in git; paths are where the pipeline writes them for compile/deploy):
-  - `circom/contracts/src/ZKEmailVerifier.sol`
-  - `circom/contracts/src/Groth16Verifier.sol`
-  - `circom/contracts/src/interfaces/IGroth16Verifier.sol`
-- Template / generator (source of truth for wrapper + Groth16 surface):
-  - [`circom/templates/ZKEmailVerifier.sol.tera`](../../templates/ZKEmailVerifier.sol.tera)
-  - [`circom/templates/IGroth16Verifier.sol.tera`](../../templates/IGroth16Verifier.sol.tera)
-  - [`circom/templates/MockGroth16Verifier.sol.tera`](../../templates/MockGroth16Verifier.sol.tera) (used to emit a mock `Groth16Verifier.sol` in some flows; production verifiers come from the proving pipeline)
-  - [`circom/src/contract.rs`](../../src/contract.rs)
-- DKIM registry mock (testing):
-  - [`circom/contracts/test/DKIMRegistryMock.sol`](../../contracts/test/DKIMRegistryMock.sol)
-
 ## Scope note
 
 - This milestone ships **Groth16** as the concrete proof backend in generated contracts (`IGroth16Verifier`, `Groth16Verifier`, `ZKEmailVerifier` per blueprint). Other proof systems are not implemented; new backends can follow the same composition pattern (registry + proof verifier + shared `IZKEmailVerifier` shape) without changing how DKIM is checked.
-
-## Related documentation
-
-- Contracts package overview (DKIM registry sourcing, env vars): [`circom/contracts/README.md`](../../contracts/README.md)
-- Local deploy evidence (wrapper deployed via Ignition): [`02_local_environment.md`](./02_local_environment.md)
-- Templates and deploy tooling: [`04_template_and_tooling.md`](./04_template_and_tooling.md)

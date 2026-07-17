@@ -38,10 +38,3 @@ Milestone 2 contracts project: a unified Hardhat + Foundry structure that compil
 - Verify (where supported): `yarn verify chain-<chain_id>`
 
 These scripts are defined in [`circom/contracts/package.json`](../../contracts/package.json).
-
-## Related Documentation
-
-- Contracts package overview and usage:
-  - [`circom/contracts/README.md`](../../contracts/README.md)
-- Grant index for milestone docs:
-  - [`circom/kusama-grant/README.md`](../README.md)
