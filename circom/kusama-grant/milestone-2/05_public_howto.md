@@ -262,27 +262,6 @@ ZKEmailVerifierModule#ZKEmailVerifier - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F05
 ✨  Done in 2.26s.
 ```
 
-## Documentation map
-
-Public documentation for this milestone spans **three layers**:
-
-1. **Contracts package (operators / integrators)**: [`circom/contracts/README.md`](../../contracts/README.md)  
-   Describes package layout, DKIM registry sourcing (external zk.email docs and `@zk-email/contracts`), environment variables, Hardhat Ignition deploy and verify and command reference. Network examples include `localPvm`, `localEvm`, Base Sepolia (`84532`), Polkadot Hub testnet (`420420417`), and Ethereum Sepolia (`11155111`). Numeric networks read `RPC_URL` / `PRIVATE_KEY` from the environment when set (see [`contracts/README.md`](../../contracts/README.md)). For **which** variables apply to which local network profile, use [`02_local_environment.md`](./02_local_environment.md) together with [`hardhat.config.ts`](../../contracts/hardhat.config.ts).
-
-2. **Circom crate (pipeline / local Solidity-only)**: [`circom/README.md`](../../README.md)  
-   Documents `generate-example-contracts` for populating gitignored `src/*.sol` from [`example-contract-data.json`](../../example-contract-data.json) without a full circuit build. This complements the contracts README: a fresh clone needs generated verifiers before `yarn build` (see step 2 above).
-
-3. **Grant evidence and structure (this directory)**: [`circom/kusama-grant/README.md`](../README.md) indexes milestones; Milestone 2 detail lives under [`milestone-2/`](./):
-
-   | Doc                                                                                | Role                                                                        |
-   | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-   | [`00_overview.md`](./00_overview.md)                                               | Milestone goal, deliverable table, current status, summary                  |
-   | [`01_project_setup.md`](./01_project_setup.md)                                     | Hardhat + Foundry + resolc, build/deploy responsibilities                   |
-   | [`02_local_environment.md`](./02_local_environment.md)                             | Local network definitions and components; expected local flow               |
-   | [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md) | Interfaces vs generated wrapper, verification flow                          |
-   | [`04_template_and_tooling.md`](./04_template_and_tooling.md)                       | Tera templates, deploy/verify tooling, PolkaVM verification limit           |
-   | [`05_public_howto.md`](./05_public_howto.md)                                       | This public how-to (generate, build, deploy locally) plus the doc map       |
-
 ### Reusable public template
 
 As a community-facing outcome of this milestone, the generic project structure and dual-target (EVM + PolkaVM) tooling are published as a standalone GitHub template repository: [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template). It strips the ZK Email-specific verifier contracts and ships a minimal `Counter` example, so anyone can click **"Use this template"** and deploy Solidity to both EVM and PolkaVM with Hardhat + `resolc` + Foundry. Its README documents local PolkaVM / Anvil flows, testnet deploy (create-and-fund-a-wallet), and the PolkaVM source-verification tooling gap.
