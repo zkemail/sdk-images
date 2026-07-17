@@ -1,11 +1,6 @@
 # 02 - Local Environment
 
-Deliverable mapping: Milestone 2, Deliverable 2 (`Local Environment`).
-
-## What must be delivered
-
-- Local testing environments for both EVM and PolkaVM.
-- Ability to deploy/test contracts on local nodes.
+Milestone 2 local testing environment: Hardhat network profiles (`localPvm`, `localEvm`) and helpers for deploying to a local PolkaVM-compatible node and to Anvil.
 
 ## Implementation Notes
 
@@ -37,14 +32,3 @@ Deliverable mapping: Milestone 2, Deliverable 2 (`Local Environment`).
 ## Runnable Demonstration
 
 The full copy-pasteable command sequence for both local targets (generate contracts, set up the PolkaVM node or Anvil, build, and deploy) with representative outputs is in the public how-to: [`05_public_howto.md`](./05_public_howto.md) (steps 2 through 5).
-
-## Evidence Standard for This Deliverable
-
-- Local network profiles `localEvm` (Anvil) and `localPvm` (PolkaVM adapter RPC) are defined in [`hardhat.config.ts`](../../contracts/hardhat.config.ts).
-- The reproducible end-to-end local flow (generate, build, deploy) with representative outputs for both targets is documented in [`05_public_howto.md`](./05_public_howto.md).
-
-## Status
-
-`Delivered`
-
-Conclusion: The deliverable "Working local setup capable of deploying contracts to Anvil and a local PolkaVM compatible node." is delivered: [`hardhat.config.ts`](../../contracts/hardhat.config.ts) defines `localEvm` (e.g. Anvil on `8545`) and `localPvm` (adapter RPC); the reproducible generate, build, and Ignition deploy flow with representative outputs for both paths is in the public how-to ([`05_public_howto.md`](./05_public_howto.md)).

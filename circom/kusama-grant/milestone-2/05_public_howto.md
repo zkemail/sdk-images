@@ -2,12 +2,6 @@
 
 Public usage guide for the Milestone 2 ZK verifier contract tooling: generate the example verifier contracts from the templates, then build and deploy them to a local PolkaVM-compatible node and to a local EVM node (Anvil).
 
-Deliverable mapping: Milestone 2, Deliverable 5 (`Documentation`).
-
-## What must be delivered
-
-- Public documentation with usage instructions.
-
 ## 1) Prerequisites
 
 - Node and Yarn installed.
@@ -311,15 +305,3 @@ As a community-facing outcome of this milestone, the generic project structure a
 
 - Local environment components and network definitions: [`02_local_environment.md`](./02_local_environment.md)
 - Template and deploy/verify tooling detail: [`04_template_and_tooling.md`](./04_template_and_tooling.md)
-
-## Evidence standard for this deliverable
-
-- Public READMEs exist under [`circom/contracts`](../../contracts/) and `circom` with actionable commands and environment expectations.
-- This how-to provides a reproducible, copy-pasteable local flow (generate, build, deploy) with representative outputs for both PolkaVM and EVM targets.
-- Grant documentation provides a traceable index and per-deliverable evidence that aligns with those READMEs and with the flows above.
-
-## Status
-
-`Delivered`
-
-Conclusion: Usage documentation is publicly available in the contracts and Circom package READMEs; this how-to records the reproducible generate, build, and deploy flow for both local targets, and the grant milestone docs under `kusama-grant/milestone-2` index and elaborate the delivery evidence.

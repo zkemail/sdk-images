@@ -1,24 +1,17 @@
 # 01 - Project Setup
 
-Deliverable mapping: Milestone 2, Deliverable 1 (`Project Setup`).
+Milestone 2 contracts project: a unified Hardhat + Foundry structure that compiles with both the native Solidity compiler (`solc`, EVM) and the PolkaVM Solidity compiler (`resolc`).
 
-## What must be delivered
+## Toolchain
 
-- Unified project structure using Hardhat and Foundry.
-- Support for both `solc` and `resolc` compilation.
-
-## Implementation Notes
-
-- Hardhat is the primary build/deploy toolchain for this package.
+- Hardhat is the primary build and deploy toolchain, using Ignition modules under `hh-ignition/`.
 - Foundry is kept for test execution.
-- Deployment uses Hardhat Ignition modules.
-- PolkaVM compilation path is provided via Hardhat + `@parity/hardhat-polkadot` + `resolc`.
+- The PolkaVM compilation path is provided via Hardhat + `@parity/hardhat-polkadot` + `resolc`.
 
 ## Build and Deployment Responsibilities
 
 - Hardhat:
-  - Compiles contracts.
-  - Handles `solc` and `resolc`-based build targets.
+  - Compiles contracts (`solc` and `resolc` build targets).
   - Deploys with Ignition (`hh-ignition/modules/...`).
   - Runs verification where explorer APIs support it.
 - Foundry:
@@ -52,9 +45,3 @@ These scripts are defined in [`circom/contracts/package.json`](../../contracts/p
   - [`circom/contracts/README.md`](../../contracts/README.md)
 - Grant index for milestone docs:
   - [`circom/kusama-grant/README.md`](../README.md)
-
-## Status
-
-`Delivered`
-
-Conclusion: The deliverable "Project structure with Hardhat and Foundry configuration supporting EVM and PolkaVM compilation." is delivered.

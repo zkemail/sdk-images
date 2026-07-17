@@ -1,11 +1,6 @@
 # 03 - Verifier Interface and Wrappers
 
-Deliverable mapping: Milestone 2, Deliverable 3 (`Verifier Interface and Wrappers`).
-
-## What must be delivered
-
-- Generic verifier interface.
-- Groth16 wrapper contracts integrating DKIM verification and proof formatting/preparation before verifier invocation.
+Milestone 2 on-chain integration surface: a generic `IZKEmailVerifier` interface plus the per-blueprint Groth16 + DKIM wrapper that checks and formats a proof before verifying it.
 
 ## Implementation Notes
 
@@ -51,14 +46,3 @@ Deliverable mapping: Milestone 2, Deliverable 3 (`Verifier Interface and Wrapper
 - Contracts package overview (DKIM registry sourcing, env vars): [`circom/contracts/README.md`](../../contracts/README.md)
 - Local deploy evidence (wrapper deployed via Ignition): [`02_local_environment.md`](./02_local_environment.md)
 - Templates and deploy tooling: [`04_template_and_tooling.md`](./04_template_and_tooling.md)
-
-## Evidence standard for this deliverable
-
-- On-chain integration surface is defined by the committed `IZKEmailVerifier` (and `IDKIMRegistry` for registry calls).
-- Wrapper behavior and Groth16 coupling are defined by the Tera templates and `contract.rs` generation path; generated Solidity under [`circom/contracts/src/`](../../contracts/src/) is evidence only after a blueprint build, not a git-tracked canonical file.
-
-## Status
-
-`Delivered`
-
-Conclusion: Generic verifier-facing interfaces are committed in [`circom/contracts`](../../contracts/); the Groth16 + DKIM wrapper is specified by templates and emitted per blueprint (not committed). Multi-proof-system coverage beyond Groth16 is out of scope for this delivery.

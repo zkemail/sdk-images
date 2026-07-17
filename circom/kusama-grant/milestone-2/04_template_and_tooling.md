@@ -1,11 +1,6 @@
 # 04 - Template and Tooling
 
-Deliverable mapping: Milestone 2, Deliverable 4 (`Template and Tooling`).
-
-## What must be delivered
-
-- Wrapper contracts converted into reusable templates.
-- Deployment and verification tooling for both environments.
+Milestone 2 templating and tooling: reusable Tera templates for the wrapper and verifier contracts, plus Hardhat Ignition deploy and verify tooling for EVM and PolkaVM targets.
 
 ## Implementation Notes
 
@@ -55,14 +50,3 @@ Deliverable mapping: Milestone 2, Deliverable 4 (`Template and Tooling`).
 
 - Wrapper / interface intent and what is generated vs committed: [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md)
 - Local prerequisites (`generate-example-contracts`, `yarn build`, deploy): [`02_local_environment.md`](./02_local_environment.md)
-
-## Evidence standard for this deliverable
-
-- Templates exist for the wrapper, Groth16 interface, and mock verifier; the pipeline can emit a real Groth16 verifier from a zkey when provided.
-- Deployment is reproducible via Ignition; verification is covered by Ignition verify, with the PolkaVM verification limitation documented in the Verification tooling section above.
-
-## Status
-
-`Delivered`
-
-Conclusion: Reusable Tera templates and Rust generation cover Solidity wrappers and related verifier artifacts; Hardhat Ignition plus Foundry script and verify helpers provide deployment and verification tooling across EVM-oriented and PolkaVM-configured Hardhat networks, with documented caveats where automated verification is not yet reliable.
