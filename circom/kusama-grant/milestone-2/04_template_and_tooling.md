@@ -13,10 +13,6 @@ Milestone 2 templating and tooling: reusable Tera templates for the wrapper and 
 - **Rust entrypoints** in [`circom/src/contract.rs`](../../src/contract.rs): render templates to disk, optionally run [`generate_verifier_contract`](../../src/contract.rs) (`snarkjs zkey export solidityverifier`) for a **real** Groth16 verifier when a `.zkey` is available.
 - **Local / example path:** `cargo run -p circom -- generate-example-contracts …` (see [`02_local_environment.md`](./02_local_environment.md) and [`circom/README.md`](../../README.md)) writes mock verifier + wrapper + interface into [`circom/contracts/src/`](../../contracts/src/) without running the full pipeline.
 
-### Circuit template
-
-- [`circom/templates/template.circom.tera`](../../templates/template.circom.tera) is rendered by [`circom/src/template.rs`](../../src/template.rs) for blueprint-specific Circom sources (broader pipeline; complements Solidity templating).
-
 ### Downloadable contract bundle
 
 - The Circom binary maintains a fixed list of paths (`CONTRACT_BUNDLE_FILES` in [`circom/src/main.rs`](../../src/main.rs)) copied or generated when producing the user-facing contracts zip: Hardhat/Ignition layout, static interfaces, and **generated** `src/*.sol` files produced from templates or `snarkjs` as appropriate.
@@ -36,8 +32,6 @@ Milestone 2 templating and tooling: reusable Tera templates for the wrapper and 
   - [`circom/templates/ZKEmailVerifier.sol.tera`](../../templates/ZKEmailVerifier.sol.tera)
   - [`circom/templates/IGroth16Verifier.sol.tera`](../../templates/IGroth16Verifier.sol.tera)
   - [`circom/templates/MockGroth16Verifier.sol.tera`](../../templates/MockGroth16Verifier.sol.tera)
-- Circuit template (same Tera stack):
-  - [`circom/templates/template.circom.tera`](../../templates/template.circom.tera)
 - Generation and optional real verifier export:
   - [`circom/src/contract.rs`](../../src/contract.rs)
   - [`circom/src/main.rs`](../../src/main.rs) (`generate-example-contracts`, bundle assembly)
