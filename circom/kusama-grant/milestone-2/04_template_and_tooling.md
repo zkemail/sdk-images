@@ -33,7 +33,7 @@ Deliverable mapping: Milestone 2, Deliverable 4 (`Template and Tooling`).
 ### Verification tooling
 
 - **EVM:** `yarn verify chain-<chainId>` (Hardhat Ignition verify) for networks where an Etherscan-compatible API is configured and working (for example Base Sepolia).
-- **PolkaVM:** source-code verification is not currently possible. `resolc`/RISC-V bytecode is unsupported by `@nomicfoundation/hardhat-verify` and the Blockscout verification API, and there is no `resolc`-aware verify task yet (see [`01_project_setup.md`](./01_project_setup.md)). This is a tooling gap, not a deployment issue; the contract stays visible and exercisable on Blockscout.
+- **PolkaVM:** source-code verification is not currently possible for PolkaVM deployments (e.g. Polkadot Hub testnet, `420420417`). The contract is `resolc`-compiled to PolkaVM/RISC-V bytecode; the Blockscout explorer's verification API and `@nomicfoundation/hardhat-verify` both only support EVM `solc`/Vyper bytecode, and `@parity/hardhat-polkadot` does not yet provide a `resolc`-aware verify task. This is a PolkaVM tooling gap, not a deployment issue: the contract remains fully visible on Blockscout (address, PolkaVM bytecode, transactions) and is exercisable via its read/write methods.
 
 ## Repo Evidence
 
@@ -59,7 +59,7 @@ Deliverable mapping: Milestone 2, Deliverable 4 (`Template and Tooling`).
 ## Evidence standard for this deliverable
 
 - Templates exist for the wrapper, Groth16 interface, and mock verifier; the pipeline can emit a real Groth16 verifier from a zkey when provided.
-- Deployment is reproducible via Ignition; verification is covered by Ignition verify, with known limits on PolkaVM explorer APIs noted in project setup docs.
+- Deployment is reproducible via Ignition; verification is covered by Ignition verify, with the PolkaVM verification limitation documented in the Verification tooling section above.
 
 ## Status
 

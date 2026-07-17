@@ -21,10 +21,10 @@ Documentation for this milestone spans **three layers**:
    | Doc                                                                                | Role                                                                        |
    | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
    | [`00_overview.md`](./00_overview.md)                                               | Milestone goal, deliverable table, current status, summary                  |
-   | [`01_project_setup.md`](./01_project_setup.md)                                     | Hardhat + Foundry + resolc, responsibilities, verification limits           |
+   | [`01_project_setup.md`](./01_project_setup.md)                                     | Hardhat + Foundry + resolc, build/deploy responsibilities                   |
    | [`02_local_environment.md`](./02_local_environment.md)                             | Generate contracts → local PVM + local EVM flows, `.env`, commands, outputs |
    | [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md) | Interfaces vs generated wrapper, verification flow                          |
-   | [`04_template_and_tooling.md`](./04_template_and_tooling.md)                       | Tera templates, bundle, deploy/verify tooling                               |
+   | [`04_template_and_tooling.md`](./04_template_and_tooling.md)                       | Tera templates, bundle, deploy/verify tooling, PolkaVM verification limit   |
    | [`05_documentation_and_howto.md`](./05_documentation_and_howto.md)                 | This map of public and grant-facing docs                                    |
 
 ### Reusable public template

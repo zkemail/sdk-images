@@ -13,7 +13,7 @@ Deliverable mapping: Milestone 3, Deliverable 1 (`Circom Pipeline Integration`).
 - **Environment wiring for deploy:** [`circom/src/payload.rs`](../../src/payload.rs) maps payload fields into process env (`PRIVATE_KEY`, `RPC_URL`, `CHAIN_ID`, `ETHERSCAN_API_KEY`, `DKIM_REGISTRY`) before Hardhat runs inside `tmp/contracts`.
 - **Contracts layout:** `CONTRACT_BUNDLE_FILES` in [`main.rs`](../../src/main.rs) defines the zip/deploy tree (Hardhat config, Ignition module, static interfaces, generated `src/*.sol`).
 - **Network definitions:** [`circom/contracts/hardhat.config.ts`](../../contracts/hardhat.config.ts) includes PolkaVM targets (`420420417`, embedded `hardhat` / `localPvm` profiles), EVM testnets (`84532`, `11155111`), and named local profiles (`localEvm`, `localPvm`). For numeric keys, `RPC_URL` and `PRIVATE_KEY` from the environment override the default public RPC and supply `accounts` (aligned with [zk-email-verify](https://github.com/zkemail/zk-email-verify/blob/kusama-grant/packages/contracts/hardhat.config.ts)), so payload-injected env matches what Hardhat reads. Ignition uses `--network <chain_id>` as passed from `yarn deploy <chain_id>`.
-- **Verification behavior:** For `chain_id == 420420417`, [`deploy_verifier_contract`](../../src/contract.rs) skips automated explorer verification (same practical constraint as Milestone 2 project setup docs).
+- **Verification behavior:** For `chain_id == 420420417`, [`deploy_verifier_contract`](../../src/contract.rs) skips automated explorer verification (same PolkaVM verification constraint documented in [`milestone-2/04_template_and_tooling.md`](../milestone-2/04_template_and_tooling.md)).
 
 ## Repo Evidence
 
@@ -44,7 +44,7 @@ cargo test -p circom test_contracts_bundle_and_zip_works
 
 | Filter | Exercises |
 | --- | --- |
-| `hardhat_env_from_payload` | [`hardhat_deploy_env_from_payload`](../../src/payload.rs) — deploy env (`PRIVATE_KEY`, `RPC_URL`, `CHAIN_ID`, etc.). |
+| `hardhat_env_from_payload` | [`hardhat_deploy_env_from_payload`](../../src/payload.rs): deploy env (`PRIVATE_KEY`, `RPC_URL`, `CHAIN_ID`, etc.). |
 | `test_contracts_bundle_and_zip_works` | Template-generated Solidity and [`CONTRACT_BUNDLE_FILES`](../../src/main.rs) zip layout (contracts tree the pipeline emits). |
 
 ## Evidence standard for this deliverable
