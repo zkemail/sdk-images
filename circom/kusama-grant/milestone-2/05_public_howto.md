@@ -280,7 +280,7 @@ Public documentation for this milestone spans **three layers**:
    | [`01_project_setup.md`](./01_project_setup.md)                                     | Hardhat + Foundry + resolc, build/deploy responsibilities                   |
    | [`02_local_environment.md`](./02_local_environment.md)                             | Local network definitions and components; expected local flow               |
    | [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md) | Interfaces vs generated wrapper, verification flow                          |
-   | [`04_template_and_tooling.md`](./04_template_and_tooling.md)                       | Tera templates, bundle, deploy/verify tooling, PolkaVM verification limit   |
+   | [`04_template_and_tooling.md`](./04_template_and_tooling.md)                       | Tera templates, deploy/verify tooling, PolkaVM verification limit           |
    | [`05_public_howto.md`](./05_public_howto.md)                                       | This public how-to (generate, build, deploy locally) plus the doc map       |
 
 ### Reusable public template
