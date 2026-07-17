@@ -10,7 +10,7 @@ Primary Goal: Develop a reusable smart contract project with tooling supporting 
 | 2 | Local Environment | Configure local testing environments for both EVM and PolkaVM, enabling contract deployment and testing on local nodes. | Working local setup capable of deploying contracts to Anvil and a local PolkaVM compatible node. | `localEvm` (Anvil) and `localPvm` networks, with reproducible build and Ignition-deploy commands and captured outputs for both. **Proof:** [`02_local_environment.md`](./02_local_environment.md). |
 | 3 | Verifier Interface and Wrappers | Define a generic verifier interface and implement wrapper contracts for Groth16 that integrate DKIM verification and prepare/format proofs before invoking the underlying verifier contract. | Verifier interface and wrapper contracts compatible with different proof systems. | Generic `IZKEmailVerifier` interface plus a per-blueprint Groth16 + DKIM wrapper that validates the DKIM key hash and formats the proof before verifying. **Proof:** [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md). |
 | 4 | Template and Tooling | Convert wrapper contracts into reusable templates and provide deployment and verification tooling for both environments. | Templated wrapper contracts, deployment scripts, and verification tooling. | Reusable Tera templates for the wrapper and verifier, with Hardhat Ignition deploy (`yarn deploy`) and `yarn verify`. **Proof:** [`04_template_and_tooling.md`](./04_template_and_tooling.md). |
-| 5 | Documentation | Include documentation with public how-tos. | Docs with usage instructions. | Public how-tos in the contracts and Circom READMEs, plus per-deliverable grant evidence. **Proof:** [`05_documentation_and_howto.md`](./05_documentation_and_howto.md). |
+| 5 | Documentation | Include documentation with public how-tos. | Docs with usage instructions. | Public how-to with a runnable local generate/build/deploy flow, plus the contracts and Circom READMEs. **Proof:** [`05_public_howto.md`](./05_public_howto.md). |
 
 ## Current Status
 
@@ -28,7 +28,7 @@ Primary Goal: Develop a reusable smart contract project with tooling supporting 
 - [`02_local_environment.md`](./02_local_environment.md)
 - [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md)
 - [`04_template_and_tooling.md`](./04_template_and_tooling.md)
-- [`05_documentation_and_howto.md`](./05_documentation_and_howto.md)
+- [`05_public_howto.md`](./05_public_howto.md)
 
 ## Summary
 

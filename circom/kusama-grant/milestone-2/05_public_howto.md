@@ -1,0 +1,325 @@
+# 05 - Public How-To
+
+Public usage guide for the Milestone 2 ZK verifier contract tooling: generate the example verifier contracts from the templates, then build and deploy them to a local PolkaVM-compatible node and to a local EVM node (Anvil).
+
+Deliverable mapping: Milestone 2, Deliverable 5 (`Documentation`).
+
+## What must be delivered
+
+- Public documentation with usage instructions.
+
+## 1) Prerequisites
+
+- Node and Yarn installed.
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) installed for the local EVM (Anvil) flow.
+- macOS (arm64) or Linux (x86_64) for the bundled PolkaVM dev-node binaries.
+
+Use two directories: run **contract generation** from **`circom/`** (so `./templates/` resolves), then run **install / build / deploy** from **[`circom/contracts/`](../../contracts/)** unless noted.
+
+## 2) Generate example contracts (do this first)
+
+`ZKEmailVerifier.sol`, `Groth16Verifier.sol` (mock), and `interfaces/IGroth16Verifier.sol` are **generated** (gitignored). Materialize them under [`circom/contracts/src/`](../../contracts/src/) before `yarn build`; the Circom crate provides `generate-example-contracts` for a fixed example payload.
+
+From the **`circom`** directory:
+
+```bash
+cargo run -p circom -- generate-example-contracts ./example-contract-data.json ./contracts/src
+```
+
+This writes (among others):
+
+- `contracts/src/ZKEmailVerifier.sol`
+- `contracts/src/Groth16Verifier.sol` (mock Groth16 verifier from the Tera template)
+- `contracts/src/interfaces/IGroth16Verifier.sol`
+
+Example command output:
+
+```text
+Populated ZKEmailVerifier contract written to contracts/src/ZKEmailVerifier.sol
+Populated MockGroth16Verifier contract written to contracts/src/Groth16Verifier.sol
+```
+
+See [`circom/README.md`](../../README.md) for the `ContractData` JSON shape if you need a custom payload.
+
+## 3) Install dependencies
+
+First-time Hardhat dependency install (once per machine), from the [`circom/contracts`](../../contracts/) directory:
+
+```bash
+yarn
+```
+
+The flows in 4) and 5) below assume 2) and 3) are already done.
+
+## 4) Local PolkaVM-compatible node flow
+
+Run node setup and Hardhat from **[`circom/contracts`](../../contracts/)** (from repository root: `cd circom/contracts`).
+
+terminal 1:
+
+```bash
+./bin/setup-dev-node.sh
+```
+
+output:
+
+```text
+Downloading dev-node from https://github.com/paritytech/hardhat-polkadot/releases/download/nodes-19907546951/revive-dev-node-darwin-arm64
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100  253M  100  253M    0     0  10.1M      0  0:00:25  0:00:25 --:--:-- 10.0M
+Downloading eth-rpc from https://github.com/paritytech/hardhat-polkadot/releases/download/nodes-19907546951/eth-rpc-darwin-arm64
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 64.5M  100 64.5M    0     0  13.5M      0  0:00:04  0:00:04 --:--:-- 16.2M
+```
+
+start the local node:
+
+```bash
+npx hardhat node
+```
+
+output:
+
+```text
+Starting server at 127.0.0.1:8000
+Running command: ./bin/dev-node --rpc-port=8000 --pruning=archive --dev
+Starting the Eth RPC Adapter at 127.0.0.1:8545
+Running command: ./bin/eth-rpc --node-rpc-url=ws://localhost:8000 --dev
+2026-04-02 14:51:38 Running in --dev mode, RPC CORS has been disabled.
+2026-04-02 14:51:38 Running in --dev mode, RPC CORS has been disabled.
+2026-04-02 14:51:38 🌐 Connecting to node at: ws://localhost:8000 ...
+2026-04-02 14:51:38 🌟 Connected to node at: ws://localhost:8000
+2026-04-02 14:51:38 💾 Using in-memory database, keeping only 256 blocks in memory
+2026-04-02 14:51:38 〽️ Prometheus exporter started at 127.0.0.1:9616
+2026-04-02 14:51:38 Running JSON-RPC server: addr=127.0.0.1:8545,[::1]:8545
+2026-04-02 14:51:38 🔌 Subscribing to new blocks (BestBlocks)
+2026-04-02 14:51:38 🔌 Subscribing to new blocks (FinalizedBlocks)
+2026-04-02 14:51:45.401 INFO main sc_rpc_server: Running JSON-RPC server: addr=127.0.0.1:61021,[::1]:61022
+```
+
+populate the `.env` with the test values:
+
+```env
+# placeholder for deploy testing (non-zero EOA, not a real DKIM registry; replace to exercise verify)
+DKIM_REGISTRY=0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+```
+
+terminal 2:
+
+compile the contracts:
+
+```bash
+yarn build
+```
+
+output:
+
+```text
+yarn run v1.22.22
+$ hardhat compile
+Compiling 5 Solidity files
+Successfully compiled 5 Solidity files
+✨  Done in 4.24s.
+```
+
+deploy using the `localPvm` network:
+
+```
+yarn deploy localPvm
+```
+
+output:
+
+```text
+yarn run v1.22.22
+$ yes | hardhat ignition deploy hh-ignition/modules/ZKEmailVerifier.ts --network localPvm
+✔ Confirm deploy to network localPvm (420420420)? … yes
+Hardhat Ignition 🚀
+
+Deploying [ ZKEmailVerifierModule ]
+
+Batch #1
+  Executed ZKEmailVerifierModule#Groth16Verifier
+
+Batch #2
+  Executed ZKEmailVerifierModule#ZKEmailVerifier
+
+[ ZKEmailVerifierModule ] successfully deployed 🚀
+
+Deployed Addresses
+
+ZKEmailVerifierModule#Groth16Verifier - 0x3ed62137c5DB927cb137c26455969116BF0c23Cb
+ZKEmailVerifierModule#ZKEmailVerifier - 0x962c0940d72E7Db6c9a5F81f1cA87D8DB2B82A23
+✨  Done in 1.94s.
+```
+
+## 5) Local EVM flow (Anvil)
+
+Same prerequisite as 4): example contracts generated under [`circom/contracts/src/`](../../contracts/src/), and `yarn` run once from [`circom/contracts`](../../contracts/) if needed.
+
+terminal 1:
+
+```bash
+anvil
+```
+
+output:
+
+```text
+
+
+                             _   _
+                            (_) | |
+      __ _   _ __   __   __  _  | |
+     / _` | | '_ \  \ \ / / | | | |
+    | (_| | | | | |  \ V /  | | | |
+     \__,_| |_| |_|   \_/   |_| |_|
+
+    1.5.1-stable (b0a9dd9ced 2025-12-22T11:41:09.812070000Z)
+    https://github.com/foundry-rs/foundry
+
+...
+...
+
+Chain ID
+==================
+
+31337
+
+Base Fee
+==================
+
+1000000000
+
+Gas Limit
+==================
+
+30000000
+
+Genesis Timestamp
+==================
+
+1775136197
+
+Genesis Number
+==================
+
+0
+
+Listening on 127.0.0.1:8545
+```
+
+populate the `.env` with the test values:
+
+```env
+# Anvil default account #0, public test key; never use on mainnet
+PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+# placeholder for deploy testing (not a real DKIM registry; replace to exercise verify)
+DKIM_REGISTRY=0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+```
+
+terminal 2:
+
+```bash
+yarn build
+```
+
+output:
+
+```text
+yarn run v1.22.22
+$ hardhat compile
+Compiling 5 Solidity files
+Successfully compiled 5 Solidity files
+✨  Done in 2.04s.
+```
+
+deploy using the `localEvm` network (Anvil on `127.0.0.1:8545`):
+
+```bash
+yarn deploy localEvm
+```
+
+output:
+
+```text
+yarn run v1.22.22
+$ yes | hardhat ignition deploy hh-ignition/modules/ZKEmailVerifier.ts --network localEvm
+Hardhat Ignition 🚀
+
+Deploying [ ZKEmailVerifierModule ]
+
+Batch #1
+  Executed ZKEmailVerifierModule#Groth16Verifier
+
+Batch #2
+  Executed ZKEmailVerifierModule#ZKEmailVerifier
+
+[ ZKEmailVerifierModule ] successfully deployed 🚀
+
+Deployed Addresses
+
+ZKEmailVerifierModule#Groth16Verifier - 0x5FbDB2315678afecb367f032d93F642f64180aa3
+ZKEmailVerifierModule#ZKEmailVerifier - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+✨  Done in 2.26s.
+```
+
+## Documentation map
+
+Public documentation for this milestone spans **three layers**:
+
+1. **Contracts package (operators / integrators)**: [`circom/contracts/README.md`](../../contracts/README.md)  
+   Describes package layout, DKIM registry sourcing (external zk.email docs and `@zk-email/contracts`), environment variables, Hardhat Ignition deploy and verify and command reference. Network examples include `localPvm`, `localEvm`, Base Sepolia (`84532`), Polkadot Hub testnet (`420420417`), and Ethereum Sepolia (`11155111`). Numeric networks read `RPC_URL` / `PRIVATE_KEY` from the environment when set (see [`contracts/README.md`](../../contracts/README.md)). For **which** variables apply to which local network profile, use [`02_local_environment.md`](./02_local_environment.md) together with [`hardhat.config.ts`](../../contracts/hardhat.config.ts).
+
+2. **Circom crate (pipeline / local Solidity-only)**: [`circom/README.md`](../../README.md)  
+   Documents `generate-example-contracts` for populating gitignored `src/*.sol` from [`example-contract-data.json`](../../example-contract-data.json) without a full circuit build. This complements the contracts README: a fresh clone needs generated verifiers before `yarn build` (see step 2 above).
+
+3. **Grant evidence and structure (this directory)**: [`circom/kusama-grant/README.md`](../README.md) indexes milestones; Milestone 2 detail lives under [`milestone-2/`](./):
+
+   | Doc                                                                                | Role                                                                        |
+   | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+   | [`00_overview.md`](./00_overview.md)                                               | Milestone goal, deliverable table, current status, summary                  |
+   | [`01_project_setup.md`](./01_project_setup.md)                                     | Hardhat + Foundry + resolc, build/deploy responsibilities                   |
+   | [`02_local_environment.md`](./02_local_environment.md)                             | Local network definitions and components; expected local flow               |
+   | [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md) | Interfaces vs generated wrapper, verification flow                          |
+   | [`04_template_and_tooling.md`](./04_template_and_tooling.md)                       | Tera templates, bundle, deploy/verify tooling, PolkaVM verification limit   |
+   | [`05_public_howto.md`](./05_public_howto.md)                                       | This public how-to (generate, build, deploy locally) plus the doc map       |
+
+### Reusable public template
+
+As a community-facing outcome of this milestone, the generic project structure and dual-target (EVM + PolkaVM) tooling are published as a standalone GitHub template repository: [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template). It strips the ZK Email-specific verifier contracts and ships a minimal `Counter` example, so anyone can click **"Use this template"** and deploy Solidity to both EVM and PolkaVM with Hardhat + `resolc` + Foundry. Its README documents local PolkaVM / Anvil flows, testnet deploy (create-and-fund-a-wallet), and the PolkaVM source-verification tooling gap.
+
+## Repo Evidence
+
+- Operator-facing how-to:
+  - [`circom/contracts/README.md`](../../contracts/README.md)
+- Circom CLI / example generation:
+  - [`circom/README.md`](../../README.md)
+  - [`circom/example-contract-data.json`](../../example-contract-data.json)
+- Grant index and Milestone 2 narrative:
+  - [`circom/kusama-grant/README.md`](../README.md)
+  - [`circom/kusama-grant/milestone-2/00_overview.md`](./00_overview.md)
+  - Deliverables [`01`](./01_project_setup.md) through [`04`](./04_template_and_tooling.md) as linked above
+- Reusable public template repository (community-facing outcome):
+  - [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template)
+
+## Related documentation
+
+- Local environment components and network definitions: [`02_local_environment.md`](./02_local_environment.md)
+- Template and deploy/verify tooling detail: [`04_template_and_tooling.md`](./04_template_and_tooling.md)
+
+## Evidence standard for this deliverable
+
+- Public READMEs exist under [`circom/contracts`](../../contracts/) and `circom` with actionable commands and environment expectations.
+- This how-to provides a reproducible, copy-pasteable local flow (generate, build, deploy) with representative outputs for both PolkaVM and EVM targets.
+- Grant documentation provides a traceable index and per-deliverable evidence that aligns with those READMEs and with the flows above.
+
+## Status
+
+`Delivered`
+
+Conclusion: Usage documentation is publicly available in the contracts and Circom package READMEs; this how-to records the reproducible generate, build, and deploy flow for both local targets, and the grant milestone docs under `kusama-grant/milestone-2` index and elaborate the delivery evidence.
