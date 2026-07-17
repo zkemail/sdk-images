@@ -52,7 +52,7 @@ As a community-facing outcome of this milestone, the generic project structure a
 
 ## Evidence standard for this deliverable
 
-- Public READMEs exist under `circom/contracts` and `circom` with actionable commands and environment expectations.
+- Public READMEs exist under [`circom/contracts`](../../contracts/) and `circom` with actionable commands and environment expectations.
 - Grant documentation provides a traceable index and per-deliverable evidence that aligns with those READMEs and with reproducible local flows.
 
 ## Status

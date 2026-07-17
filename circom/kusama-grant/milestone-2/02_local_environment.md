@@ -12,31 +12,31 @@ Deliverable mapping: Milestone 2, Deliverable 2 (`Local Environment`).
 - The contracts package includes local network definitions in Hardhat for PolkaVM-compatible execution.
 - Local PolkaVM dev binaries can be downloaded via helper script for supported platforms.
 - Deployment command entry points exist and can target configured local network profiles.
-- `ZKEmailVerifier.sol`, `Groth16Verifier.sol` (mock), and `interfaces/IGroth16Verifier.sol` are **generated** (gitignored). You must materialize them under `circom/contracts/src/` before `yarn build`; the Circom crate provides `generate-example-contracts` for a fixed example payload (see below).
+- `ZKEmailVerifier.sol`, `Groth16Verifier.sol` (mock), and `interfaces/IGroth16Verifier.sol` are **generated** (gitignored). You must materialize them under [`circom/contracts/src/`](../../contracts/src/) before `yarn build`; the Circom crate provides `generate-example-contracts` for a fixed example payload (see below).
 
 ## Local Environment Components
 
 - Local PolkaVM-compatible network configuration:
-  - `circom/contracts/hardhat.config.ts` (`hardhat`, `localPvm`, and `localEvm` network entries)
+  - [`circom/contracts/hardhat.config.ts`](../../contracts/hardhat.config.ts) (`hardhat`, `localPvm`, and `localEvm` network entries)
 - PolkaVM local node setup helper:
-  - `circom/contracts/bin/setup-dev-node.sh`
+  - [`circom/contracts/bin/setup-dev-node.sh`](../../contracts/bin/setup-dev-node.sh)
 - Build/deploy command scripts:
-  - `circom/contracts/package.json`
+  - [`circom/contracts/package.json`](../../contracts/package.json)
 - Example contract payload + generator CLI:
   - [`circom/example-contract-data.json`](../../example-contract-data.json)
   - `cargo run -p circom -- generate-example-contracts …` (documented in [`circom/README.md`](../../README.md))
 
 ## Expected Local Flow
 
-- Generate example Solidity contracts into `circom/contracts/src/` (required; not committed in git).
+- Generate example Solidity contracts into [`circom/contracts/src/`](../../contracts/src/) (required; not committed in git).
 - Prepare local node binaries (where needed).
 - Start local execution target.
-- Build contracts (`yarn build` from `circom/contracts`).
+- Build contracts (`yarn build` from [`circom/contracts`](../../contracts/)).
 - Deploy contracts to local target network.
 
 ## Proof-by-Demonstration Commands
 
-Use two directories: run **contract generation** from **`circom/`** (so `./templates/` resolves), then run **install / build / deploy** from **`circom/contracts/`** unless noted.
+Use two directories: run **contract generation** from **`circom/`** (so `./templates/` resolves), then run **install / build / deploy** from **[`circom/contracts/`](../../contracts/)** unless noted.
 
 ### 0) Generate example contracts (do this first)
 
@@ -61,7 +61,7 @@ Populated MockGroth16Verifier contract written to contracts/src/Groth16Verifier.
 
 See [`circom/README.md`](../../README.md) for the `ContractData` JSON shape if you need a custom payload.
 
-First-time Hardhat dependency install (once per machine), from the `circom/contracts` directory:
+First-time Hardhat dependency install (once per machine), from the [`circom/contracts`](../../contracts/) directory:
 
 ```bash
 yarn
@@ -71,7 +71,7 @@ The flows **A)** and **B)** below assume **0)** is already done.
 
 ### A) Local PolkaVM-compatible node flow
 
-Run node setup and Hardhat from **`circom/contracts`** (from repository root: `cd circom/contracts`).
+Run node setup and Hardhat from **[`circom/contracts`](../../contracts/)** (from repository root: `cd circom/contracts`).
 
 terminal 1:
 
@@ -177,7 +177,7 @@ ZKEmailVerifierModule#ZKEmailVerifier - 0x962c0940d72E7Db6c9a5F81f1cA87D8DB2B82A
 
 ### B) Local EVM flow (Anvil)
 
-Same prerequisite as **A)**: example contracts generated under `circom/contracts/src/`, and `yarn` run once from `circom/contracts` if needed.
+Same prerequisite as **A)**: example contracts generated under [`circom/contracts/src/`](../../contracts/src/), and `yarn` run once from [`circom/contracts`](../../contracts/) if needed.
 
 terminal 1:
 
@@ -297,4 +297,4 @@ ZKEmailVerifierModule#ZKEmailVerifier - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F05
 
 `Delivered`
 
-Conclusion: The deliverable "Working local setup capable of deploying contracts to Anvil and a local PolkaVM compatible node." is delivered: `hardhat.config.ts` defines `localEvm` (e.g. Anvil on `8545`) and `localPvm` (adapter RPC); this document records generating example contracts, then end-to-end setup, compile, and Ignition deploy commands with representative outputs for both paths.
+Conclusion: The deliverable "Working local setup capable of deploying contracts to Anvil and a local PolkaVM compatible node." is delivered: [`hardhat.config.ts`](../../contracts/hardhat.config.ts) defines `localEvm` (e.g. Anvil on `8545`) and `localPvm` (adapter RPC); this document records generating example contracts, then end-to-end setup, compile, and Ignition deploy commands with representative outputs for both paths.

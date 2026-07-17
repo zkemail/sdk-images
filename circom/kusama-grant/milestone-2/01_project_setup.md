@@ -28,15 +28,15 @@ Deliverable mapping: Milestone 2, Deliverable 1 (`Project Setup`).
 ## Contracts Project Structure
 
 - Hardhat config with PolkaVM/resolc support:
-  - `circom/contracts/hardhat.config.ts`
+  - [`circom/contracts/hardhat.config.ts`](../../contracts/hardhat.config.ts)
 - Foundry project config:
-  - `circom/contracts/foundry.toml`
+  - [`circom/contracts/foundry.toml`](../../contracts/foundry.toml)
 - Build scripts/toolchain dependencies:
-  - `circom/contracts/package.json`
+  - [`circom/contracts/package.json`](../../contracts/package.json)
 - Ignition deployment module:
-  - `circom/contracts/hh-ignition/modules/ZKEmailVerifier.ts`
+  - [`circom/contracts/hh-ignition/modules/ZKEmailVerifier.ts`](../../contracts/hh-ignition/modules/ZKEmailVerifier.ts)
 - Contracts and interfaces:
-  - `circom/contracts/src/`
+  - [`circom/contracts/src/`](../../contracts/src/)
 
 ## Command Entry Points
 
@@ -44,14 +44,14 @@ Deliverable mapping: Milestone 2, Deliverable 1 (`Project Setup`).
 - Deploy: `yarn deploy <chain_id>`
 - Verify (where supported): `yarn verify chain-<chain_id>`
 
-These scripts are defined in `circom/contracts/package.json`.
+These scripts are defined in [`circom/contracts/package.json`](../../contracts/package.json).
 
 ## Related Documentation
 
 - Contracts package overview and usage:
-  - `circom/contracts/README.md`
+  - [`circom/contracts/README.md`](../../contracts/README.md)
 - Grant index for milestone docs:
-  - `circom/kusama-grant/README.md`
+  - [`circom/kusama-grant/README.md`](../README.md)
 
 ## Status
 

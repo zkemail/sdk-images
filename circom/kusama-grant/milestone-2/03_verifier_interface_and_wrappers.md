@@ -14,7 +14,7 @@ Deliverable mapping: Milestone 2, Deliverable 3 (`Verifier Interface and Wrapper
   - [`IDKIMRegistry`](../../contracts/src/interfaces/IDKIMRegistry.sol): `isKeyHashValid(domainHash, keyHash)` before accepting the proof’s public key hash.
   - `IGroth16Verifier` / `Groth16Verifier`: generated alongside the blueprint’s proving key; `verifyProof` takes decoded Groth16 `(pA, pB, pC)` and a fixed-size public-signals array aligned with the circuit.
 - **Proof preparation in-contract:** `verify` checks public-input count, validates the DKIM key hash at a fixed offset in `publicInputs`, `abi.decode`s the calldata proof into Groth16 points, copies `bytes32[]` into `uint256[]` for the underlying verifier, then calls `verifyProof`.
-- **What is committed vs generated:** Stable, repo-tracked artifacts are the integrator-facing [`IZKEmailVerifier`](../../contracts/src/interfaces/IZKEmailVerifier.sol) and [`IDKIMRegistry`](../../contracts/src/interfaces/IDKIMRegistry.sol). Per-blueprint outputs (`ZKEmailVerifier.sol`, `Groth16Verifier.sol`, and `IGroth16Verifier.sol` under `circom/contracts/src/`) are **not** committed (see repository root [`.gitignore`](../../../.gitignore)); they are produced when a blueprint is built and exist only in working trees / distribution zips, not as canonical source in git.
+- **What is committed vs generated:** Stable, repo-tracked artifacts are the integrator-facing [`IZKEmailVerifier`](../../contracts/src/interfaces/IZKEmailVerifier.sol) and [`IDKIMRegistry`](../../contracts/src/interfaces/IDKIMRegistry.sol). Per-blueprint outputs (`ZKEmailVerifier.sol`, `Groth16Verifier.sol`, and `IGroth16Verifier.sol` under [`circom/contracts/src/`](../../contracts/src/)) are **not** committed (see repository root [`.gitignore`](../../../.gitignore)); they are produced when a blueprint is built and exist only in working trees / distribution zips, not as canonical source in git.
 - **Tests:** [`test/DKIMRegistryMock.sol`](../../contracts/test/DKIMRegistryMock.sol) implements `IDKIMRegistry` for local or Foundry-style tests.
 
 ## Verification flow (high level)
@@ -55,10 +55,10 @@ Deliverable mapping: Milestone 2, Deliverable 3 (`Verifier Interface and Wrapper
 ## Evidence standard for this deliverable
 
 - On-chain integration surface is defined by the committed `IZKEmailVerifier` (and `IDKIMRegistry` for registry calls).
-- Wrapper behavior and Groth16 coupling are defined by the Tera templates and `contract.rs` generation path; generated Solidity under `circom/contracts/src/` is evidence only after a blueprint build, not a git-tracked canonical file.
+- Wrapper behavior and Groth16 coupling are defined by the Tera templates and `contract.rs` generation path; generated Solidity under [`circom/contracts/src/`](../../contracts/src/) is evidence only after a blueprint build, not a git-tracked canonical file.
 
 ## Status
 
 `Delivered`
 
-Conclusion: Generic verifier-facing interfaces are committed in `circom/contracts`; the Groth16 + DKIM wrapper is specified by templates and emitted per blueprint (not committed). Multi-proof-system coverage beyond Groth16 is out of scope for this delivery.
+Conclusion: Generic verifier-facing interfaces are committed in [`circom/contracts`](../../contracts/); the Groth16 + DKIM wrapper is specified by templates and emitted per blueprint (not committed). Multi-proof-system coverage beyond Groth16 is out of scope for this delivery.
