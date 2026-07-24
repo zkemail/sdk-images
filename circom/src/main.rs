@@ -656,6 +656,7 @@ mod tests {
             external_inputs: vec![],
             signal_size: 8,
             prover_eth_address_idx: 4,
+            public_key_hash_offset: 0,
         };
         create_zkemail_verifier_and_interface_at_paths(
             &contract_data,

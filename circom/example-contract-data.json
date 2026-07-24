@@ -17,5 +17,6 @@
     }
   ],
   "signal_size": 8,
-  "prover_eth_address_idx": 7
+  "prover_eth_address_idx": 7,
+  "public_key_hash_offset": 0
 }

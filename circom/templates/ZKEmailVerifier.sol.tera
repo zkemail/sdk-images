@@ -23,7 +23,7 @@ contract ZKEmailVerifier is IZKEmailVerifier {
     /**
      * @notice Public key hash offset in the public inputs array
      */
-    uint256 public constant PUBLIC_KEY_HASH_OFFSET = 0;
+    uint256 public constant PUBLIC_KEY_HASH_OFFSET = {{ public_key_hash_offset }};
     /**
      * @notice Public inputs length (number of public inputs for the circuit)
      */

@@ -17,6 +17,12 @@ pub struct ContractData {
     pub external_inputs: Vec<Field>,
     pub signal_size: usize,
     pub prover_eth_address_idx: usize,
+    /// Index of the DKIM public key hash within the circuit's public signals. Only ever
+    /// non-zero when header and/or body masking is enabled, since `maskedHeader`/`maskedBody`
+    /// are then declared (and thus become public outputs) ahead of `pubkeyHash` in
+    /// `template.circom.tera`.
+    #[serde(default)]
+    pub public_key_hash_offset: usize,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,6 +50,10 @@ pub fn create_zkemail_verifier_contract_at_path(
     context.insert(
         "prover_eth_address_idx",
         &contract_data.prover_eth_address_idx,
+    );
+    context.insert(
+        "public_key_hash_offset",
+        &contract_data.public_key_hash_offset,
     );
 
     let rendered_contract = tera.render("Contract.sol", &context)?;
@@ -122,8 +132,19 @@ pub fn create_mock_groth16_verifier_at_path(
 }
 
 pub fn prepare_contract_data(payload: &Payload) -> ContractData {
-    let mut signal_size = 1 + 1 + 2; // For pubkey, proverETHAddress and sha256 hash of header
-    let mut current_idx = 1;
+    // `maskedHeader`/`maskedBody` are declared (and thus become public outputs) ahead of
+    // `pubkeyHash` in template.circom.tera whenever masking is enabled, shifting where the DKIM
+    // public key hash actually lands in the circuit's public signals.
+    let mut public_key_hash_offset = 0usize;
+    if payload.blueprint.enable_header_masking {
+        public_key_hash_offset += payload.blueprint.email_header_max_length as usize;
+    }
+    if payload.blueprint.enable_body_masking && !payload.blueprint.ignore_body_hash_check {
+        public_key_hash_offset += payload.blueprint.email_body_max_length as usize;
+    }
+
+    let mut signal_size = 1 + 1 + 2 + public_key_hash_offset; // pubkeyHash(1) + proverETHAddress(1) + headerHashHi/Lo(2) + masking(offset)
+    let mut current_idx = 1 + 2 + public_key_hash_offset; // pubkeyHash(1) + headerHashHi/Lo(2) + masking(offset); proverETHAddress accounted separately below
 
     let mut values = Vec::new();
     for regex in &payload.blueprint.decomposed_regexes {
@@ -176,6 +197,7 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
         external_inputs,
         signal_size,
         prover_eth_address_idx,
+        public_key_hash_offset,
     }
 }
 
@@ -442,6 +464,12 @@ mod tests {
 
         let data = prepare_contract_data(&payload);
         assert_eq!(data.signal_size, 7);
+        // pubkeyHash(1) + headerHashHi/Lo(2) precede the first regex output at index 3.
+        assert_eq!(data.values[0].start_idx, 3);
+        // ... + the regex's own 1-signal packed part (max_length 20) puts proverETHAddress at 4.
+        assert_eq!(data.prover_eth_address_idx, 4);
+        // ... + proverETHAddress itself (1) puts the external input at 5.
+        assert_eq!(data.external_inputs[0].start_idx, 5);
     }
 
     #[test]
@@ -470,6 +498,73 @@ mod tests {
 
         let data = prepare_contract_data(&payload);
         assert_eq!(data.signal_size, 5);
+    }
+
+    #[test]
+    fn prepare_contract_data_public_key_hash_offset_is_zero_without_masking() {
+        let payload = payload_with(vec![], vec![]);
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.public_key_hash_offset, 0);
+    }
+
+    #[test]
+    fn prepare_contract_data_offsets_public_key_hash_when_header_masking_enabled() {
+        let mut payload = payload_with(vec![], vec![]);
+        payload.blueprint.enable_header_masking = true;
+        // email_header_max_length is 1024 in payload_with's fixture.
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.public_key_hash_offset, 1024);
+        assert_eq!(data.signal_size, 4 + 1024);
+    }
+
+    #[test]
+    fn prepare_contract_data_offsets_public_key_hash_when_body_masking_enabled() {
+        let mut payload = payload_with(vec![], vec![]);
+        payload.blueprint.ignore_body_hash_check = false;
+        payload.blueprint.enable_body_masking = true;
+        payload.blueprint.email_body_max_length = 1536;
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.public_key_hash_offset, 1536);
+        assert_eq!(data.signal_size, 4 + 1536);
+    }
+
+    #[test]
+    fn prepare_contract_data_ignores_body_masking_when_body_hash_check_is_ignored() {
+        // maskedBody is only declared inside the `not ignore_body_hash_check` block in
+        // template.circom.tera, so enabling body masking has no effect while the body hash
+        // check itself is ignored.
+        let mut payload = payload_with(vec![], vec![]);
+        payload.blueprint.enable_body_masking = true;
+        payload.blueprint.email_body_max_length = 1536;
+        assert!(payload.blueprint.ignore_body_hash_check);
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.public_key_hash_offset, 0);
+    }
+
+    #[test]
+    fn prepare_contract_data_ignores_body_masking_when_header_masking_also_enabled() {
+        // Regression guard: the two masking flags must be checked independently, not chained
+        // as if/else off the same branch. Both enabled, but body-hash-check ignored, should
+        // suppress only the body-masking contribution while still applying header masking.
+        let mut payload = payload_with(vec![], vec![]);
+        payload.blueprint.enable_header_masking = true;
+        payload.blueprint.enable_body_masking = true;
+        payload.blueprint.email_body_max_length = 1536;
+        assert!(payload.blueprint.ignore_body_hash_check);
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.public_key_hash_offset, 1024);
+    }
+
+    #[test]
+    fn prepare_contract_data_offsets_public_key_hash_when_both_masking_enabled() {
+        let mut payload = payload_with(vec![], vec![]);
+        payload.blueprint.ignore_body_hash_check = false;
+        payload.blueprint.enable_header_masking = true;
+        payload.blueprint.enable_body_masking = true;
+        payload.blueprint.email_body_max_length = 1536;
+        let data = prepare_contract_data(&payload);
+        assert_eq!(data.public_key_hash_offset, 1024 + 1536);
+        assert_eq!(data.signal_size, 4 + 1024 + 1536);
     }
 
     #[test]
