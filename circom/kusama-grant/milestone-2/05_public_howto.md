@@ -216,8 +216,6 @@ populate the `.env` with the test values:
 DKIM_REGISTRY=0x70997970C51812dc3A010C7d01b50e0d17dc79C8
 ```
 
-No `PRIVATE_KEY` needed: with none set, Hardhat uses Anvil's default unlocked account #0 (same as the `localPvm` flow, and the same convention as [`polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template)). Set `PRIVATE_KEY` in `.env` only if you want to deploy from a specific account.
-
 terminal 2:
 
 ```bash
