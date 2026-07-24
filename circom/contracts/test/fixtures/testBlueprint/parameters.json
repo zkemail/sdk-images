@@ -1,0 +1,41 @@
+{
+  "title": "test_0001",
+  "description": "test_0001",
+  "slug": "zkemailverify/test_0001_2",
+  "email_query": "from:x.com",
+  "circuit_name": "test_0001_2",
+  "ignore_body_hash_check": true,
+  "sender_domain": "x.com",
+  "client_zk_framework": 1,
+  "server_zk_framework": 1,
+  "is_public": true,
+  "decomposed_regexes": [
+    {
+      "name": "email_sender",
+      "location": "header",
+      "max_match_length": 109,
+      "parts": [
+        {
+          "is_public": false,
+          "regex_def": "(?:\r\n|^)from:"
+        },
+        {
+          "is_public": false,
+          "regex_def": "(?:[^\r\n]+<)?"
+        },
+        {
+          "is_public": true,
+          "regex_def": "[A-Za-z0-9!#$%&'*\\+\\-/=\\?\\^_`{\\|}~\\.]+@[A-Za-z0-9\\.-]+",
+          "max_length": 64
+        },
+        {
+          "is_public": false,
+          "regex_def": ">?\r\n"
+        }
+      ],
+      "max_length": 64
+    }
+  ],
+  "version": 3,
+  "email_header_max_length": 960
+}
