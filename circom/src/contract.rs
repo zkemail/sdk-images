@@ -143,8 +143,8 @@ pub fn prepare_contract_data(payload: &Payload) -> ContractData {
         public_key_hash_offset += payload.blueprint.email_body_max_length as usize;
     }
 
-    let mut signal_size = 1 + 1 + 2 + public_key_hash_offset; // For pubkey, proverETHAddress, sha256 hash of header, and any masking outputs ahead of pubkeyHash
-    let mut current_idx = 1 + public_key_hash_offset;
+    let mut signal_size = 1 + 1 + 2 + public_key_hash_offset; // pubkeyHash(1) + proverETHAddress(1) + headerHashHi/Lo(2) + masking(offset)
+    let mut current_idx = 1 + 2 + public_key_hash_offset; // pubkeyHash(1) + headerHashHi/Lo(2) + masking(offset); proverETHAddress accounted separately below
 
     let mut values = Vec::new();
     for regex in &payload.blueprint.decomposed_regexes {
@@ -464,6 +464,12 @@ mod tests {
 
         let data = prepare_contract_data(&payload);
         assert_eq!(data.signal_size, 7);
+        // pubkeyHash(1) + headerHashHi/Lo(2) precede the first regex output at index 3.
+        assert_eq!(data.values[0].start_idx, 3);
+        // ... + the regex's own 1-signal packed part (max_length 20) puts proverETHAddress at 4.
+        assert_eq!(data.prover_eth_address_idx, 4);
+        // ... + proverETHAddress itself (1) puts the external input at 5.
+        assert_eq!(data.external_inputs[0].start_idx, 5);
     }
 
     #[test]
