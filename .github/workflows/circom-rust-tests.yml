@@ -1,0 +1,46 @@
+name: Circom Rust tests
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'circom/**'
+      - 'sdk-utils/**'
+      - 'Cargo.toml'
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install circom
+        run: |
+          git clone https://github.com/iden3/circom.git /tmp/circom-src
+          cd /tmp/circom-src
+          git checkout tags/v2.1.9 -b v2.1.9
+          cargo build --release
+          cargo install --path circom
+
+      - name: Run circom crate tests
+        # --test-threads=1: several tests share a hardcoded ./tmp working directory
+        # (via prepare_contract_data's setup()/cleanup()), so running them in parallel
+        # races on that shared state. Serializing avoids the race; these tests aren't
+        # on a fast feedback loop, so the extra time is an acceptable trade-off over
+        # refactoring the shared tmp-dir handling.
+        run: cargo test -p circom -- --test-threads=1
