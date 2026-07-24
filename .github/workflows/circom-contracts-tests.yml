@@ -14,10 +14,10 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Set Node.js 18.x
+      - name: Set Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Install Yarn dependencies
         working-directory: ./circom/contracts
