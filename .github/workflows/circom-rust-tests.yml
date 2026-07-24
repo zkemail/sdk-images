@@ -58,4 +58,4 @@ jobs:
         # ./tmp) was getting the job cancelled ~7-8 min in on every attempt: target/ alone
         # runs to ~16GB on a cold build, comfortably over the 14GB disk budget on standard
         # GitHub-hosted runners. See ZK-1454 for bringing the full suite back within budget.
-        run: cargo test -p circom contract::
+        run: cargo test -p circom "contract::"
