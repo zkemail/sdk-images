@@ -37,13 +37,18 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install protoc
+        # Required by prost-wkt-types' build script (a transitive dependency); without it,
+        # compiling the crate's own test binary fails before any test runs.
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
       - name: Install circom
+        # Prebuilt binary (matches circom/Dockerfile's pinned v2.1.9) instead of building from
+        # source: ~seconds instead of ~2 minutes for a cold `cargo build --release` of circom
+        # itself, which has nothing to do with this crate's own build cache.
         run: |
-          git clone https://github.com/iden3/circom.git /tmp/circom-src
-          cd /tmp/circom-src
-          git checkout tags/v2.1.9 -b v2.1.9
-          cargo build --release
-          cargo install --path circom
+          curl -L -o /usr/local/bin/circom https://github.com/iden3/circom/releases/download/v2.1.9/circom-linux-amd64
+          chmod +x /usr/local/bin/circom
 
       - name: Run circom crate tests
         # --test-threads=1: several tests share a hardcoded ./tmp working directory
