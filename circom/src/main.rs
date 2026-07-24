@@ -955,10 +955,10 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // ZK-1453: template.circom.tera's regex call site is hardcoded to a single
-              // capture group, so any regex with 2+ public parts (like this blueprint's
-              // EmailSubject) fails to compile with a circom TAC01 arity error. Pre-existing,
-              // unrelated to this crate's Rust logic.
+    #[ignore] // ZK-1453 (https://linear.app/zk-email/issue/ZK-1453): template.circom.tera's
+              // regex call site is hardcoded to a single capture group, so any regex with 2+
+              // public parts (like this blueprint's EmailSubject) fails to compile with a
+              // circom TAC01 arity error. Pre-existing, unrelated to this crate's Rust logic.
     async fn test_compile_circuit_kraken() {
         let blueprint = Blueprint {
             internal_version: "v2".to_string(),
