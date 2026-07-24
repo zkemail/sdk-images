@@ -264,6 +264,14 @@ ZKEmailVerifierModule#ZKEmailVerifier - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F05
 ✨  Done in 2.26s.
 ```
 
+## Want a real (non-mock) example instead of the local walkthrough above?
+
+Steps 4 and 5 above use `MockGroth16Verifier` so the local flow has no external dependencies (no circuit compile, no trusted setup). For a concrete, reviewable example that instead uses a real Groth16 verifier and a real proof, see [`circom/contracts/test/TestBlueprintZKEmailVerifier.t.sol`](../../contracts/test/TestBlueprintZKEmailVerifier.t.sol) and [`circom/contracts/test/fixtures/testBlueprint/`](../../contracts/test/fixtures/testBlueprint/): a committed `ZKEmailVerifier` instance and a committed real snarkjs-generated verifier (both copied verbatim from a real blueprint's own generated output), run end-to-end through `verify()` against a real proof, with no mock involved. Run it with:
+
+```bash
+cd circom/contracts && forge test --match-path "test/TestBlueprintZKEmailVerifier.t.sol" -vvv
+```
+
 ## Reusable public template
 
 As a community-facing outcome of this milestone, the generic project structure and dual-target (EVM + PolkaVM) tooling are published as a standalone GitHub template repository: [`zkemail/polkavm-hardhat-template`](https://github.com/zkemail/polkavm-hardhat-template). It strips the ZK Email-specific verifier contracts and ships a minimal `Counter` example, so anyone can click **"Use this template"** and deploy Solidity to both EVM and PolkaVM with Hardhat + `resolc` + Foundry. Its README documents local PolkaVM / Anvil flows, testnet deploy (create-and-fund-a-wallet), and the PolkaVM source-verification tooling gap.
