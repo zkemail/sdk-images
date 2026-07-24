@@ -52,9 +52,10 @@ jobs:
           chmod +x /usr/local/bin/circom
 
       - name: Run circom crate tests
-        # --test-threads=1: several tests share a hardcoded ./tmp working directory
-        # (via prepare_contract_data's setup()/cleanup()), so running them in parallel
-        # races on that shared state. Serializing avoids the race; these tests aren't
-        # on a fast feedback loop, so the extra time is an acceptable trade-off over
-        # refactoring the shared tmp-dir handling.
-        run: cargo test -p circom -- --test-threads=1
+        # Scoped to contract:: only (fast, pure-Rust unit tests, no circom/yarn involved).
+        # The full suite (including main.rs's test_compile_circuit_* integration tests,
+        # each of which does a real circom compile + a fresh `yarn install` into a shared
+        # ./tmp) was getting the job cancelled ~7-8 min in on every attempt: target/ alone
+        # runs to ~16GB on a cold build, comfortably over the 14GB disk budget on standard
+        # GitHub-hosted runners. See ZK-1454 for bringing the full suite back within budget.
+        run: cargo test -p circom contract::
