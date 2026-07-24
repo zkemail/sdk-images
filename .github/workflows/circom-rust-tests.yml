@@ -9,6 +9,14 @@ on:
       - 'circom/**'
       - 'sdk-utils/**'
       - 'Cargo.toml'
+  pull_request:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'circom/**'
+      - 'sdk-utils/**'
+      - 'Cargo.toml'
   workflow_dispatch: {}
 
 jobs:
