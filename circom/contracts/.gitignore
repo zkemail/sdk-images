@@ -6,7 +6,14 @@ out
 # hardhat directories
 hh-artifacts
 hh-cache
-hh-ignition/deployments
+
+# local-only Ignition deployments (not real networks, not evidentiary):
+# chain-31337 is the localEvm network's default Anvil/Hardhat chain id,
+# chain-420420420 is the local PVM dev node (bin/dev-node + bin/eth-rpc, both
+# already ignored below). Real-network deployments (e.g. chain-420420417 /
+# Paseo) are committed, matching zk-email-verify's hh-ignition versioning policy.
+hh-ignition/deployments/chain-31337
+hh-ignition/deployments/chain-420420420
 
 # polkadot hardhat node binaries
 bin/dev-node
