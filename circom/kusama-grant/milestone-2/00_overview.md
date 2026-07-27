@@ -29,6 +29,7 @@ Primary Goal: Develop a reusable smart contract project with tooling supporting 
 - [`03_verifier_interface_and_wrappers.md`](./03_verifier_interface_and_wrappers.md)
 - [`04_template_and_tooling.md`](./04_template_and_tooling.md)
 - [`05_public_howto.md`](./05_public_howto.md)
+- [`06_e2e_demo.md`](./06_e2e_demo.md) -- additional evidence added in response to review, not itself a milestone deliverable
 
 ## Summary
 
