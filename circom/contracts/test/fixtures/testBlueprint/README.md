@@ -56,5 +56,5 @@ proof-decode/dispatch plumbing against real Groth16 verification math, not re-ex
 `DKIMRegistry`'s own logic, which already has its own dedicated test suite in `zk-email-verify`.
 Interface compatibility with a real, live-deployed `DKIMRegistry` is demonstrated separately,
 end-to-end, on Paseo, using this exact fixture deployed from
-[`src/e2e-demo/`](../../../src/e2e-demo/) -- see that directory's README and
-`kusama-grant/milestone-2/06_e2e_demo.md` for the deployment record.
+[`src/e2e-demo/`](../../../src/e2e-demo/) -- see that directory's README for the deployed
+addresses.

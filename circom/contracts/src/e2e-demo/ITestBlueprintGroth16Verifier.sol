@@ -6,7 +6,7 @@ pragma solidity ^0.8.30;
  * @notice Byte-for-byte copy of the committed test fixture at
  * test/fixtures/testBlueprint/ITestBlueprintGroth16Verifier.sol, sized to blueprint
  * f63c7198-76b1-413c-b785-7655ebdaaec1's 7-element public-signal layout. Deployed here to Paseo as
- * part of the milestone-2 E2E demo -- see ../../../kusama-grant/milestone-2/06_e2e_demo.md.
+ * part of the milestone-2 E2E demo -- see README.md in this directory for the deployed addresses.
  */
 interface ITestBlueprintGroth16Verifier {
     function verifyProof(
