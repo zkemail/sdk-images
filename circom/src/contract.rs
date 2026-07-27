@@ -602,4 +602,91 @@ mod tests {
         fs::remove_dir_all(&dir).ok();
     }
 
+    /// Regression guard (HIGH-04): the committed testBlueprint fixture
+    /// (`contracts/test/fixtures/testBlueprint/TestBlueprintZKEmailVerifier.sol`) is a frozen,
+    /// hand-copied snapshot of this generator's own output for a real blueprint - see that
+    /// fixture's README for full provenance. Nothing else regenerates it, so if
+    /// `prepare_contract_data` or `ZKEmailVerifier.sol.tera` changes, the frozen snapshot could
+    /// silently drift from what the generator now actually produces while still passing its own
+    /// test. This test re-derives the same blueprint config fresh on every run, re-renders the
+    /// real template, and asserts the load-bearing generated constants still match what's
+    /// committed.
+    #[test]
+    fn generated_zkemail_verifier_matches_committed_testblueprint_fixture() {
+        use super::create_zkemail_verifier_contract_at_path;
+
+        // Mirrors contracts/test/fixtures/testBlueprint/parameters.json's single
+        // `email_sender` decomposed regex (header, not hashed, one public part of max_length 64).
+        let payload = payload_with(
+            vec![DecomposedRegex {
+                name: "email_sender".to_string(),
+                max_match_length: 109,
+                location: "header".to_string(),
+                is_hashed: Some(false),
+                parts: vec![
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "(?:\r\n|^)from:".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: "(?:[^\r\n]+<)?".to_string(),
+                        max_length: None,
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(true),
+                        regex_def: "[A-Za-z0-9!#$%&'*\\+\\-/=\\?\\^_`{\\|}~\\.]+@[A-Za-z0-9\\.-]+"
+                            .to_string(),
+                        max_length: Some(64),
+                    },
+                    DecomposedRegexPart {
+                        is_public: Some(false),
+                        regex_def: ">?\r\n".to_string(),
+                        max_length: None,
+                    },
+                ],
+            }],
+            vec![],
+        );
+        // sender_domain "x.com" and ignore_body_hash_check true are already payload_with()'s
+        // defaults, matching parameters.json; header masking is disabled so
+        // email_header_max_length doesn't affect signal_size here.
+
+        let data = prepare_contract_data(&payload);
+
+        // Golden values from the committed fixture's constants.
+        assert_eq!(data.sender_domain, "x.com");
+        assert_eq!(data.public_key_hash_offset, 0);
+        assert_eq!(
+            data.signal_size, 7,
+            "PUBLIC_INPUTS_LENGTH would drift from the committed fixture's 7"
+        );
+
+        // Re-render the real template fresh and confirm the generated constant declarations
+        // match what's committed - this also catches ZKEmailVerifier.sol.tera regressions, not
+        // just prepare_contract_data ones.
+        let dir = std::env::temp_dir().join(format!(
+            "circom_generator_regression_test_{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let out_path = dir.join("ZKEmailVerifier.sol");
+        create_zkemail_verifier_contract_at_path(&data, out_path.to_str().unwrap()).unwrap();
+        let rendered = fs::read_to_string(&out_path).unwrap();
+        fs::remove_dir_all(&dir).ok();
+
+        assert!(
+            rendered.contains("uint256 public constant PUBLIC_KEY_HASH_OFFSET = 0;"),
+            "rendered template:\n{rendered}"
+        );
+        assert!(
+            rendered.contains("uint256 public constant PUBLIC_INPUTS_LENGTH = 7;"),
+            "rendered template:\n{rendered}"
+        );
+        assert!(
+            rendered.contains("bytes32 public constant DOMAIN_HASH = keccak256(bytes(\"x.com\"));"),
+            "rendered template:\n{rendered}"
+        );
+    }
 }
