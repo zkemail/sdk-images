@@ -10,12 +10,10 @@ import { IZKEmailVerifier } from "../interfaces/IZKEmailVerifier.sol";
  * @notice A byte-for-byte copy (only the relative import paths changed to match this directory)
  * of the committed test fixture at test/fixtures/testBlueprint/TestBlueprintZKEmailVerifier.sol
  * (sender domain x.com), deployed here to Paseo against the real, already-live DKIMRegistry from
- * milestone 1 -- see ../../../kusama-grant/milestone-2/06_e2e_demo.md for the deployment record and
- * bytecode-identity proof against the original fixture, and the fixture's own README.md for full
- * provenance of the contract and the real proof it's tested against.
- * @dev Not a per-blueprint generated artifact -- see
- * ../../../kusama-grant/milestone-2/03_verifier_interface_and_wrappers.md for how the production
- * `ZKEmailVerifier.sol` is generated per blueprint (and stays gitignored).
+ * milestone 1 -- see README.md in this directory for the deployed addresses, and the fixture's own
+ * README.md for full provenance of the contract and the real proof it's tested against.
+ * @dev Not a per-blueprint generated artifact -- production `ZKEmailVerifier.sol` is generated per
+ * blueprint and stays gitignored.
  */
 contract TestBlueprintZKEmailVerifier is IZKEmailVerifier {
     IDKIMRegistry public immutable DKIM_REGISTRY;

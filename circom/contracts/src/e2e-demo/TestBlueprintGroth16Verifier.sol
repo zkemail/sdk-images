@@ -14,9 +14,9 @@
 //
 // Byte-for-byte copy of the committed test fixture at
 // test/fixtures/testBlueprint/TestBlueprintGroth16Verifier.sol, deployed here to Paseo as part of
-// the milestone-2 E2E demo. See ../../../kusama-grant/milestone-2/06_e2e_demo.md for the
-// deployment record and bytecode-identity proof, and the fixture's own README.md for full
-// provenance (blueprint f63c7198-76b1-413c-b785-7655ebdaaec1, zkemailverify/test_0001_2).
+// the milestone-2 E2E demo. See README.md in this directory for the deployed addresses, and the
+// fixture's own README.md for full provenance (blueprint f63c7198-76b1-413c-b785-7655ebdaaec1,
+// zkemailverify/test_0001_2).
 //
 pragma solidity ^0.8.30;
 library Pairing {
