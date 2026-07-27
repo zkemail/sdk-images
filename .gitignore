@@ -5,7 +5,6 @@ circuit.zkey
 node_modules
 **/.env
 **/credentials.json
-artifacts
 regex
 logs
 config.json
