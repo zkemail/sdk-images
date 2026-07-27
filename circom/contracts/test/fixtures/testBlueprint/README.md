@@ -51,5 +51,8 @@ inspect one yourself.
 
 `TestBlueprintZKEmailVerifier`'s `PUBLIC_KEY_HASH_OFFSET = 0` is correct for this specific circuit (no
 header/body masking enabled) -- see the milestone docs for when that offset shifts. The DKIM registry
-check itself is mocked (`DKIMRegistryMock`) in the test; this fixture proves the proof-decode/dispatch
-plumbing, not DKIM-registry behavior, which is covered by `ZKEmailVerifier`'s own tests.
+check itself is mocked (`DKIMRegistryMock`) in the test, deliberately: this fixture's job is proving the
+proof-decode/dispatch plumbing against real Groth16 verification math, not re-exercising
+`DKIMRegistry`'s own logic, which already has its own dedicated test suite in `zk-email-verify`.
+Interface compatibility with a real, live-deployed `DKIMRegistry` is demonstrated separately,
+end-to-end, on Paseo -- see the milestone-2 E2E demo docs.
