@@ -12,7 +12,7 @@ This directory tracks delivery evidence for Kusama grant milestones related to t
 ## Current Status Snapshot
 
 - Milestone 2: `Delivered`
-- Milestone 3 (in this repository, deliverables 1-3): `Delivered`
+- Milestone 3 (in this repository, deliverables 1-3): `In Progress`
 
 ## Notes
 
