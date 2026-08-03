@@ -112,5 +112,7 @@ pub struct Blueprint {
     pub status: Option<Status>,
     pub verifier_contract_chain: Option<usize>,
     pub verifier_contract_address: Option<String>,
+    pub noir_verifier_contract_address_1024: Option<String>,
+    pub noir_verifier_contract_address_2048: Option<String>,
     pub version: Option<usize>,
 }

@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+import { IHonkVerifier } from "./interfaces/IHonkVerifier.sol";
+
+/**
+ * @title HonkVerifier (TEST MOCK)
+ * @notice Test-only mock Honk verifier. DO NOT deploy to production.
+ * @dev In production, this file is replaced by the real verifier generated from the circuit.
+ */
+contract HonkVerifier is IHonkVerifier {
+    /// @notice Controls whether `verify` returns true or false in this mock.
+    bool public shouldValidate = true;
+
+    /**
+     * @notice Sets whether proofs should be treated as valid in this mock.
+     * @dev This is intentionally unrestricted because the contract is test-only and not intended for production deployments.
+     */
+    function setShouldValidate(bool _value) external {
+        shouldValidate = _value;
+    }
+
+    /**
+     * @inheritdoc IHonkVerifier
+     */
+    function verify(bytes calldata, bytes32[] calldata)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return shouldValidate;
+    }
+}
+

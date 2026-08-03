@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.34;
+
+import { IDKIMRegistry } from "./interfaces/IDKIMRegistry.sol";
+import { IHonkVerifier } from "./interfaces/IHonkVerifier.sol";
+import { IZKEmailVerifier } from "./interfaces/IZKEmailVerifier.sol";
+
+/**
+ * @title ZKEmailVerifier
+ * @notice Concrete implementation of {IZKEmailVerifier} that verifies Honk proofs and DKIM public key hashes
+ * @dev See {IZKEmailVerifier} for the interface-level documentation.
+ */
+contract ZKEmailVerifier is IZKEmailVerifier {
+    /**
+     * @notice The DKIM registry contract used to verify the public key hash
+     */
+    IDKIMRegistry public immutable DKIM_REGISTRY;
+    /**
+     * @notice The Honk verifier contract used to verify the Honk proof
+     */
+    IHonkVerifier public immutable HONK_VERIFIER;
+
+    /**
+     * @notice Public key hash offset in the public inputs array
+     */
+    uint256 public constant PUBLIC_KEY_HASH_OFFSET = 0;
+    /**
+     * @notice Public inputs length (number of public inputs for the circuit)
+     */
+    uint256 public constant PUBLIC_INPUTS_LENGTH = {{ public_inputs_length }};
+    /**
+     * @notice Constant domain hash for dkim verification
+     */
+    bytes32 public constant DOMAIN_HASH = keccak256(bytes("{{ sender_domain }}"));
+
+    /**
+     * @param _dkimRegistry The IERC7969 compliant DKIM registry contract
+     * @param _honkVerifier The Honk verifier contract
+     */
+    constructor(IDKIMRegistry _dkimRegistry, IHonkVerifier _honkVerifier) {
+        if (address(_dkimRegistry) == address(0)) revert InvalidDKIMRegistry();
+        if (address(_honkVerifier) == address(0)) revert InvalidProofVerifier();
+        DKIM_REGISTRY = _dkimRegistry;
+        HONK_VERIFIER = _honkVerifier;
+    }
+
+    /**
+     * @inheritdoc IZKEmailVerifier
+     */
+    function verify(bytes calldata proof, bytes32[] calldata publicInputs) external view {
+        if (publicInputs.length != PUBLIC_INPUTS_LENGTH) {
+            revert InvalidPublicInputsLength(PUBLIC_INPUTS_LENGTH, publicInputs.length);
+        }
+        if (!DKIM_REGISTRY.isKeyHashValid(DOMAIN_HASH, publicInputs[PUBLIC_KEY_HASH_OFFSET])) {
+            revert InvalidPublicKey();
+        }
+
+        if (!HONK_VERIFIER.verify(proof, publicInputs)) revert InvalidProof();
+    }
+}
