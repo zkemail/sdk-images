@@ -16,7 +16,7 @@ Primary Goal: Extend the blueprint pipeline to support automated contract genera
 - Proof Formatting and Wrapper Integration Layer: `In Progress`
 - Blueprint Deployment System: `In Progress`
 
-**Milestone 3 (scope of this documentation):** `In Progress` -- evidence and CI links are still being finalized; see `TBD` markers in the per-deliverable docs.
+**Milestone 3 (scope of this documentation):** `In Progress` -- CI-run evidence is in place; a real pipeline-triggered Paseo deployment is still needed (see [`03_blueprint_deployment_system.md`](./03_blueprint_deployment_system.md)).
 
 ## Evidence index (this repository)
 
