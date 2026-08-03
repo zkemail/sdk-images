@@ -51,10 +51,14 @@ jobs:
           chmod +x /usr/local/bin/circom
 
       - name: Run circom crate tests
-        # Scoped to contract:: only (fast, pure-Rust unit tests, no circom/yarn involved).
-        # The full suite (including main.rs's test_compile_circuit_* integration tests,
-        # each of which does a real circom compile + a fresh `yarn install` into a shared
-        # ./tmp) was getting the job cancelled ~7-8 min in on every attempt: target/ alone
-        # runs to ~16GB on a cold build, comfortably over the 14GB disk budget on standard
-        # GitHub-hosted runners. See ZK-1454 for bringing the full suite back within budget.
-        run: cargo test -p circom "contract::"
+        # Scoped to contract:: and payload:: plus one named main.rs test, all fast
+        # pure-Rust unit tests with no circom/yarn involved. The full suite (including
+        # main.rs's test_compile_circuit_* integration tests, each of which does a real
+        # circom compile + a fresh `yarn install` into a shared ./tmp) was getting the
+        # job cancelled ~7-8 min in on every attempt: target/ alone runs to ~16GB on a
+        # cold build, comfortably over the 14GB disk budget on standard GitHub-hosted
+        # runners. See ZK-1454 for bringing the full suite back within budget.
+        run: |
+          cargo test -p circom "contract::"
+          cargo test -p circom "payload::"
+          cargo test -p circom test_contracts_bundle_and_zip_works
