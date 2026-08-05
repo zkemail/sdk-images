@@ -8,13 +8,13 @@ Public usage guide for the Milestone 2 ZK verifier contract tooling: generate th
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) installed for the local EVM (Anvil) flow.
 - macOS (arm64) or Linux (x86_64) for the bundled PolkaVM dev-node binaries.
 
-For the full command reference, environment variables, DKIM registry sourcing, and supported networks, see [`circom/contracts/README.md`](../../contracts/README.md).
+For the full command reference, environment variables, DKIM registry sourcing, and supported networks, see [`circom/contracts/README.md`](../../../contracts/README.md).
 
-Use two directories: run **contract generation** from **`circom/`** (so `./templates/` resolves), then run **install / build / deploy** from **[`circom/contracts/`](../../contracts/)** unless noted.
+Use two directories: run **contract generation** from **`circom/`** (so `./templates/` resolves), then run **install / build / deploy** from **[`circom/contracts/`](../../../contracts/)** unless noted.
 
 ## 2) Generate example contracts (do this first)
 
-`ZKEmailVerifier.sol`, `Groth16Verifier.sol` (mock), and `interfaces/IGroth16Verifier.sol` are **generated** (gitignored). Materialize them under [`circom/contracts/src/`](../../contracts/src/) before `yarn build`; the Circom crate provides `generate-example-contracts` for a fixed example payload.
+`ZKEmailVerifier.sol`, `Groth16Verifier.sol` (mock), and `interfaces/IGroth16Verifier.sol` are **generated** (gitignored). Materialize them under [`circom/contracts/src/`](../../../contracts/src/) before `yarn build`; the Circom crate provides `generate-example-contracts` for a fixed example payload.
 
 From the **`circom`** directory:
 
@@ -35,11 +35,11 @@ Populated ZKEmailVerifier contract written to contracts/src/ZKEmailVerifier.sol
 Populated MockGroth16Verifier contract written to contracts/src/Groth16Verifier.sol
 ```
 
-The default payload is [`circom/example-contract-data.json`](../../example-contract-data.json); see [`circom/README.md`](../../README.md) for the `ContractData` JSON shape if you need a custom one.
+The default payload is [`circom/example-contract-data.json`](../../../example-contract-data.json); see [`circom/README.md`](../../../README.md) for the `ContractData` JSON shape if you need a custom one.
 
 ## 3) Install dependencies
 
-First-time Hardhat dependency install (once per machine), from the [`circom/contracts`](../../contracts/) directory:
+First-time Hardhat dependency install (once per machine), from the [`circom/contracts`](../../../contracts/) directory:
 
 ```bash
 yarn
@@ -49,7 +49,7 @@ The flows in 4) and 5) below assume 2) and 3) are already done.
 
 ## 4) Local PolkaVM-compatible node flow
 
-Run node setup and Hardhat from **[`circom/contracts`](../../contracts/)** (from repository root: `cd circom/contracts`).
+Run node setup and Hardhat from **[`circom/contracts`](../../../contracts/)** (from repository root: `cd circom/contracts`).
 
 terminal 1:
 
@@ -155,7 +155,7 @@ ZKEmailVerifierModule#ZKEmailVerifier - 0x962c0940d72E7Db6c9a5F81f1cA87D8DB2B82A
 
 ## 5) Local EVM flow (Anvil)
 
-Same prerequisite as 4): example contracts generated under [`circom/contracts/src/`](../../contracts/src/), and `yarn` run once from [`circom/contracts`](../../contracts/) if needed.
+Same prerequisite as 4): example contracts generated under [`circom/contracts/src/`](../../../contracts/src/), and `yarn` run once from [`circom/contracts`](../../../contracts/) if needed.
 
 terminal 1:
 
@@ -264,7 +264,7 @@ ZKEmailVerifierModule#ZKEmailVerifier - 0xe7f1725E7734CE288F8367e1Bb143E90bb3F05
 
 ## Want a real (non-mock) example instead of the local walkthrough above?
 
-Steps 4 and 5 above use `MockGroth16Verifier` so the local flow has no external dependencies (no circuit compile, no trusted setup). For a concrete, reviewable example that instead uses a real Groth16 verifier and a real proof, see [`circom/contracts/test/TestBlueprintZKEmailVerifier.t.sol`](../../contracts/test/TestBlueprintZKEmailVerifier.t.sol) and [`circom/contracts/test/fixtures/testBlueprint/`](../../contracts/test/fixtures/testBlueprint/): a committed `ZKEmailVerifier` instance and a committed real snarkjs-generated verifier (both copied verbatim from a real blueprint's own generated output), run end-to-end through `verify()` against a real proof, with no mock involved. Run it with:
+Steps 4 and 5 above use `MockGroth16Verifier` so the local flow has no external dependencies (no circuit compile, no trusted setup). For a concrete, reviewable example that instead uses a real Groth16 verifier and a real proof, see [`circom/contracts/test/TestBlueprintZKEmailVerifier.t.sol`](../../../contracts/test/TestBlueprintZKEmailVerifier.t.sol) and [`circom/contracts/test/fixtures/testBlueprint/`](../../../contracts/test/fixtures/testBlueprint/): a committed `ZKEmailVerifier` instance and a committed real snarkjs-generated verifier (both copied verbatim from a real blueprint's own generated output), run end-to-end through `verify()` against a real proof, with no mock involved. Run it with:
 
 ```bash
 cd circom/contracts && forge test --match-path "test/TestBlueprintZKEmailVerifier.t.sol" -vvv

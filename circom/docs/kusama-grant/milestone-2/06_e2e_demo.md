@@ -7,7 +7,7 @@ live on Paseo, added in response to review feedback (not itself a milestone deli
 ## What this demonstrates
 
 The committed `testBlueprint` fixture (see
-[`test/fixtures/testBlueprint/README.md`](../../contracts/test/fixtures/testBlueprint/README.md))
+[`test/fixtures/testBlueprint/README.md`](../../../contracts/test/fixtures/testBlueprint/README.md))
 is normally exercised in Foundry against a mock registry, since the wrapper's own logic (proof
 decoding, offset math, the DKIM-gate call) is independent of which concrete `IDKIMRegistry` it's
 wired to. This demo removes that abstraction entirely: the exact fixture contracts are deployed to
@@ -24,8 +24,8 @@ Paseo and wired to the real, already-live milestone-1 `DKIMRegistry`
 | `DOMAIN_HASH` (wrapper constant) | `0xbbcc9f0af825b951a41a390086b09f7d8b4c4434d5315255b2ab6ffee1e8c781` (`keccak256("x.com")`), confirmed by reading it back on-chain |
 | Network | Polkadot Hub Testnet (Paseo Assethub), chain ID `420420417` |
 | `resolc` version | `0.5.0+commit.046455.llvm-18.1.8` |
-| Source | [`circom/contracts/src/e2e-demo/`](../../contracts/src/e2e-demo/) -- verbatim copy of the committed `test/fixtures/testBlueprint/` contracts (only relative import paths differ; no logic differs, confirmed by diff) |
-| Ignition module | [`hh-ignition/modules/E2EDemo.ts`](../../contracts/hh-ignition/modules/E2EDemo.ts) |
+| Source | [`circom/contracts/src/e2e-demo/`](../../../contracts/src/e2e-demo/) -- verbatim copy of the committed `test/fixtures/testBlueprint/` contracts (only relative import paths differ; no logic differs, confirmed by diff) |
+| Ignition module | [`hh-ignition/modules/E2EDemo.ts`](../../../contracts/hh-ignition/modules/E2EDemo.ts) |
 
 ## Bytecode Provenance
 
@@ -40,7 +40,7 @@ the on-chain code, and confirm the PolkaVM magic-byte prefix.
 ## Real Proof, Real Registry, Real Transaction
 
 `x.com`'s DKIM key hash (the exact value the fixture's real proof was built against -- see
-[`test/fixtures/testBlueprint/README.md`](../../contracts/test/fixtures/testBlueprint/README.md)
+[`test/fixtures/testBlueprint/README.md`](../../../contracts/test/fixtures/testBlueprint/README.md)
 for provenance of the proof itself) is registered in the real milestone-1 registry. `verify()` was
 called with the fixture's real proof and public inputs, submitted as an actual mined transaction
 (not just a read-only call) so it's independently inspectable without any tooling:

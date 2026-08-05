@@ -6,16 +6,16 @@ Milestone 2 templating and tooling: reusable Tera templates for the wrapper and 
 
 ### Solidity templates and generation
 
-- **Tera sources** under [`circom/templates/`](../../templates/):
-  - [`ZKEmailVerifier.sol.tera`](../../templates/ZKEmailVerifier.sol.tera): wrapper parameters (`signal_size`, `sender_domain`, regex / external-input metadata).
-  - [`IGroth16Verifier.sol.tera`](../../templates/IGroth16Verifier.sol.tera): verifier interface sized to the blueprint’s public-signal count.
-  - [`MockGroth16Verifier.sol.tera`](../../templates/MockGroth16Verifier.sol.tera): mock `Groth16Verifier.sol` for local / CI without a full `snarkjs` export.
-- **Rust entrypoints** in [`circom/src/contract.rs`](../../src/contract.rs): render templates to disk, optionally run [`generate_verifier_contract`](../../src/contract.rs) (`snarkjs zkey export solidityverifier`) for a **real** Groth16 verifier when a `.zkey` is available.
-- **Local / example path:** the `generate-example-contracts` CLI in [`circom/src/main.rs`](../../src/main.rs) (see [`02_local_environment.md`](./02_local_environment.md) and [`circom/README.md`](../../README.md)) writes mock verifier + wrapper + interface into [`circom/contracts/src/`](../../contracts/src/) without running the full pipeline.
+- **Tera sources** under [`circom/templates/`](../../../templates/):
+  - [`ZKEmailVerifier.sol.tera`](../../../templates/ZKEmailVerifier.sol.tera): wrapper parameters (`signal_size`, `sender_domain`, regex / external-input metadata).
+  - [`IGroth16Verifier.sol.tera`](../../../templates/IGroth16Verifier.sol.tera): verifier interface sized to the blueprint’s public-signal count.
+  - [`MockGroth16Verifier.sol.tera`](../../../templates/MockGroth16Verifier.sol.tera): mock `Groth16Verifier.sol` for local / CI without a full `snarkjs` export.
+- **Rust entrypoints** in [`circom/src/contract.rs`](../../../src/contract.rs): render templates to disk, optionally run [`generate_verifier_contract`](../../../src/contract.rs) (`snarkjs zkey export solidityverifier`) for a **real** Groth16 verifier when a `.zkey` is available.
+- **Local / example path:** the `generate-example-contracts` CLI in [`circom/src/main.rs`](../../../src/main.rs) (see [`02_local_environment.md`](./02_local_environment.md) and [`circom/README.md`](../../../README.md)) writes mock verifier + wrapper + interface into [`circom/contracts/src/`](../../../contracts/src/) without running the full pipeline.
 
 ### Deployment tooling
 
-- **Hardhat Ignition:** [`circom/contracts/hh-ignition/modules/ZKEmailVerifier.ts`](../../contracts/hh-ignition/modules/ZKEmailVerifier.ts) deploys `Groth16Verifier` then `ZKEmailVerifier` with `DKIM_REGISTRY` from the environment. Invoked via `yarn deploy <network>` from [`circom/contracts/package.json`](../../contracts/package.json) (EVM and PolkaVM-facing networks are configured in [`hardhat.config.ts`](../../contracts/hardhat.config.ts)).
+- **Hardhat Ignition:** [`circom/contracts/hh-ignition/modules/ZKEmailVerifier.ts`](../../../contracts/hh-ignition/modules/ZKEmailVerifier.ts) deploys `Groth16Verifier` then `ZKEmailVerifier` with `DKIM_REGISTRY` from the environment. Invoked via `yarn deploy <network>` from [`circom/contracts/package.json`](../../../contracts/package.json) (EVM and PolkaVM-facing networks are configured in [`hardhat.config.ts`](../../../contracts/hardhat.config.ts)).
 
 ### Verification tooling
 
