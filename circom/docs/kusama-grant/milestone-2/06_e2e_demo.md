@@ -2,7 +2,7 @@
 
 Real wrapper, real Groth16 verifier, real proof, and the real milestone-1 `DKIMRegistry` -- all
 live on Paseo, added in response to review feedback (not itself a milestone deliverable; see
-[`00_overview.md`](./00_overview.md) for the deliverables this milestone actually commits to).
+[`README.md`](./README.md) for the deliverables this milestone actually commits to).
 
 ## What this demonstrates
 
