@@ -12,16 +12,6 @@ Primary Goal: Develop a reusable smart contract project with tooling supporting 
 | 4 | Template and Tooling | Convert wrapper contracts into reusable templates and provide deployment and verification tooling for both environments. | Templated wrapper contracts, deployment scripts, and verification tooling. | Reusable Tera templates for the wrapper and verifier, with Hardhat Ignition deploy (`yarn deploy`) and `yarn verify`. **Proof:** [`04_template_and_tooling.md`](./04_template_and_tooling.md). |
 | 5 | Documentation | Include documentation with public how-tos. | Docs with usage instructions. | Public how-to with a runnable local generate/build/deploy flow, plus the contracts and Circom READMEs. **Proof:** [`05_public_howto.md`](./05_public_howto.md). |
 
-## Current Status
-
-- Project Setup: `Delivered`
-- Local Environment: `Delivered`
-- Verifier Interface and Wrappers: `Delivered`
-- Template and Tooling: `Delivered`
-- Documentation: `Delivered`
-
-**Milestone 2:** `Delivered`
-
 ## Evidence Index
 
 - [`01_project_setup.md`](./01_project_setup.md)

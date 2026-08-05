@@ -1,8 +1,20 @@
-# Milestone 3 - Verification Pipeline (Circom / contracts scope)
+# Milestone 3
 
-Primary Goal: Extend the blueprint pipeline to support automated contract generation, deployment, and on-chain verifier deployment for PolkaVM-oriented networks.
+Primary Goal: extend the Circom pipeline, SDK, and registry frontend to support automated PolkaVM verifier contract generation and deployment, and end-to-end on-chain proof verification.
 
-## Deliverables (this repository)
+Milestone 3 spans five deliverables across three repositories:
+
+| # | Name | Repository | Evidence |
+| --- | --- | --- | --- |
+| 1 | Circom Pipeline Integration | sdk-images | [`01_circom_pipeline_integration.md`](https://github.com/zkemail/sdk-images/blob/kusama-grant/circom/docs/kusama-grant/milestone-3/01_circom_pipeline_integration.md) |
+| 2 | Proof Formatting and Wrapper Integration Layer | sdk-images | [`02_proof_formatting_and_wrapper_integration.md`](https://github.com/zkemail/sdk-images/blob/kusama-grant/circom/docs/kusama-grant/milestone-3/02_proof_formatting_and_wrapper_integration.md) |
+| 3 | Blueprint Deployment System | sdk-images | [`03_blueprint_deployment_system.md`](https://github.com/zkemail/sdk-images/blob/kusama-grant/circom/docs/kusama-grant/milestone-3/03_blueprint_deployment_system.md) |
+| 4 | SDK On-Chain Verification | zk-email-sdk-js | [`04_sdk_on_chain_verification.md`](https://github.com/zkemail/zk-email-sdk-js/blob/kusama-grant/docs/kusama-grant/milestone-3/04_sdk_on_chain_verification.md) |
+| 5 | Frontend Integration & Documentation | registry | [`05_frontend_integration_and_documentation.md`](https://github.com/zkemail/registry/blob/kusama-grant/docs/kusama-grant/milestone-3/05_frontend_integration_and_documentation.md) |
+
+## In this repository (sdk-images)
+
+Deliverables 1-3 (Circom/contracts scope):
 
 | # | Name | Description | Deliverable | What was done / Proof |
 | --- | --- | --- | --- | --- |
@@ -10,15 +22,7 @@ Primary Goal: Extend the blueprint pipeline to support automated contract genera
 | 2 | Proof Formatting and Wrapper Integration Layer | Implement proof formatting, serialization, and integration logic to ensure compatibility between Circom-generated proofs and the verifier wrapper contracts, enabling seamless on-chain verification. | Proof formatting and integration layer enabling compatibility between Circom-generated proofs and on-chain verifier contracts. | Templated `ZKEmailVerifier` wrapper decodes Groth16 proofs and public inputs; the wrapper/verifier Solidity itself is rendered from `ContractData` (signal size, public-key-hash offset) via `create_zkemail_verifier_and_interface_at_paths`, gated on the DKIM key hash. **Proof:** [`02_proof_formatting_and_wrapper_integration.md`](./02_proof_formatting_and_wrapper_integration.md). |
 | 3 | Blueprint Deployment System | Extend the blueprint system to support configurable target chains and automate contract generation and deployment for new blueprints. | Blueprint pipeline supporting automatic contract generation and deployment. | Chain id from the blueprint payload selects the Ignition network; the deployed verifier address is read back from Ignition's output and persisted to the blueprint record. **Proof:** [`03_blueprint_deployment_system.md`](./03_blueprint_deployment_system.md). |
 
-## Current Status
-
-- Circom Pipeline Integration: `In Progress`
-- Proof Formatting and Wrapper Integration Layer: `In Progress`
-- Blueprint Deployment System: `In Progress`
-
-**Milestone 3 (scope of this documentation):** `In Progress` -- CI-run evidence is in place; a real pipeline-triggered Paseo deployment is still needed (see [`03_blueprint_deployment_system.md`](./03_blueprint_deployment_system.md)).
-
-## Evidence index (this repository)
+Local evidence index:
 
 - [`01_circom_pipeline_integration.md`](./01_circom_pipeline_integration.md)
 - [`02_proof_formatting_and_wrapper_integration.md`](./02_proof_formatting_and_wrapper_integration.md)
