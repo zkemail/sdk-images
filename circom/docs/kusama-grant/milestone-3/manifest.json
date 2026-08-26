@@ -1,0 +1,30 @@
+{
+  "repo": "sdk-images",
+  "updated_at": "2026-08-26T20:00:00Z",
+  "branch": "staging",
+  "commit_sha": "e019d3a3dd3b3da572ad267526e48dfe6edacda5",
+  "ci": {
+    "circom-rust-tests.yml": {
+      "job": "test",
+      "run_url": "https://github.com/zkemail/sdk-images/actions/runs/30817776514/job/91699698934",
+      "date": "2026-08-03"
+    },
+    "circom-contracts-tests.yml": {
+      "job": "run_contracts_tests",
+      "run_url": "https://github.com/zkemail/sdk-images/actions/runs/30265748763/job/89975888650",
+      "date": "2026-07-27"
+    }
+  },
+  "reference_blueprint": {
+    "id": "e94e7f93-7575-4e26-a147-de894b19ce3e",
+    "slug": "zkemailverify/kusama_grant_paseo_e2e",
+    "compile_timestamp": "2026-08-03T17:40:26Z",
+    "generator_commit": "a6e5c43",
+    "circuit_zip_sha256": "edc4a3b89b7699911c2b402fdf0a64ac3a1091b240c70420534bb4bec9f40592",
+    "circuit_zkey_sha256": "e8358bbc0c70db9f3d76ed92473dcf6c1e8de5b8a3e1fb2ea7f13778a75c34fe",
+    "verifier_contract_chain": 420420417,
+    "verifier_contract_address": "0x72616B78d29d0cccBfEec1bf00E108885286D2f3",
+    "verifier_deployment_tx": "0x2de5759fc470311c6ef5be16855fbaee095725c3f3fb671fc31da422300d344e",
+    "proof_verify_tx": "0xb866a4b151dfba6838ba31275afc5dbc9e45b16918f1c6a69fab1d7592364934"
+  }
+}
