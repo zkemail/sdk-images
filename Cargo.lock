@@ -735,7 +735,7 @@ dependencies = [
  "sqlx",
  "tera",
  "tokio",
- "zk-regex-compiler 2.0.0-alpha.2 (git+https://github.com/zkemail/zk-regex?rev=7e62e6dc2a07ba96c53ea3a1ff95a69855938c07)",
+ "zk-regex-compiler",
 ]
 
 [[package]]
@@ -841,7 +841,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 [[package]]
 name = "comptime"
 version = "0.1.0"
-source = "git+https://github.com/jp4g/sparse_array?branch=feat%2Fcomptime-codegen#36d5251606d1044759de79b941b0d5d0600c695d"
+source = "git+https://github.com/jp4g/sparse_array?rev=36d5251606d1044759de79b941b0d5d0600c695d#36d5251606d1044759de79b941b0d5d0600c695d"
 dependencies = [
  "hex",
  "lazy_static",
@@ -3308,7 +3308,7 @@ dependencies = [
  "sqlx",
  "tera",
  "tokio",
- "zk-regex-compiler 2.0.0-alpha.2 (git+https://github.com/zkemail/zk-regex?rev=7e62e6dc2a07ba96c53ea3a1ff95a69855938c07)",
+ "zk-regex-compiler",
 ]
 
 [[package]]
@@ -4592,7 +4592,7 @@ checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 [[package]]
 name = "relayer-utils"
 version = "0.4.62-21"
-source = "git+https://github.com/zkemail/relayer-utils?rev=fecd55f#fecd55f99c91feb823fd85c28da08a39df6c5718"
+source = "git+https://github.com/zkemail/relayer-utils?rev=c6be1667aa46e24ad3d339ba5951c83d96a5ca3d#c6be1667aa46e24ad3d339ba5951c83d96a5ca3d"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4631,7 +4631,7 @@ dependencies = [
  "thiserror 1.0.69",
  "wasm-bindgen",
  "wasm-bindgen-futures",
- "zk-regex-compiler 2.0.0-alpha.2 (git+https://github.com/zkemail/zk-regex?rev=a2ce67ff8ae667bc7846cf8920d7d866f2f02d4c)",
+ "zk-regex-compiler",
 ]
 
 [[package]]
@@ -7944,25 +7944,8 @@ dependencies = [
 
 [[package]]
 name = "zk-regex-compiler"
-version = "2.0.0-alpha.2"
-source = "git+https://github.com/zkemail/zk-regex?rev=7e62e6dc2a07ba96c53ea3a1ff95a69855938c07#7e62e6dc2a07ba96c53ea3a1ff95a69855938c07"
-dependencies = [
- "clap",
- "comptime",
- "heck 0.5.0",
- "regex-automata",
- "regex-syntax",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "thiserror 2.0.17",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "zk-regex-compiler"
-version = "2.0.0-alpha.2"
-source = "git+https://github.com/zkemail/zk-regex?rev=a2ce67ff8ae667bc7846cf8920d7d866f2f02d4c#a2ce67ff8ae667bc7846cf8920d7d866f2f02d4c"
+version = "3.0.0-alpha.1"
+source = "git+https://github.com/zkemail/zk-regex?tag=3.0.0-alpha.1#89a4adb990b6288e02385fa63080af31d664bbd9"
 dependencies = [
  "clap",
  "comptime",
