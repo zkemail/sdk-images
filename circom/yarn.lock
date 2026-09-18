@@ -61,6 +61,14 @@
     commander "^11.0.0"
     snarkjs "^0.7.5"
 
+"@zk-email/zk-regex-circom@3.0.0-alpha.1":
+  version "3.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@zk-email/zk-regex-circom/-/zk-regex-circom-3.0.0-alpha.1.tgz#431c0352ee7722160f9cbb5701e9dc4eda61225d"
+  integrity sha512-Q+0jkHVYY5nZKd3cLRRsrbh0RSxN24d12eet88zt4adBLJUqbkDXPzDJkSoB2cAPzp3TWcxToxBM5mEV2+bBnQ==
+  dependencies:
+    "@zk-email/circuits" "6.4.1-alpha.0"
+    circomlib "^2.0.5"
+
 async@^3.2.6:
   version "3.2.6"
   resolved "https://registry.yarnpkg.com/async/-/async-3.2.6.tgz#1b0728e14929d51b85b449b7f06e27c1145e38ce"

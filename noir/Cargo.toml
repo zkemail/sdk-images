@@ -19,13 +19,13 @@ sqlx = { version = "0.8.2", features = [
     "chrono",
     "runtime-tokio-rustls",
 ] }
-relayer-utils = { git = "https://github.com/zkemail/relayer-utils", rev = "fecd55f" }
+relayer-utils = { git = "https://github.com/zkemail/relayer-utils", rev = "c6be1667aa46e24ad3d339ba5951c83d96a5ca3d" }
 sdk-utils = { workspace = true }
 slog = { version = "2.7.0", features = [
     "max_level_trace",
     "release_max_level_warn",
 ] }
-zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", rev = "7e62e6dc2a07ba96c53ea3a1ff95a69855938c07" }
+zk-regex-compiler = { git = "https://github.com/zkemail/zk-regex", tag = "3.0.0-alpha.1" }
 base64 = "0.22.1"
 dotenv = "0.15.0"
 axum = "0.8.3"
