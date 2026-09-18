@@ -1,15 +1,15 @@
 use anyhow::Result;
 use sqlx::{Pool, Postgres, types::Uuid};
 
-/// Updates the verifier contract address in the database
-pub async fn update_verifier_contract_address(
+/// Updates the Noir 1024-bit verifier contract address in the database
+pub async fn update_noir_verifier_contract_address_1024(
     pool: &Pool<Postgres>,
-    id: Uuid,
+    id: &Uuid,
     address: &str,
 ) -> Result<()> {
     let query = r#"
         UPDATE blueprints
-        SET verifier_contract_address = $1
+        SET noir_verifier_contract_address_1024 = $1
         WHERE id = $2
     "#;
 
@@ -22,21 +22,21 @@ pub async fn update_verifier_contract_address(
     Ok(())
 }
 
-/// Updates the contract address in the database for integer IDs
-pub async fn update_contract_address(
+/// Updates the Noir 2048-bit verifier contract address in the database
+pub async fn update_noir_verifier_contract_address_2048(
     pool: &Pool<Postgres>,
-    blueprint_id: i32,
-    contract_address: &str,
+    id: &Uuid,
+    address: &str,
 ) -> Result<()> {
     let query = r#"
-        UPDATE blueprints 
-        SET noir_contract_address = $1 
+        UPDATE blueprints
+        SET noir_verifier_contract_address_2048 = $1
         WHERE id = $2
     "#;
 
     sqlx::query(query)
-        .bind(contract_address)
-        .bind(blueprint_id)
+        .bind(address)
+        .bind(id)
         .execute(pool)
         .await?;
 

@@ -1,121 +1,77 @@
-use anyhow::Result;
 use axum::{extract::Json, http::StatusCode, response::IntoResponse};
 use relayer_utils::LOG;
 use sdk_utils::proto_types::proto_blueprint::Blueprint;
-use serde::Deserialize;
 use slog::info;
 
-// Import from the crate root
-use crate::circuit_generator::generate_circuit;
-use crate::filesystem::{FileUploader, ProductionFileUploader, cleanup_multi_key, compile_circuit, setup};
-use crate::models::CircuitTemplateInputs;
-use crate::regex_generator::generate_regex_circuits;
+use crate::blueprint_pipeline::{
+    DeployConfig, Payload, UploadUrls, compile_blueprint_artifacts, deploy_blueprint_contracts,
+    package_blueprint_artifacts, upload_blueprint_artifacts,
+};
+use crate::filesystem::{FileUploader, ProductionFileUploader};
 
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct UploadUrls {
-    pub circuit_1024: String,
-    pub circuit_2048: String,
-    pub circuit_json_1024: String,
-    pub circuit_json_2048: String,
-    pub regex_graphs: String,
-}
+async fn process_compile_blueprint<U>(
+    blueprint: Blueprint,
+    upload_urls: UploadUrls,
+    deploy_config: DeployConfig,
+    uploader: U,
+) -> anyhow::Result<()>
+where
+    U: FileUploader,
+{
+    let tmp_dir = std::env::current_dir().unwrap().join("tmp");
+    let compiled = compile_blueprint_artifacts(&tmp_dir, &blueprint).await?;
+    let packaged = package_blueprint_artifacts(&tmp_dir, &compiled).await?;
+    upload_blueprint_artifacts(&packaged, &upload_urls, uploader).await?;
 
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Payload {
-    pub blueprint: Blueprint,
-    pub upload_urls: UploadUrls,
-    pub database_url: String,
-    pub private_key: String,
-    pub rpc_url: String,
-    pub chain_id: u32,
-    pub etherscan_api_key: String,
-    pub dkim_registry_address: String,
-}
-
-pub async fn compile_circuit_handler(
-    Json(payload): Json<Payload>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
-    info!(LOG, "Received payload: {:?}", payload);
-
-    // Process the request
-    match process_circuit(payload, ProductionFileUploader).await {
-        Ok(_) => Ok(StatusCode::OK),
-        Err(e) => {
-            println!("e while compiling: {:?}", e);
-            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-        }
-    }
-}
-
-async fn process_circuit(payload: Payload, uploader: impl FileUploader) -> Result<()> {
-    // Setup filesystem
-    setup().await?;
-
-    // Extract blueprint
-    let blueprint = payload.blueprint;
-
-    // Generate regex circuits (shared between both key sizes)
-    generate_regex_circuits(&blueprint.decomposed_regexes)?;
-
-    // Generate separate circuits for 1024-bit and 2048-bit RSA keys.
-    //
-    // Why two circuits instead of one with conditional logic?
-    // - Noir circuits are compile-time fixed; any conditional branching on key size
-    //   would still compile all code paths and incur the constraint cost of both sizes
-    // - Two specialized circuits are more efficient since each only contains the
-    //   constraints needed for its specific key size
-    // - The zkemail library exports different array sizes (KEY_LIMBS_1024=9 vs
-    //   KEY_LIMBS_2048=18) that must be known at compile time for type safety
-    // - This approach lets provers select the appropriate circuit based on the
-    //   actual DKIM key size of the email they're proving
-
-    // Generate and compile 1024-bit circuit
-    info!(LOG, "Generating 1024-bit circuit");
-    let inputs_1024 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 1024);
-    let circuit_1024 = generate_circuit(inputs_1024)?;
-    std::fs::write("./tmp/src/main.nr", &circuit_1024)?;
-    compile_circuit().await?;
-
-    // Move 1024-bit artifacts to specific names
-    std::fs::rename(
-        "./tmp/target/sdk_noir.json",
-        "./tmp/target/sdk_noir_1024.json",
-    )?;
-
-    // Generate and compile 2048-bit circuit
-    info!(LOG, "Generating 2048-bit circuit");
-    let inputs_2048 = CircuitTemplateInputs::from_blueprint_with_key_size(&blueprint, 2048);
-    let circuit_2048 = generate_circuit(inputs_2048)?;
-    std::fs::write("./tmp/src/main.nr", &circuit_2048)?;
-    compile_circuit().await?;
-
-    // Move 2048-bit artifacts to specific names
-    std::fs::rename(
-        "./tmp/target/sdk_noir.json",
-        "./tmp/target/sdk_noir_2048.json",
-    )?;
-
-    // Cleanup and zip both circuits
-    cleanup_multi_key(&circuit_1024, &circuit_2048).await?;
-
-    // Upload files
-    uploader.upload_files(payload.upload_urls).await?;
+    deploy_blueprint_contracts(&compiled, &deploy_config, &blueprint.id).await?;
 
     Ok(())
+}
+
+pub async fn compile_blueprint_handler(
+    Json(payload): Json<Payload>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    info!(
+        LOG,
+        "Received compile request for blueprint: {}", payload.blueprint.id
+    );
+
+    let deploy_config = DeployConfig {
+        database_url: payload.database_url,
+        private_key: payload.private_key,
+        rpc_url: payload.rpc_url,
+        chain_id: payload.chain_id,
+        etherscan_api_key: payload.etherscan_api_key,
+        dkim_registry_address: payload.dkim_registry_address,
+    };
+
+    if let Err(e) = process_compile_blueprint(
+        payload.blueprint,
+        payload.upload_urls,
+        deploy_config,
+        ProductionFileUploader,
+    )
+    .await
+    {
+        info!(LOG, "Error processing blueprint: {:?}", e);
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Internal processing error".to_string(),
+        ));
+    }
+
+    Ok(StatusCode::OK)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::filesystem::MockFileUploader;
-    // use dotenv::dotenv;
     use prost_wkt_types::Timestamp;
     use sdk_utils::proto_types::proto_blueprint::{
         Blueprint, DecomposedRegex, DecomposedRegexPart, ExternalInput,
     };
-    // use std::env;
+    use std::path::Path;
 
     #[tokio::test]
     async fn test_compile_circuit_x_export_data() {
@@ -185,7 +141,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -205,7 +161,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -243,9 +213,9 @@ mod tests {
             email_body_max_length: 2048, // Set a valid body length for body masking
             sender_domain: "email.apple.com".to_string(),
             enable_header_masking: true, // Enable header masking for testing
-            enable_body_masking: true, // Enable body masking for testing
-            client_zk_framework: 3, // Noir
-            server_zk_framework: 0, // None
+            enable_body_masking: true,   // Enable body masking for testing
+            client_zk_framework: 3,      // Noir
+            server_zk_framework: 0,      // None
             verifier_contract_chain: 84532,
             verifier_contract_address: "0x1E8AbE8B8551E73d25239004EffccA2d077eF146".to_string(),
             is_public: true,
@@ -297,7 +267,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -319,7 +289,21 @@ mod tests {
         println!("calling process_circuit");
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         println!("Got a result");
 
@@ -332,9 +316,9 @@ mod tests {
 
         // Verify body_mask is generated as a function input parameter
         let circuit_path = "./tmp/src/main.nr";
-        if std::path::Path::new(circuit_path).exists() {
-            let circuit_code = std::fs::read_to_string(circuit_path)
-                .expect("Failed to read generated circuit");
+        if Path::new(circuit_path).exists() {
+            let circuit_code =
+                std::fs::read_to_string(circuit_path).expect("Failed to read generated circuit");
 
             // Verify header_mask is a function input parameter
             assert!(
@@ -358,7 +342,9 @@ mod tests {
                 "Generated circuit should contain 'masked_body' output"
             );
 
-            println!("✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter");
+            println!(
+                "✓ Body mask verified in test_compile_circuit_apple - body_mask is generated as a function input parameter"
+            );
         }
     }
 
@@ -434,7 +420,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -454,7 +440,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -534,7 +534,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -554,7 +554,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
@@ -636,7 +650,7 @@ mod tests {
             num_local_proofs: 0,
         };
 
-        let upload_urls = UploadUrls {
+        let upload_urls = crate::blueprint_pipeline::UploadUrls {
             circuit_1024: "".to_string(),
             circuit_2048: "".to_string(),
             circuit_json_1024: "".to_string(),
@@ -656,7 +670,21 @@ mod tests {
         };
 
         // Call the handler with the mock uploader
-        let result = process_circuit(payload, mock_uploader).await;
+        let deploy_config = DeployConfig {
+            database_url: payload.database_url,
+            private_key: payload.private_key,
+            rpc_url: payload.rpc_url,
+            chain_id: payload.chain_id,
+            etherscan_api_key: payload.etherscan_api_key,
+            dkim_registry_address: payload.dkim_registry_address,
+        };
+        let result = super::process_compile_blueprint(
+            payload.blueprint,
+            payload.upload_urls,
+            deploy_config,
+            mock_uploader,
+        )
+        .await;
 
         if let Err(ref e) = result {
             println!("Error: {:?}", e);
