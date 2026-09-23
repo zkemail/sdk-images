@@ -22,9 +22,7 @@ The `IDKIMRegistry` interface in this package is adapted from the implementation
 
 When deploying, you typically have two options:
 
-1. **Use an existing deployed DKIM registry (recommended)** - for example the `UserOverrideableDKIMRegistry` instances documented in  
-   the Account Recovery docs: [`docs.zk.email/account-recovery/deployed-contracts`](https://docs.zk.email/account-recovery/deployed-contracts).  
-   In this case you simply configure `DKIM_REGISTRY` to point at one of those addresses.
+1. **Use an existing deployed DKIM registry (recommended)** - configure `DKIM_REGISTRY` to point at the address of an already-deployed registry.
 2. **Deploy your own DKIM registry** - for example using the contracts from `@zk-email/contracts`:
 
    ```solidity
