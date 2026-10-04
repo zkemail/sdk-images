@@ -8,7 +8,7 @@ use zkemail::{
     {% if key_bits == 2048 %}hash::poseidon_large,{% endif %}
     headers::body_hash::get_body_hash,
     partial_hash::partial_sha256_var_end, remove_soft_line_breaks::remove_soft_line_breaks,
-    masking::mask_text, Sequence, utils::pack_bytes,
+    Sequence, utils::pack_bytes,
 };
 
 fn main(
@@ -50,7 +50,7 @@ fn main(
     {{ regex.name }}_capture_group_start_indices: [Field; {{ regex.num_public_parts }}],
 {% endif %}
 {% endfor %}
-) -> pub (Field, Field, Field, Field, [Field; 1] {{ output_args }}) {
+) -> pub (Field, Field, Field, Field, Field, [Field; 1] {{ output_args }}) {
     // check the body and header lengths are within bounds
     assert(header.len() <= {{ email_header_max_length }});
 {% if not ignore_body_hash_check %}
@@ -75,8 +75,9 @@ fn main(
         "SHA256 hash computed over body does not match body hash found in DKIM-signed header",
     );
 {% if remove_soft_linebreaks %}
+    // Decode only the hash-covered bytes; see signed_bytes below.
     assert(
-        remove_soft_line_breaks(body.storage(), decoded_body.storage()),
+        remove_soft_line_breaks(signed_bytes(body), decoded_body.storage()),
         "Decoded body does not properly remove soft line breaks",
     );
 {% endif %}
@@ -90,20 +91,18 @@ fn main(
 {% endif %}
 
 {% if enable_header_masking %}
-    // Apply mask using mask_text function
-    let masked_header = mask_text::<{{ email_header_max_length }}>(header, header_mask);
+    let masked_header = mask_signed_bytes(header, header_mask);
 {% endif %}
 {% if enable_body_masking and not ignore_body_hash_check %}
-    {% if remove_soft_linebreaks %}
-    // Apply mask using mask_text function
-    let masked_body = mask_text::<{{ email_body_max_length }}>(decoded_body, body_mask);
-    {% else %}
-    // Apply mask using mask_text function
-    let masked_body = mask_text::<{{ email_body_max_length }}>(body, body_mask);
-    {% endif %}
+    let masked_body = mask_signed_bytes({% if remove_soft_linebreaks %}decoded_body{% else %}body{% endif %}, body_mask);
 {% endif %}
 
 {% for regex in regexes %}
+    // REASON: regex_match reads the whole fixed-size storage, but only the first len()
+    // bytes are signed. Without these bounds a match (and its public captures) could sit
+    // in prover-chosen padding. Honest inputs always match inside the real text.
+    assert({{ regex.name }}_match_start <= {{ regex.location }}.len(), "Regex starts beyond text length");
+    assert({{ regex.name }}_match_length <= {{ regex.location }}.len() - {{ regex.name }}_match_start, "Regex exceeds text length");
 {% if regex.num_public_parts > 0 %}
     let {% if regex.num_public_parts > 1 %}({% endif %}{{ regex.capture_string }}{% if regex.num_public_parts > 1 %}){% endif %} = {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_match_length }}>(
         {{ regex.location }}.storage(),
@@ -120,7 +119,7 @@ fn main(
         {{ regex.name }}_capture_group_start_indices,
     );
 {% else %}
-    regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_match_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states);
+    {{ regex.regex_circuit_name }}::regex_match::<{{ regex.max_length_of_location }}, {{ regex.max_match_length }}>({{ regex.location }}.storage(), {{ regex.name }}_match_start, {{ regex.name }}_match_length, {{ regex.name }}_current_states, {{ regex.name }}_next_states);
 {% endif %}
 {% if regex.is_hashed %}
 {% for i in range(start=0, end=regex.num_public_parts) %}
@@ -130,5 +129,46 @@ fn main(
 {% endif %}
 {% endfor %}
 
-    (pubkey_hash, email_nullifier, header_hash[0], header_hash[1], prover_address{{ output_signals }})
+    (pubkey_hash[0], pubkey_hash[1], email_nullifier, header_hash[0], header_hash[1], prover_address{{ output_signals }})
+}
+
+/**
+ * Apply `mask`, publishing only the first `text.len()` bytes; every later byte is output as 0.
+ *
+ * REASON (security): zkemail.nr's `mask_text` outputs all N storage bytes, but SHA-256 and the
+ * DKIM RSA check cover only the first `len` bytes. Storage past `len` is unconstrained prover
+ * input, so a prover could append unsigned text and it would be published as part of the signed
+ * email. Zeroing (instead of asserting the mask is false there) keeps honest "reveal everything"
+ * masks working. Same fix and pattern as zkemail/Redacted PR #21 (`mask_signed_bytes`).
+ * `in_range` is a running flag that switches off at i == len (about 3 gates per byte).
+ */
+fn mask_signed_bytes<let N: u32>(text: BoundedVec<u8, N>, mask: [bool; N]) -> [u8; N] {
+    let len = text.len();
+    let mut out = [0; N];
+    let mut in_range = true;
+    for i in 0..N {
+        in_range = in_range & (i != len);
+        out[i] = text.get_unchecked(i) * ((mask[i] & in_range) as u8);
+    }
+    out
+}
+
+/**
+ * Return `text.storage()` with every byte at index >= `text.len()` set to 0.
+ *
+ * REASON (security): remove_soft_line_breaks compares the WHOLE encoded and decoded storage, and
+ * `decoded_body.len()` is not constrained. Feeding it raw `body.storage()` would let unsigned
+ * bytes past `body.len()` flow into decoded_body, where body regexes and body masks read them.
+ * Zeroing the tail (instead of asserting it is zero) matches relayer-utils, which decodes only
+ * `body[..len]`; with sha_precompute_selector the honest tail may contain SHA padding.
+ */
+fn signed_bytes<let N: u32>(text: BoundedVec<u8, N>) -> [u8; N] {
+    let len = text.len();
+    let mut out = [0; N];
+    let mut in_range = true;
+    for i in 0..N {
+        in_range = in_range & (i != len);
+        out[i] = text.get_unchecked(i) * (in_range as u8);
+    }
+    out
 }

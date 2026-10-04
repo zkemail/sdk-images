@@ -1,5 +1,5 @@
 # Base image
-FROM ubuntu:jammy
+FROM ubuntu:jammy AS noir-toolchain
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -20,15 +20,21 @@ RUN apt update && \
     && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Noir
-RUN curl -L https://raw.githubusercontent.com/noir-lang/noirup/refs/heads/main/install | bash
+# Install the matching Noir/Barretenberg releases directly. Moving installer
+# branches can change independently of these versions.
+RUN mkdir -p /root/.nargo/bin /root/.bb && \
+    curl -fLsS https://github.com/noir-lang/noir/releases/download/v1.0.0-beta.5/nargo-x86_64-unknown-linux-gnu.tar.gz -o /tmp/nargo.tar.gz && \
+    echo "a99c2aaab24e97a41a72224dd345aa82e8c8c21911b3d51ab38c232987fbdb5e  /tmp/nargo.tar.gz" | sha256sum -c - && \
+    tar -xzf /tmp/nargo.tar.gz -C /root/.nargo/bin && \
+    curl -fLsS https://github.com/AztecProtocol/aztec-packages/releases/download/v0.84.0/barretenberg-amd64-linux.tar.gz -o /tmp/bb.tar.gz && \
+    echo "770b17b0c383923bd0ad5268c0440d6d472971e1e39a77f3a57523d299435c6e  /tmp/bb.tar.gz" | sha256sum -c - && \
+    tar -xzf /tmp/bb.tar.gz -C /root/.bb && \
+    rm /tmp/nargo.tar.gz /tmp/bb.tar.gz
 ENV PATH="/root/.nargo/bin:$PATH"
-RUN noirup --version 1.0.0-beta.5
-
-# Install Barrentenberg
-RUN curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/next/barretenberg/bbup/install | bash
 ENV PATH="/root/.bb:$PATH"
-RUN bbup --version 0.84.0
+RUN nargo --version && bb --version
+
+FROM noir-toolchain AS runtime
 
 # Install Rust
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
