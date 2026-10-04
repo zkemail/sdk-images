@@ -50,7 +50,7 @@ fn main(
     {{ regex.name }}_capture_group_start_indices: [Field; {{ regex.num_public_parts }}],
 {% endif %}
 {% endfor %}
-) -> pub (Field, Field, Field, Field, [Field; 1] {{ output_args }}) {
+) -> pub (Field, Field, Field, Field, Field, [Field; 1] {{ output_args }}) {
     // check the body and header lengths are within bounds
     assert(header.len() <= {{ email_header_max_length }});
 {% if not ignore_body_hash_check %}
@@ -130,5 +130,5 @@ fn main(
 {% endif %}
 {% endfor %}
 
-    (pubkey_hash, email_nullifier, header_hash[0], header_hash[1], prover_address{{ output_signals }})
+    (pubkey_hash[0], pubkey_hash[1], email_nullifier, header_hash[0], header_hash[1], prover_address{{ output_signals }})
 }
