@@ -14,5 +14,7 @@ cargo run -p circom -- generate-example-contracts ./example-contract-data.json .
 - `./contracts/src` output directory where:
   - `ZKEmailVerifier.sol` will be written.
   - `interfaces/IGroth16Verifier.sol` will be written.
+  - `Groth16Verifier.sol` is a mock verifier for local tests. Generate the real
+    Groth16 verifier from the proving key before any deployment.
 
 This is especially useful for local Solidity-only development where you want contracts to compile and tests to run without doing a full proof/circuit build.

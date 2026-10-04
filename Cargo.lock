@@ -5021,6 +5021,7 @@ dependencies = [
  "reqwest 0.12.24",
  "serde",
  "slog",
+ "tokio",
  "uuid 1.18.1",
 ]
 

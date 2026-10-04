@@ -331,10 +331,14 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify body_mask is generated as a function input parameter
-        let circuit_path = "./tmp/src/main.nr";
-        if std::path::Path::new(circuit_path).exists() {
-            let circuit_code = std::fs::read_to_string(circuit_path)
-                .expect("Failed to read generated circuit");
+        for bits in [1024, 2048] {
+            // Check each immutable upload bundle, not only the last rendered source.
+            let zip = format!("./tmp/circuit_{bits}.zip");
+            let circuit_code = sdk_utils::run_command_and_return_output(
+                "unzip", &["-p", &zip, "src/main.nr"], None,
+            ).await.expect("both key-size bundles must exist and contain main.nr");
+            let limbs = if bits == 1024 { 9 } else { 18 };
+            assert!(circuit_code.contains(&format!("pubkey: RSAPubkey<{limbs}>")));
 
             // Verify header_mask is a function input parameter
             assert!(

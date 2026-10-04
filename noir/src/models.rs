@@ -14,7 +14,6 @@ pub struct RegexEntry {
     pub num_public_parts: usize,
     pub public_parts_max_length: Vec<usize>,
     pub is_hashed: bool,
-    pub hash_packing_size: usize,
     pub hash_inputs: String,
     pub capture_string: String,
 }
@@ -94,13 +93,19 @@ impl From<Blueprint> for CircuitTemplateInputs {
             let is_hashed = regex.is_hashed.unwrap_or(false);
             let mut hash_inputs = Vec::new();
             let mut capture_string = String::new();
-            let hash_packing_size = ((max_match_length as f64) / 31.0).ceil() as usize;
 
             for part in &regex.parts {
                 if part.is_public == Some(true) {
                     num_public_parts += 1;
                     public_parts_max_length.push(part.max_length() as usize);
 
+                    // NOTE: the template packs each capture with
+                    // pack_bytes::<public_parts_max_length[i], 31>, which yields
+                    // ceil(part_max_length / 31) fields. Sizing this from the regex's
+                    // max_match_length instead indexes past the packed array, so a hashed
+                    // capture shorter than the regex can never prove (nargo reports
+                    // "Assertion is always false").
+                    let hash_packing_size = (part.max_length() as usize).div_ceil(31);
                     for i in 0..hash_packing_size {
                         hash_inputs.push(format!(
                             "{}_capture_{}_packed[{}]",
@@ -127,7 +132,6 @@ impl From<Blueprint> for CircuitTemplateInputs {
                 num_public_parts,
                 public_parts_max_length,
                 is_hashed,
-                hash_packing_size,
                 hash_inputs: if is_hashed {
                     hash_inputs.join(", ")
                 } else {
